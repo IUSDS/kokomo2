@@ -8,7 +8,7 @@ from routes.get_membership import get_membership_route
 from routes.update_membership import update_membership_route
 from routes.delete_user import delete_user_route
 from routes.update_user import update_user_route
-
+from routes.add_points import add_points_route
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -31,7 +31,7 @@ app.include_router(get_membership_route, prefix="/get", tags=["Membership"])
 app.include_router(update_membership_route, prefix="/update", tags=["Update Membership"])
 app.include_router(delete_user_route, prefix="/update", tags=["Delete User"])
 app.include_router(update_user_route, prefix="/update", tags=["Update User"])
-
+app.include_router(add_points_route, prefix="/update", tags=["Update Points"])
 
 @app.get("/health", tags=["Health"])
 async def health_check():
@@ -40,7 +40,3 @@ async def health_check():
         "status": "healthy",
         "message": "Service is running normally"
     }
-
-
-
-
