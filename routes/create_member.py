@@ -2,10 +2,10 @@ from fastapi import APIRouter, HTTPException, Form
 from pydantic import EmailStr
 from database import get_db_connection
 
-router = APIRouter()
+create_member_route = APIRouter()
 
 # Endpoint to validate username and email
-@router.get("/validate-member/")
+@create_member_route.get("/validate-member/")
 async def validate_member(username: str = None, email_id: str = None):
     try:
         connection = get_db_connection()
@@ -35,7 +35,7 @@ async def validate_member(username: str = None, email_id: str = None):
 
 
 # Endpoint to add a new member
-@router.post("/add-member/")
+@create_member_route.post("/add-member/")
 async def add_member(
     username: str = Form(...),
     password: str = Form(...),
