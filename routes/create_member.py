@@ -47,7 +47,7 @@ async def add_member(
     membership_type: str = Form(...),
     points: int = Form(...),
     picture_url: str = Form(...),
-    is_deleted: bool = Form(default=False),
+    is_deleted: bool = Form(default="N"),
 ):
     try:
         connection = get_db_connection()
@@ -71,7 +71,7 @@ async def add_member(
         query = """
         INSERT INTO Members (username, pass, first_name, last_name, phone_number, address,
                              email_id, membership_type, points, picture_url, is_deleted)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, "N")
         """
         cursor.execute(
             query,
