@@ -2,10 +2,10 @@ from fastapi import APIRouter, HTTPException, Form
 from pydantic import EmailStr
 from database import get_db_connection
 
-router = APIRouter()
+create_member_route = APIRouter()
 
 # Endpoint to validate username and email
-@router.get("/validate-member/")
+@create_member_route.get("/validate-member/")
 async def validate_member(username: str = None, email_id: str = None):
     try:
         connection = get_db_connection()
@@ -35,7 +35,7 @@ async def validate_member(username: str = None, email_id: str = None):
 
 
 # Endpoint to add a new member
-@router.post("/add-member/")
+@create_member_route.post("/add-member/")
 async def add_member(
     username: str = Form(...),
     password: str = Form(...),
@@ -47,17 +47,31 @@ async def add_member(
     membership_type: str = Form(...),
     points: int = Form(...),
     picture_url: str = Form(...),
-    is_deleted: bool = Form(default=False),
+    is_deleted: bool = Form(default="N"),
 ):
     try:
         connection = get_db_connection()
         cursor = connection.cursor()
 
-        # Insert new member
+        # Check if the username already exists
+        cursor.execute("SELECT COUNT(*) AS count FROM Members WHERE username = %s", (username,))
+        username_exists = cursor.fetchone()["count"]
+
+        if username_exists > 0:
+            return {"status": "error", "message": "Username already exists, try something else"}
+
+        # Check if the email_id already exists
+        cursor.execute("SELECT COUNT(*) AS count FROM Members WHERE email_id = %s", (email_id,))
+        email_exists = cursor.fetchone()["count"]
+
+        if email_exists > 0:
+            return {"status": "error", "message": "Account already exists for this email, try logging in"}
+
+        # If both username and email_id are unique, insert the new member
         query = """
         INSERT INTO Members (username, pass, first_name, last_name, phone_number, address,
                              email_id, membership_type, points, picture_url, is_deleted)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, "N")
         """
         cursor.execute(
             query,
