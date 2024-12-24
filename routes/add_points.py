@@ -1,11 +1,11 @@
 from fastapi import APIRouter, HTTPException, Form
 from database import get_db_connection
 
-add_points_route = APIRouter()
+update_points_route = APIRouter()
 
 # Endpoint to update points for a user
-@add_points_route.put("/update-points/")
-async def update_points(username: str = Form(...), add_points: int = Form(...)):
+@update_points_route.put("/update-points/")
+async def update_points(username: str = Form(...), update_points: int = Form(...)):
     try:
         connection = get_db_connection()
         cursor = connection.cursor()
@@ -19,7 +19,7 @@ async def update_points(username: str = Form(...), add_points: int = Form(...)):
 
         # Update the points column
         current_points = result["points"]
-        new_points = current_points + add_points
+        new_points = current_points + update_points
 
         cursor.execute("UPDATE Members SET points = %s WHERE username = %s", (new_points, username))
         connection.commit()
