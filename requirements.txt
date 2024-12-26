@@ -3,3 +3,7 @@ uvicorn
 pydantic
 pymysql
 passlib[bcrypt]
+boto3
+python-multipart
+SessionMiddleware
+secure-cookies
