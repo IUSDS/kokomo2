@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException, Form, UploadFile, File, Response
+from fastapi import APIRouter, HTTPException, Form, UploadFile, File, Response, Depends
 from pydantic import EmailStr
-from database import get_db_connection
 from botocore.exceptions import ClientError
+from database import get_db_connection
 import boto3
+from fastapi.middleware.sessions import SessionMiddleware
 
 create_member_route = APIRouter()
 
@@ -11,12 +12,13 @@ S3_BUCKET_NAME = "image-bucket-kokomo-yacht-club"
 S3_REGION = "ap-southeast-2"
 ACCESS_POINT_ALIAS = "first-kokomo-access-y1pahkde96c1mfspxs7cbiaro94hyaps2a-s3alias"
 
-# Initialize S3 client (assume EC2 instance role or environment variables for credentials)
+# Initialize S3 client (using EC2 IAM role or environment variables for credentials)
 s3_client = boto3.client("s3", region_name=S3_REGION)
 
+
 def save_to_session(response: Response, key: str, value: str):
-    """Save data into secure cookies for session management."""
-    response.set_cookie(key=key, value=value, httponly=True, max_age=3600)  # 1 hour validity
+    """Save data into secure session cookies."""
+    response.set_cookie(key=key, value=value, httponly=True, max_age=3600)  # 1 hour session
 
 
 # Endpoint to validate username and email
@@ -42,6 +44,7 @@ async def validate_member(username: str = None, email_id: str = None):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
     finally:
         if 'cursor' in locals():
             cursor.close()
@@ -61,7 +64,9 @@ async def add_member(
     email_id: EmailStr = Form(...),
     membership_type: str = Form(...),
     points: int = Form(...),
-    file: UploadFile = File(...),  # Added file upload for S3
+    picture_url: str = Form(...),
+    file: UploadFile = None,  # Optional file upload
+    is_deleted: bool = Form(default="N"),
     response: Response = Response(),
 ):
     try:
@@ -82,19 +87,24 @@ async def add_member(
         if email_exists > 0:
             return {"status": "error", "message": "Account already exists for this email, try logging in"}
 
-        # Upload the profile picture to S3
-        file_content = await file.read()
-        object_name = f"profile_pictures/{username}/{file.filename}"
-        try:
-            s3_client.put_object(
-                Bucket=ACCESS_POINT_ALIAS,
-                Key=object_name,
-                Body=file_content,
-                ContentType=file.content_type,
-            )
-            picture_url = f"https://{ACCESS_POINT_ALIAS}.s3.{S3_REGION}.amazonaws.com/{object_name}"
-        except ClientError as e:
-            raise HTTPException(status_code=500, detail=f"S3 Upload error: {e.response['Error']['Message']}")
+        # Upload the file to S3 if provided
+        picture_s3_url = None
+        if file:
+            file_content = await file.read()
+            object_name = f"profile_pictures/{username}/{file.filename}"
+            try:
+                s3_client.put_object(
+                    Bucket=ACCESS_POINT_ALIAS,
+                    Key=object_name,
+                    Body=file_content,
+                    ContentType=file.content_type,
+                )
+                picture_s3_url = f"https://{ACCESS_POINT_ALIAS}.s3.{S3_REGION}.amazonaws.com/{object_name}"
+            except ClientError as e:
+                raise HTTPException(status_code=500, detail=f"S3 Upload error: {e.response['Error']['Message']}")
+
+        # Determine final picture URL
+        picture_url = picture_s3_url if picture_s3_url else picture_url
 
         # If both username and email_id are unique, insert the new member
         query = """
@@ -114,12 +124,13 @@ async def add_member(
                 email_id,
                 membership_type,
                 points,
-                picture_url,  # Use picture URL generated from S3 upload
+                picture_url,
+                is_deleted,
             ),
         )
         connection.commit()
 
-        # Save session data in secure cookies
+        # Save data to session
         save_to_session(response, "username", username)
         save_to_session(response, "email_id", email_id)
         save_to_session(response, "picture_url", picture_url)
