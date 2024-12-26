@@ -11,3 +11,7 @@ class UserResponse(BaseModel):
     membership_type: str
     points: int
     picture_url: Optional[str]
+    address: set
+    email_id: str
+    phone_number: int
+    

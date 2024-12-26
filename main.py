@@ -1,21 +1,23 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes.validate_user import validate_user_route
-from routes.create_member import create_member_route
+from routes.create_member import create_member_route  # Updated with session and S3 integration
 from routes.get_points import get_points_route
 from routes.get_membership import get_membership_route
 from routes.update_membership import update_membership_route
 from routes.delete_user import delete_user_route
 from routes.update_user import update_user_route
-from routes.add_points import add_points_route
+from routes.add_points import update_points_route
+from fastapi.middleware.sessions import SessionMiddleware
 
 # Initialize FastAPI app
 app = FastAPI()
 
-# Add CORS middleware
+# Add CORS and Session middleware
+app.add_middleware(SessionMiddleware, secret_key="3003d57aaae374611f2cd2897ec6b92345d195f7cce32a452ddcf59dfa5565f")  # Used for managing sessions
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # Adjust origins as needed for production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -23,14 +25,15 @@ app.add_middleware(
 
 # Include Routes
 app.include_router(validate_user_route, prefix="/validate-user", tags=["Validate User"])
-app.include_router(create_member_route, prefix="/create-member", tags=["Create Member"])
+app.include_router(create_member_route, prefix="/create-member", tags=["Create Member"])  # Updated
 app.include_router(get_points_route, prefix="/get", tags=["Points"])
 app.include_router(get_membership_route, prefix="/get", tags=["Membership"])
 app.include_router(update_membership_route, prefix="/update", tags=["Update Membership"])
 app.include_router(delete_user_route, prefix="/update", tags=["Delete User"])
 app.include_router(update_user_route, prefix="/update", tags=["Update User"])
-app.include_router(add_points_route, prefix="/update", tags=["Update Points"])
+app.include_router(update_points_route, prefix="/update", tags=["Update Points"])
 
+# Health check endpoint
 @app.get("/health", tags=["Health"])
 async def health_check():
     """Health check endpoint"""

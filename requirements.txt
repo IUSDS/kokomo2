@@ -3,3 +3,7 @@ uvicorn
 pydantic
 pymysql
 passlib[bcrypt]
+boto3
+python-multipart
+SessionMiddleware
+#export SECRET_KEY=3003d57aaae374611f2cd2897ec6b92345d195f7cce32a452ddcf59dfa5565f

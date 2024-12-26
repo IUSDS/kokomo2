@@ -45,7 +45,7 @@ async def validate_user(user: User):
 async def get_user_details(username: str):
     query = """
         SELECT member_id, CONCAT(first_name, ' ', last_name) AS full_name, 
-               membership_type, points, picture_url
+               membership_type, points, picture_url, phone_number, address, email_id, username
         FROM Members
         WHERE username = %s AND is_deleted = "N"
         LIMIT 1
@@ -66,6 +66,9 @@ async def get_user_details(username: str):
                 "membership_type": result["membership_type"],
                 "points": result["points"],
                 "picture_url": result["picture_url"],
+                "phone_number": result["phone_number"],
+                "email_id": result["email_id"],
+                "address": result["address"],
             }
 
     except pymysql.Error as e:

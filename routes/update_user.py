@@ -93,3 +93,4 @@ async def update_user(
 
     finally:
         connection.close()
+        
