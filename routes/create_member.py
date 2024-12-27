@@ -1,9 +1,10 @@
-from fastapi import APIRouter, HTTPException, Form, UploadFile, File, Response, Depends
+from fastapi import APIRouter, HTTPException, Form, UploadFile, File
 from pydantic import EmailStr
 from botocore.exceptions import ClientError
 from database import get_db_connection
 import boto3
-from fastapi.middleware.sessions import SessionMiddleware
+from starlette.middleware.sessions import SessionMiddleware
+from fastapi import Request
 
 create_member_route = APIRouter()
 
@@ -14,12 +15,6 @@ ACCESS_POINT_ALIAS = "first-kokomo-access-y1pahkde96c1mfspxs7cbiaro94hyaps2a-s3a
 
 # Initialize S3 client (using EC2 IAM role or environment variables for credentials)
 s3_client = boto3.client("s3", region_name=S3_REGION)
-
-
-def save_to_session(response: Response, key: str, value: str):
-    """Save data into secure session cookies."""
-    response.set_cookie(key=key, value=value, httponly=True, max_age=3600)  # 1 hour session
-
 
 # Endpoint to validate username and email
 @create_member_route.get("/validate-member/")
@@ -51,7 +46,6 @@ async def validate_member(username: str = None, email_id: str = None):
         if 'connection' in locals():
             connection.close()
 
-
 # Endpoint to add a new member
 @create_member_route.post("/add-member/")
 async def add_member(
@@ -67,7 +61,8 @@ async def add_member(
     picture_url: str = Form(...),
     file: UploadFile = None,  # Optional file upload
     is_deleted: bool = Form(default="N"),
-    response: Response = Response(),
+    request: Request,  # Correctly imported from FastAPI
+    
 ):
     try:
         connection = get_db_connection()
@@ -130,11 +125,11 @@ async def add_member(
         )
         connection.commit()
 
-        # Save data to session
-        save_to_session(response, "username", username)
-        save_to_session(response, "email_id", email_id)
-        save_to_session(response, "picture_url", picture_url)
-
+        # Save data to session using Starlette's SessionMiddleware
+        request.session["username"] = username
+        request.session["email_id"] = email_id
+        request.session["picture_url"] = picture_url
+        
         return {"status": "success", "message": "Member added successfully", "picture_url": picture_url}
 
     except Exception as e:
