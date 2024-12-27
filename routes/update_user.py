@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Form, Response
+from fastapi import APIRouter, HTTPException, Form, Request
 from passlib.context import CryptContext
 from database import get_db_connection
 
@@ -12,12 +12,6 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
-# Helper function to save session data in secure cookies
-def save_to_session(response: Response, key: str, value: str):
-    """Save data into secure cookies for session management."""
-    response.set_cookie(key=key, value=value, httponly=True, max_age=3600)  # 1 hour validity
-
-
 @update_user_route.put("/user/")
 async def update_user(
     username: str = Form(..., description="The username of the user to update"),
@@ -27,7 +21,7 @@ async def update_user(
     phone_number: str = Form(None, description="The new phone number"),
     address: str = Form(None, description="The new address"),
     picture_url: str = Form(None, description="The new picture URL"),
-    response: Response = Response(),
+    request: Request,  # Access session via Request
 ):
     """
     Update user details. Fields left blank will retain their previous values.
@@ -82,11 +76,11 @@ async def update_user(
 
             connection.commit()
 
-            # Save updated fields in session cookies
-            save_to_session(response, "username", username)
-            save_to_session(response, "first_name", updated_first_name)
-            save_to_session(response, "last_name", updated_last_name)
-            save_to_session(response, "picture_url", updated_picture_url)
+            # Save updated fields in the session
+            request.session["username"] = username
+            request.session["first_name"] = updated_first_name
+            request.session["last_name"] = updated_last_name
+            request.session["picture_url"] = updated_picture_url
 
             return {
                 "status": "success",
