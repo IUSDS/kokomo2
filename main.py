@@ -8,7 +8,7 @@ from routes.update_membership import update_membership_route
 from routes.delete_user import delete_user_route
 from routes.update_user import update_user_route
 from routes.add_points import update_points_route
-from fastapi.middleware.sessions import SessionMiddleware
+from starlette_session import SessionMiddleware
 import boto3
 
 # Initialize FastAPI app
