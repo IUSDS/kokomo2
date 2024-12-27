@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Form
+from fastapi import APIRouter, HTTPException, Form, Request
 from passlib.context import CryptContext
 from database import get_db_connection
 
@@ -20,7 +20,8 @@ async def update_user(
     last_name: str = Form(None, description="The new last name"),
     phone_number: str = Form(None, description="The new phone number"),
     address: str = Form(None, description="The new address"),
-    picture_url: str = Form(None, description="The new picture URL")
+    picture_url: str = Form(None, description="The new picture URL"),
+    request: Request,  # Access session via Request
 ):
     """
     Update user details. Fields left blank will retain their previous values.
@@ -75,6 +76,12 @@ async def update_user(
 
             connection.commit()
 
+            # Save updated fields in the session
+            request.session["username"] = username
+            request.session["first_name"] = updated_first_name
+            request.session["last_name"] = updated_last_name
+            request.session["picture_url"] = updated_picture_url
+
             return {
                 "status": "success",
                 "message": "User details updated successfully.",
@@ -93,4 +100,3 @@ async def update_user(
 
     finally:
         connection.close()
-        

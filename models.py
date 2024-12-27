@@ -14,4 +14,3 @@ class UserResponse(BaseModel):
     address: set
     email_id: str
     phone_number: int
-    

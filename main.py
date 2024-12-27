@@ -8,13 +8,25 @@ from routes.update_membership import update_membership_route
 from routes.delete_user import delete_user_route
 from routes.update_user import update_user_route
 from routes.add_points import update_points_route
-from fastapi.middleware.sessions import SessionMiddleware
+from starlette_session import SessionMiddleware
+import boto3
 
 # Initialize FastAPI app
 app = FastAPI()
 
+def get_secret():
+    """Retrieve the secret from AWS Secrets Manager"""
+    client = boto3.client("secretsmanager", region_name="your-region")
+    secret = client.get_secret_value(SecretId="my-fastapi-secret-key")
+    return secret["SecretString"]
+
+# Load the secret key
+SECRET_KEY = get_secret()
+
+#SECRET_KEY FOR SESSION
+app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
+
 # Add CORS and Session middleware
-app.add_middleware(SessionMiddleware, secret_key="3003d57aaae374611f2cd2897ec6b92345d195f7cce32a452ddcf59dfa5565f")  # Used for managing sessions
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Adjust origins as needed for production
