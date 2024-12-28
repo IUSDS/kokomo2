@@ -1,10 +1,8 @@
-from fastapi import APIRouter, HTTPException, Form, Request
+from fastapi import APIRouter, HTTPException, Form, UploadFile, File
 from passlib.context import CryptContext
 from database import get_db_connection
-from fastapi import APIRouter, HTTPException, Form, UploadFile, File, Request
 import boto3
 from botocore.exceptions import ClientError
-#from starlette.middleware.sessions import SessionMiddleware
 
 # Initialize router
 update_user_route = APIRouter()
@@ -17,24 +15,22 @@ S3_BUCKET_NAME = "image-bucket-kokomo-yacht-club"
 S3_REGION = "ap-southeast-2"
 ACCESS_POINT_ALIAS = "first-kokomo-access-y1pahkde96c1mfspxs7cbiaro94hyaps2a-s3alias"
 
-# Initialize S3 client (using EC2 IAM role or environment variables for credentials)
+# Initialize S3 client
 s3_client = boto3.client("s3", region_name=S3_REGION)
 
 # Function to hash passwords
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
-@update_user_route.put("/user/")
+@update_user_route.put("/update/user/")
 async def update_user(
-    request: Request,  # Access session via Request
     username: str = Form(..., description="The username of the user to update"),
     password: str = Form(None, description="The new password"),
     first_name: str = Form(None, description="The new first name"),
     last_name: str = Form(None, description="The new last name"),
     phone_number: str = Form(None, description="The new phone number"),
     address: str = Form(None, description="The new address"),
-    picture_url: str = None,  # Optional file upload
-    file: UploadFile = Form(None, description="The new picture URL"),
+    file: UploadFile = File(None, description="The new profile picture"),
 ):
     """
     Update user details. Fields left blank will retain their previous values.
@@ -63,17 +59,15 @@ async def update_user(
         object_name = f"profile_pictures/{username}/{file.filename}"
         try:
             s3_client.put_object(
-                Bucket=S3_BUCKET_NAME,  # Correct bucket name usage
-                    Key=object_name,
-                    Body=file_content,
-                    ContentType=file.content_type,
-                )
+                Bucket=S3_BUCKET_NAME,
+                Key=object_name,
+                Body=file_content,
+                ContentType=file.content_type,
+            )
             picture_s3_url = f"https://{ACCESS_POINT_ALIAS}.s3.{S3_REGION}.amazonaws.com/{object_name}"
         except ClientError as e:
             raise HTTPException(status_code=500, detail=f"S3 Upload error: {e.response['Error']['Message']}")
 
-        # Determine final picture URL
-        picture_url = picture_s3_url if picture_s3_url else picture_url
     try:
         with connection.cursor() as cursor:
             # Fetch existing user data
@@ -89,7 +83,7 @@ async def update_user(
             updated_last_name = last_name or existing_data["last_name"]
             updated_phone_number = phone_number or existing_data["phone_number"]
             updated_address = address or existing_data["address"]
-            updated_picture_url = picture_url or existing_data["picture_url"]
+            updated_picture_url = picture_s3_url or existing_data["picture_url"]
 
             # Execute update query
             cursor.execute(
@@ -106,12 +100,6 @@ async def update_user(
             )
 
             connection.commit()
-
-            # Save updated fields in the session
-            request.session["username"] = username
-            request.session["first_name"] = updated_first_name
-            request.session["last_name"] = updated_last_name
-            request.session["picture_url"] = updated_picture_url
 
             return {
                 "status": "success",
