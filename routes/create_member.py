@@ -1,10 +1,8 @@
-from fastapi import APIRouter, HTTPException, Form, UploadFile, File
+from fastapi import APIRouter, HTTPException, Form, UploadFile, File, Request
 from pydantic import EmailStr
 from botocore.exceptions import ClientError
 from database import get_db_connection
 import boto3
-from starlette.middleware.sessions import SessionMiddleware
-from fastapi import Request
 
 create_member_route = APIRouter()
 
@@ -16,40 +14,9 @@ ACCESS_POINT_ALIAS = "first-kokomo-access-y1pahkde96c1mfspxs7cbiaro94hyaps2a-s3a
 # Initialize S3 client (using EC2 IAM role or environment variables for credentials)
 s3_client = boto3.client("s3", region_name=S3_REGION)
 
-# Endpoint to validate username and email
-@create_member_route.get("/validate-member/")
-async def validate_member(username: str = None, email_id: str = None):
-    try:
-        connection = get_db_connection()
-        cursor = connection.cursor()
-
-        # Check if username exists
-        if username:
-            cursor.execute("SELECT COUNT(*) AS count FROM Members WHERE username = %s", (username,))
-            if cursor.fetchone()["count"] > 0:
-                return {"status": "error", "message": "Username already exists, try something else"}
-
-        # Check if email exists
-        if email_id:
-            cursor.execute("SELECT COUNT(*) AS count FROM Members WHERE email_id = %s", (email_id,))
-            if cursor.fetchone()["count"] > 0:
-                return {"status": "error", "message": "Account already exists for this email, try logging in"}
-
-        return {"status": "success", "message": "Username and email are available"}
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
-
-    finally:
-        if 'cursor' in locals():
-            cursor.close()
-        if 'connection' in locals():
-            connection.close()
-
-# Endpoint to add a new member
 @create_member_route.post("/add-member/")
 async def add_member(
-    request: Request,  # Correctly imported from FastAPI
+    request: Request,
     username: str = Form(...),
     password: str = Form(...),
     first_name: str = Form(...),
@@ -61,11 +28,10 @@ async def add_member(
     points: int = Form(...),
     picture_url: str = Form(...),
     file: UploadFile = None,  # Optional file upload
-    is_deleted: bool = Form(default="N"),
-    
-    
+    is_deleted: bool = Form(default="N"),  # Default argument for deletion status
 ):
     try:
+        # Establish database connection
         connection = get_db_connection()
         cursor = connection.cursor()
 
@@ -90,7 +56,7 @@ async def add_member(
             object_name = f"profile_pictures/{username}/{file.filename}"
             try:
                 s3_client.put_object(
-                    Bucket=ACCESS_POINT_ALIAS,
+                    Bucket=S3_BUCKET_NAME,  # Correct bucket name usage
                     Key=object_name,
                     Body=file_content,
                     ContentType=file.content_type,
@@ -102,7 +68,7 @@ async def add_member(
         # Determine final picture URL
         picture_url = picture_s3_url if picture_s3_url else picture_url
 
-        # If both username and email_id are unique, insert the new member
+        # Insert the new member into the database
         query = """
         INSERT INTO Members (username, pass, first_name, last_name, phone_number, address,
                              email_id, membership_type, points, picture_url, is_deleted)
@@ -127,11 +93,48 @@ async def add_member(
         connection.commit()
 
         # Save data to session using Starlette's SessionMiddleware
+        if not hasattr(request, "session"):
+            raise HTTPException(status_code=500, detail="SessionMiddleware is not configured properly")
+
         request.session["username"] = username
         request.session["email_id"] = email_id
         request.session["picture_url"] = picture_url
-        
-        return {"status": "success", "message": "Member added successfully", "picture_url": picture_url}
+
+        return {
+            "status": "success",
+            "message": "Member added successfully",
+            "picture_url": picture_url,
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+    finally:
+        if "cursor" in locals():
+            cursor.close()
+        if "connection" in locals():
+            connection.close()
+
+# Endpoint to validate username and email
+@create_member_route.get("/validate-member/")
+async def validate_member(username: str = None, email_id: str = None):
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        # Check if username exists
+        if username:
+            cursor.execute("SELECT COUNT(*) AS count FROM Members WHERE username = %s", (username,))
+            if cursor.fetchone()["count"] > 0:
+                return {"status": "error", "message": "Username already exists, try something else"}
+
+        # Check if email exists
+        if email_id:
+            cursor.execute("SELECT COUNT(*) AS count FROM Members WHERE email_id = %s", (email_id,))
+            if cursor.fetchone()["count"] > 0:
+                return {"status": "error", "message": "Account already exists for this email, try logging in"}
+
+        return {"status": "success", "message": "Username and email are available"}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
