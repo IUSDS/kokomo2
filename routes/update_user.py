@@ -10,7 +10,7 @@ from starlette.middleware.sessions import SessionMiddleware
 update_user_route = APIRouter()
 
 # Add session middleware with a secure key
-app.add_middleware(
+update_user_route .add_middleware(
     SessionMiddleware,
     secret_key="supersecurekey",  # Replace with your secret key
     cookie_name="kokomo_session",  # Define the session cookie name
@@ -40,8 +40,8 @@ async def update_user(
     last_name: str = Form(None, description="The new last name"),
     phone_number: str = Form(None, description="The new phone number"),
     address: str = Form(None, description="The new address"),
-    picture_url: str = Form(None, description="The new picture URL"),
-    file: UploadFile = None,  # Optional file upload
+    picture_url: str = None,  # Optional file upload
+    file: UploadFile = Form(None, description="The new picture URL"),
 ):
     """
     Update user details. Fields left blank will retain their previous values.
