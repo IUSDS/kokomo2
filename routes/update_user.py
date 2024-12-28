@@ -4,9 +4,17 @@ from database import get_db_connection
 from fastapi import APIRouter, HTTPException, Form, UploadFile, File, Request
 import boto3
 from botocore.exceptions import ClientError
+from starlette.middleware.sessions import SessionMiddleware
 
 # Initialize router
 update_user_route = APIRouter()
+
+# Add session middleware with a secure key
+app.add_middleware(
+    SessionMiddleware,
+    secret_key="supersecurekey",  # Replace with your secret key
+    cookie_name="kokomo_session",  # Define the session cookie name
+)
 
 # Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
