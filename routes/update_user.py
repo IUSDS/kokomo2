@@ -32,8 +32,8 @@ async def update_user(
     last_name: str = Form(None, description="The new last name"),
     phone_number: str = Form(None, description="The new phone number"),
     address: str = Form(None, description="The new address"),
-    picture_url: str = Form(None, description="The new picture URL"),
-    file: UploadFile = None,  # Optional file upload
+    picture_url: str = None # Optional file upload
+    file: UploadFile = Form(None, description="The new picture URL"),  
 ):
     """
     Update user details. Fields left blank will retain their previous values.
