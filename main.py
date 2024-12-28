@@ -14,17 +14,12 @@ import boto3
 # Initialize FastAPI app
 app = FastAPI()
 
-def get_secret():
-    """Retrieve the secret from AWS Secrets Manager"""
-    client = boto3.client("secretsmanager", region_name="your-region")
-    secret = client.get_secret_value(SecretId="my-fastapi-secret-key")
-    return secret["SecretString"]
-
 # Load the secret key
-SECRET_KEY = get_secret()
+SECRET_KEY = "# Load the secret key"
 
 #SECRET_KEY FOR SESSION
-app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
+app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY, cookie_name="kokomo_session",  # Session cookie name
+                  )
 
 # Add CORS and Session middleware
 app.add_middleware(
