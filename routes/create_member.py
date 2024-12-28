@@ -26,8 +26,8 @@ async def add_member(
     email_id: EmailStr = Form(...),
     membership_type: str = Form(...),
     points: int = Form(...),
-    picture_url: str = Form(...),
-    file: UploadFile = None,  # Optional file upload
+    picture_url: str = None,  # Optional file upload
+    file: UploadFile = Form(...), None,  # Optional file upload
     is_deleted: bool = Form(default="N"),  # Default argument for deletion status
 ):
     try:
