@@ -49,6 +49,7 @@ async def validate_member(username: str = None, email_id: str = None):
 # Endpoint to add a new member
 @create_member_route.post("/add-member/")
 async def add_member(
+    request: Request,  # Correctly imported from FastAPI
     username: str = Form(...),
     password: str = Form(...),
     first_name: str = Form(...),
@@ -61,7 +62,7 @@ async def add_member(
     picture_url: str = Form(...),
     file: UploadFile = None,  # Optional file upload
     is_deleted: bool = Form(default="N"),
-    request: Request,  # Correctly imported from FastAPI
+    
     
 ):
     try:
