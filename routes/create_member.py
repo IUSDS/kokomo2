@@ -1,22 +1,27 @@
 from fastapi import APIRouter, HTTPException, Form, UploadFile, File, Request
 from pydantic import EmailStr
 from botocore.exceptions import ClientError
+from passlib.context import CryptContext
 from database import get_db_connection
 import boto3
 
+# Initialize router
 create_member_route = APIRouter()
+
+# Password hashing context
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # AWS S3 Configuration
 S3_BUCKET_NAME = "image-bucket-kokomo-yacht-club"
 S3_REGION = "ap-southeast-2"
-ACCESS_POINT_ALIAS = "first-kokomo-access-y1pahkde96c1mfspxs7cbiaro94hyaps2a-s3alias"
+ACCESS_POINT_ALIAS = "first-kokomo-access-y1pahkde96c1mfspxs7cbiaro94hyaps2a-s3alias",
 
-# Initialize S3 client (using EC2 IAM role or environment variables for credentials)
+# Initialize S3 client
 s3_client = boto3.client("s3", region_name=S3_REGION)
 
 @create_member_route.post("/add-member/")
 async def add_member(
-    request: Request,
+    request: Request,  # Correctly importing and using the Request object
     username: str = Form(...),
     password: str = Form(...),
     first_name: str = Form(...),
@@ -26,49 +31,46 @@ async def add_member(
     email_id: EmailStr = Form(...),
     membership_type: str = Form(...),
     points: int = Form(...),
-    picture_url: str = None,  # Optional file upload
-    file: UploadFile = Form(...), # Optional file upload
-    is_deleted: bool = Form(default="N"),  # Default argument for deletion status
+    file: UploadFile = File(...),  # Correctly set as a File parameter
 ):
+    """
+    Adds a new member to the database with optional profile picture upload.
+    """
     try:
-        # Establish database connection
         connection = get_db_connection()
         cursor = connection.cursor()
 
-        # Check if the username already exists
+        # Validate username and email
         cursor.execute("SELECT COUNT(*) AS count FROM Members WHERE username = %s", (username,))
-        username_exists = cursor.fetchone()["count"]
+        if cursor.fetchone()["count"] > 0:
+            raise HTTPException(status_code=400, detail="Username already exists, try another one.")
 
-        if username_exists > 0:
-            return {"status": "error", "message": "Username already exists, try something else"}
-
-        # Check if the email_id already exists
         cursor.execute("SELECT COUNT(*) AS count FROM Members WHERE email_id = %s", (email_id,))
-        email_exists = cursor.fetchone()["count"]
+        if cursor.fetchone()["count"] > 0:
+            raise HTTPException(status_code=400, detail="Account already exists for this email, try logging in.")
 
-        if email_exists > 0:
-            return {"status": "error", "message": "Account already exists for this email, try logging in"}
+        # Hash the password
+        hashed_password = pwd_context.hash(password)
 
-        # Upload the file to S3 if provided
-        picture_s3_url = None
+        # Handle file upload to S3
+        picture_url = None
         if file:
+            if file.content_type not in ["image/jpeg", "image/png"]:
+                raise HTTPException(status_code=400, detail="Invalid file type. Only JPEG and PNG are allowed.")
             file_content = await file.read()
             object_name = f"profile_pictures/{username}/{file.filename}"
             try:
                 s3_client.put_object(
-                    Bucket=S3_BUCKET_NAME,  # Correct bucket name usage
+                    Bucket=S3_BUCKET_NAME,
                     Key=object_name,
                     Body=file_content,
                     ContentType=file.content_type,
                 )
-                picture_s3_url = f"https://{ACCESS_POINT_ALIAS}.s3.{S3_REGION}.amazonaws.com/{object_name}"
+                picture_url = f"https://{ACCESS_POINT_ALIAS}.s3.{S3_REGION}.amazonaws.com/{object_name}"
             except ClientError as e:
                 raise HTTPException(status_code=500, detail=f"S3 Upload error: {e.response['Error']['Message']}")
 
-        # Determine final picture URL
-        picture_url = picture_s3_url if picture_s3_url else picture_url
-
-        # Insert the new member into the database
+        # Insert the member into the database
         query = """
         INSERT INTO Members (username, pass, first_name, last_name, phone_number, address,
                              email_id, membership_type, points, picture_url, is_deleted)
@@ -76,38 +78,20 @@ async def add_member(
         """
         cursor.execute(
             query,
-            (
-                username,
-                password,
-                first_name,
-                last_name,
-                phone_number,
-                address,
-                email_id,
-                membership_type,
-                points,
-                picture_url,
-                is_deleted,
-            ),
+            (username, hashed_password, first_name, last_name, phone_number, address, email_id, membership_type, points, picture_url),
         )
         connection.commit()
 
-        # Save data to session using Starlette's SessionMiddleware
-        if not hasattr(request, "session"):
-            raise HTTPException(status_code=500, detail="SessionMiddleware is not configured properly")
+        # Save user data to the session
+        session = request.session
+        session["username"] = username
+        session["email_id"] = email_id
+        session["picture_url"] = picture_url
 
-        request.session["username"] = username
-        request.session["email_id"] = email_id
-        request.session["picture_url"] = picture_url
-
-        return {
-            "status": "success",
-            "message": "Member added successfully",
-            "picture_url": picture_url,
-        }
+        return {"status": "success", "message": "Member added successfully", "picture_url": picture_url}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
     finally:
         if "cursor" in locals():
@@ -115,32 +99,33 @@ async def add_member(
         if "connection" in locals():
             connection.close()
 
-# Endpoint to validate username and email
+
 @create_member_route.get("/validate-member/")
 async def validate_member(username: str = None, email_id: str = None):
+    """
+    Validates if a username or email is already registered.
+    """
     try:
         connection = get_db_connection()
         cursor = connection.cursor()
 
-        # Check if username exists
         if username:
             cursor.execute("SELECT COUNT(*) AS count FROM Members WHERE username = %s", (username,))
             if cursor.fetchone()["count"] > 0:
-                return {"status": "error", "message": "Username already exists, try something else"}
+                raise HTTPException(status_code=400, detail="Username already exists.")
 
-        # Check if email exists
         if email_id:
             cursor.execute("SELECT COUNT(*) AS count FROM Members WHERE email_id = %s", (email_id,))
             if cursor.fetchone()["count"] > 0:
-                return {"status": "error", "message": "Account already exists for this email, try logging in"}
+                raise HTTPException(status_code=400, detail="Email is already registered.")
 
         return {"status": "success", "message": "Username and email are available"}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
     finally:
-        if 'cursor' in locals():
+        if "cursor" in locals():
             cursor.close()
-        if 'connection' in locals():
+        if "connection" in locals():
             connection.close()
