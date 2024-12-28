@@ -14,6 +14,7 @@ def hash_password(password: str) -> str:
 
 @update_user_route.put("/user/")
 async def update_user(
+    request: Request,  # Access session via Request
     username: str = Form(..., description="The username of the user to update"),
     password: str = Form(None, description="The new password"),
     first_name: str = Form(None, description="The new first name"),
@@ -21,7 +22,6 @@ async def update_user(
     phone_number: str = Form(None, description="The new phone number"),
     address: str = Form(None, description="The new address"),
     picture_url: str = Form(None, description="The new picture URL"),
-    request: Request,  # Access session via Request
 ):
     """
     Update user details. Fields left blank will retain their previous values.
