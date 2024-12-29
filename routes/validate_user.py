@@ -69,13 +69,13 @@ async def validate_user(user: User, request: Request, response: Response):
 
 
 @validate_user_route.get("/", response_model=UserResponse)
-async def get_user_details(username: None, request: Request):
+async def get_user_details(request: Request):
     """
     Retrieves user details and checks session validity using the `kokomo_session` cookie.
     """
     # Debugging: Log the received username
-    print(f"Received username: {username}")
-
+    #print(f"Received username: {username}")
+    username: None
     # Check session validity
     session = request.session
     session_username = session.get("username")
@@ -83,10 +83,10 @@ async def get_user_details(username: None, request: Request):
         raise HTTPException(status_code=401, detail="SESSION EXPIRED OR INVALID.")
 
     # Debugging: Log the session username
-    print(f"Session username: {session_username}")
+    #print(f"Session username: {session_username}")
 
-    #if session_username != username:
-        #raise HTTPException(status_code=403, detail="UNAUTHORIZED ACCESS.")
+    if session_username != username:
+        raise HTTPException(status_code=403, detail="UNAUTHORIZED ACCESS.")
 
     query = """
         SELECT member_id, CONCAT(first_name, ' ', last_name) AS full_name, 
