@@ -59,17 +59,17 @@ async def get_user_details(username: str, request: Request):
     # Check session validity
     session_username = request.session.get("username")
     if not session_username:
-        raise HTTPException(status_code=401, detail="Session expired or invalid.")
+        raise HTTPException(status_code=401, detail="SESSION EXPIRED OR INVALID.")
 
     # Ensure the session username matches the requested username
     if session_username != username:
-        raise HTTPException(status_code=403, detail="Unauthorized access.")
+        raise HTTPException(status_code=403, detail="UNAUTHORIZED ACCESS.")
 
     query = """
         SELECT member_id, CONCAT(first_name, ' ', last_name) AS full_name, 
                membership_type, points, picture_url, phone_number, address, email_id, username
         FROM Members
-        WHERE username = %s AND is_deleted = "N"
+        WHERE LOWER(username) = LOWER(%s) AND is_deleted = "N"
         LIMIT 1
     """
     connection = get_db_connection()
@@ -80,7 +80,7 @@ async def get_user_details(username: str, request: Request):
             result = cursor.fetchone()
 
             if not result:
-                raise HTTPException(status_code=404, detail="User not found.")
+                raise HTTPException(status_code=404, detail="USER NOT FOUND.")
 
             return {
                 "member_id": result["member_id"],
