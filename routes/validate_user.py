@@ -5,24 +5,69 @@ from models import User, UserResponse
 import pymysql
 from typing import Optional
 
-# Define models
 class User(BaseModel):
     USER: str
     password: str
 
-
 class UserResponse(BaseModel):
+    uSER: str
     member_id: int
     full_name: str
     membership_type: str
     points: int
-    picture_url: str
-    phone_number: str
+    picture_url: Optional[str]
+    address: set
     email_id: str
-    address: str
+    phone_number: int
 
-# Initialize router
 validate_user_route = APIRouter()
+
+@validate_user_route.post("/")
+async def validate_user(uSER:Response, request: Request, response: Response):
+    """
+    Validates the user credentials and manages session via cookies.
+    """
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            # Query to validate username and password
+            query = "SELECT pass, user_type FROM Members WHERE username = %s"
+            cursor.execute(query, (uSER.Response,))
+            result = cursor.fetchone()
+
+            if not result:
+                return {"status": "invalid username or password"}
+
+            stored_password = result["pass"].strip()
+            user_type = result["user_type"]
+
+            # Verify password
+            if stored_password != uSER.password.strip():
+                return {"status": "invalid password"}
+
+            # Save session details
+            session = request.session
+            session["username"] = uSER.USER
+            #request.session["username"] = user.USER
+            session["user_type"] = user_type
+
+            # Set additional session cookies if needed
+            response.set_cookie(key="username", value=uSER.USER, httponly=True)
+
+            # Return response based on user type
+            if user_type == "User":
+                return {"status": "success", "user_type": "user"}
+            elif user_type == "Admin":
+                return {"status": "success", "user_type": "admin"}
+            else:
+                return {"status": "error", "message": "Invalid user_type in database"}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+    finally:
+        connection.close()
+
 
 @validate_user_route.get("/", response_model=UserResponse)
 async def get_user_details(username: str, request: Request):
@@ -77,54 +122,6 @@ async def get_user_details(username: str, request: Request):
 
     except pymysql.Error as e:
         raise HTTPException(status_code=500, detail=f"Database query error: {e}")
-
-    finally:
-        connection.close()
-
-        
-
-@validate_user_route.post("/")
-async def validate_user(user: User, request: Request, response: Response):
-    """
-    Validates the user credentials and manages session via cookies.
-    """
-    connection = get_db_connection()
-    try:
-        with connection.cursor() as cursor:
-            # Query to validate username and password
-            query = "SELECT pass, user_type FROM Members WHERE username = %s"
-            cursor.execute(query, (user.USER,))
-            result = cursor.fetchone()
-
-            if not result:
-                return {"status": "invalid username or password"}
-
-            stored_password = result["pass"].strip()
-            user_type = result["user_type"]
-
-            # Verify password
-            if stored_password != user.password.strip():
-                return {"status": "invalid password"}
-
-            # Save session details
-            session = request.session
-            session["username"] = user.USER
-            #request.session["username"] = user.USER
-            session["user_type"] = user_type
-
-            # Set additional session cookies if needed
-            response.set_cookie(key="username", value=user.USER, httponly=True)
-
-            # Return response based on user type
-            if user_type == "User":
-                return {"status": "success", "user_type": "user"}
-            elif user_type == "Admin":
-                return {"status": "success", "user_type": "admin"}
-            else:
-                return {"status": "error", "message": "Invalid user_type in database"}
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
     finally:
         connection.close()
