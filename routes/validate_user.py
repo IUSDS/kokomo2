@@ -85,8 +85,8 @@ async def get_user_details(request: Request):
     # Debugging: Log the session username
     #print(f"Session username: {session_username}")
 
-    if session_username != username:
-        raise HTTPException(status_code=403, detail="UNAUTHORIZED ACCESS.")
+    #if session_username != username:
+        #raise HTTPException(status_code=403, detail="UNAUTHORIZED ACCESS.")
 
     query = """
         SELECT member_id, CONCAT(first_name, ' ', last_name) AS full_name, 
