@@ -6,7 +6,7 @@ import pymysql
 from typing import Optional
 
 class User(BaseModel):
-    USER: None  
+    USER: str 
     password: str
 
 class UserResponse(BaseModel):
