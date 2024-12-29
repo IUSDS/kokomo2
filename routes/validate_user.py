@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi import APIRouter, HTTPException, Request, Response, Depends
 from pydantic import BaseModel
 from database import get_db_connection
 import pymysql
@@ -19,13 +19,15 @@ class UserResponse(BaseModel):
     email_id: str
     address: str
 
+
 # Initialize router
 validate_user_route = APIRouter()
 
-@validate_user_route.post("/")
+
+@validate_user_route.post("/", tags=["Validate User"])
 async def validate_user(user: User, request: Request, response: Response):
     """
-    Validates the user credentials and manages session via cookies.
+    Validates the user credentials and saves session details via cookies.
     """
     connection = get_db_connection()
     try:
@@ -50,14 +52,14 @@ async def validate_user(user: User, request: Request, response: Response):
             session["username"] = user.USER
             session["user_type"] = user_type
 
-            # Set cookie for session tracking
+            # Set session cookie
             response.set_cookie(key="kokomo_session", value=user.USER, httponly=True)
 
             # Return response based on user type
             if user_type == "User":
-                return {"status": "SUCCESS", "user_type": "User"}
+                return {"status": "SUCCESS", "user_type": "USER"}
             elif user_type == "Admin":
-                return {"status": "SUCCESS", "user_type": "Admin"}
+                return {"status": "SUCCESS", "user_type": "ADMIN"}
             else:
                 return {"status": "ERROR", "message": "Invalid user_type in database"}
 
@@ -68,18 +70,18 @@ async def validate_user(user: User, request: Request, response: Response):
         connection.close()
 
 
-@validate_user_route.get("/", response_model=UserResponse)
+@validate_user_route.get("/", response_model=UserResponse, tags=["Validate User"])
 async def get_user_details(request: Request):
     """
-    Retrieves user details from the session and database.
+    Retrieves user details from session and database. This endpoint does not require parameters
+    and relies on session data set during the POST request.
     """
-    # Check session validity
+    # Retrieve username from session
     session = request.session
-    username = session.get("username")  # Retrieve username from session
+    username = session.get("username")
     if not username:
         raise HTTPException(status_code=401, detail="SESSION EXPIRED OR INVALID.")
-    
-    connection = get_db_connection()
+
     query = """
         SELECT member_id, CONCAT(first_name, ' ', last_name) AS full_name, 
                membership_type, points, picture_url, phone_number, address, email_id, username
@@ -87,6 +89,7 @@ async def get_user_details(request: Request):
         WHERE LOWER(username) = LOWER(%s) AND is_deleted = "N"
         LIMIT 1
     """
+    connection = get_db_connection()
 
     try:
         with connection.cursor() as cursor:
