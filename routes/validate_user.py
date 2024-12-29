@@ -30,8 +30,10 @@ async def validate_user(user: User, request: Request, response: Response):
                 return {"status": "invalid password"}
 
             # Save session details
-            request.session["username"] = user.USER
-            request.session["user_type"] = user_type
+            session = request.session
+            session["username"] = user.USER
+            #request.session["username"] = user.USER
+            session["user_type"] = user_type
 
             # Set additional session cookies if needed
             response.set_cookie(key="username", value=user.USER, httponly=True)
