@@ -1,65 +1,65 @@
 from fastapi import APIRouter, HTTPException, Request, Response
 from pydantic import BaseModel
 from database import get_db_connection
-from models import User, UserResponse
 import pymysql
-from typing import Optional
 
+# Define models
 class User(BaseModel):
     USER: str
     password: str
+
 
 class UserResponse(BaseModel):
     member_id: int
     full_name: str
     membership_type: str
     points: int
-    picture_url: Optional[str]
-    address: set
+    picture_url: str
+    phone_number: str
     email_id: str
-    phone_number: int
+    address: str
 
+# Initialize router
 validate_user_route = APIRouter()
 
 @validate_user_route.post("/")
 async def validate_user(user: User, request: Request, response: Response):
     """
-    Validates the user credentials and manages session via cookies.
+    Validates the user credentials and manages session using the `kokomo_session` cookie.
     """
     connection = get_db_connection()
     try:
         with connection.cursor() as cursor:
-            # Query to validate username and password
-            query = "SELECT pass, user_type FROM Members WHERE username = %s"
+            # Query to validate username
+            query = "SELECT pass, user_type FROM Members WHERE LOWER(username) = LOWER(%s)"
             cursor.execute(query, (user.USER,))
             result = cursor.fetchone()
 
             if not result:
-                return {"status": "invalid username or password"}
+                return {"status": "USER NOT FOUND"}
 
             stored_password = result["pass"].strip()
             user_type = result["user_type"]
 
             # Verify password
             if stored_password != user.password.strip():
-                return {"status": "invalid password"}
+                return {"status": "INVALID PASSWORD"}
 
             # Save session details
             session = request.session
             session["username"] = user.USER
-            #request.session["username"] = user.USER
             session["user_type"] = user_type
 
-            # Set additional session cookies if needed
-            response.set_cookie(key="username", value=user.USER, httponly=True)
+            # Set cookie for session tracking
+            response.set_cookie(key="kokomo_session", value=user.USER, httponly=True)
 
             # Return response based on user type
             if user_type == "User":
-                return {"status": "success", "user_type": "user"}
+                return {"status": "SUCCESS", "user_type": "USER"}
             elif user_type == "Admin":
-                return {"status": "success", "user_type": "admin"}
+                return {"status": "SUCCESS", "user_type": "ADMIN"}
             else:
-                return {"status": "error", "message": "Invalid user_type in database"}
+                return {"status": "ERROR", "message": "Invalid user_type in database"}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
@@ -71,10 +71,11 @@ async def validate_user(user: User, request: Request, response: Response):
 @validate_user_route.get("/", response_model=UserResponse)
 async def get_user_details(username: str, request: Request):
     """
-    Retrieves user details and checks session validity.
+    Retrieves user details and checks session validity using the `kokomo_session` cookie.
     """
     # Check session validity
-    session_username = request.session.get("username")
+    session = request.session  # Explicitly use session variable
+    session_username = session.get("username")
     if not session_username:
         raise HTTPException(status_code=401, detail="SESSION EXPIRED OR INVALID.")
 
