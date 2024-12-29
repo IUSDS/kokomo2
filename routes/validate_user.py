@@ -1,7 +1,9 @@
 from fastapi import APIRouter, HTTPException, Request, Response
 from pydantic import BaseModel
 from database import get_db_connection
+from models import User, UserResponse
 import pymysql
+from typing import Optional
 
 # Define models
 class User(BaseModel):
