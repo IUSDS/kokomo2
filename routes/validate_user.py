@@ -51,6 +51,7 @@ async def validate_user(user: User, request: Request, response: Response):
             session = request.session
             session["username"] = user.USER
             session["user_type"] = user_type
+            
 
             # Set session cookie
             response.set_cookie(key="kokomo_session", value=user.USER, httponly=True)
@@ -78,9 +79,9 @@ async def get_user_details(request: Request):
     """
     # Retrieve username from session
     session = request.session
-    username = session.get("username")
+    username = session.get(username)
     if not username:
-        raise HTTPException(status_code=401, detail="SESSION EXPIRED OR INVALID.")
+       raise HTTPException(status_code=401, detail="SESSION EXPIRED OR INVALID.")
 
     query = """
         SELECT member_id, CONCAT(first_name, ' ', last_name) AS full_name, 
