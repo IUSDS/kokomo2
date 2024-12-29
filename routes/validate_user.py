@@ -6,11 +6,10 @@ import pymysql
 from typing import Optional
 
 class User(BaseModel):
-    USER: str
+    USER: None  
     password: str
 
 class UserResponse(BaseModel):
-    uSER: str
     member_id: int
     full_name: str
     membership_type: str
@@ -23,7 +22,7 @@ class UserResponse(BaseModel):
 validate_user_route = APIRouter()
 
 @validate_user_route.post("/")
-async def validate_user(uSER:Response, request: Request, response: Response):
+async def validate_user(user: User, request: Request, response: Response):
     """
     Validates the user credentials and manages session via cookies.
     """
@@ -32,7 +31,7 @@ async def validate_user(uSER:Response, request: Request, response: Response):
         with connection.cursor() as cursor:
             # Query to validate username and password
             query = "SELECT pass, user_type FROM Members WHERE username = %s"
-            cursor.execute(query, (uSER.Response,))
+            cursor.execute(query, (user.USER,))
             result = cursor.fetchone()
 
             if not result:
@@ -42,17 +41,17 @@ async def validate_user(uSER:Response, request: Request, response: Response):
             user_type = result["user_type"]
 
             # Verify password
-            if stored_password != uSER.password.strip():
+            if stored_password != user.password.strip():
                 return {"status": "invalid password"}
 
             # Save session details
             session = request.session
-            session["username"] = uSER.USER
+            session["username"] = user.USER
             #request.session["username"] = user.USER
             session["user_type"] = user_type
 
             # Set additional session cookies if needed
-            response.set_cookie(key="username", value=uSER.USER, httponly=True)
+            response.set_cookie(key="username", value=user.USER, httponly=True)
 
             # Return response based on user type
             if user_type == "User":
@@ -70,7 +69,7 @@ async def validate_user(uSER:Response, request: Request, response: Response):
 
 
 @validate_user_route.get("/", response_model=UserResponse)
-async def get_user_details(username: str, request: Request):
+async def get_user_details(username: None, request: Request):
     """
     Retrieves user details and checks session validity using the `kokomo_session` cookie.
     """
@@ -86,8 +85,8 @@ async def get_user_details(username: str, request: Request):
     # Debugging: Log the session username
     print(f"Session username: {session_username}")
 
-    if session_username != username:
-        raise HTTPException(status_code=403, detail="UNAUTHORIZED ACCESS.")
+    #if session_username != username:
+        #raise HTTPException(status_code=403, detail="UNAUTHORIZED ACCESS.")
 
     query = """
         SELECT member_id, CONCAT(first_name, ' ', last_name) AS full_name, 
@@ -104,7 +103,7 @@ async def get_user_details(username: str, request: Request):
             result = cursor.fetchone()
 
             # Debugging: Log the query result
-            print(f"Query result: {result}")
+            #print(f"Query result: {result}")
 
             if not result:
                 raise HTTPException(status_code=404, detail="USER NOT FOUND.")
