@@ -90,7 +90,7 @@ async def get_user_details(request: Request):
 
     try:
         with connection.cursor() as cursor:
-            cursor.execute(query, (username,))
+            cursor.execute(query, (user.USER,))
             result = cursor.fetchone()
 
             if not result:
