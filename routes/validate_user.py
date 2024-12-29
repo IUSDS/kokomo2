@@ -78,7 +78,8 @@ async def get_user_details(request: Request):
     username = session.get("username")  # Retrieve username from session
     if not username:
         raise HTTPException(status_code=401, detail="SESSION EXPIRED OR INVALID.")
-
+    
+    connection = get_db_connection()
     query = """
         SELECT member_id, CONCAT(first_name, ' ', last_name) AS full_name, 
                membership_type, points, picture_url, phone_number, address, email_id, username
@@ -86,11 +87,10 @@ async def get_user_details(request: Request):
         WHERE LOWER(username) = LOWER(%s) AND is_deleted = "N"
         LIMIT 1
     """
-    connection = get_db_connection()
 
     try:
         with connection.cursor() as cursor:
-            cursor.execute(query, (user.USER,))
+            cursor.execute(query, (username,))
             result = cursor.fetchone()
 
             if not result:
