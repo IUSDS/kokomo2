@@ -1,11 +1,12 @@
 from fastapi import APIRouter, HTTPException, Request, Response, Depends
 from pydantic import BaseModel
-from database import get_db_connection
 import pymysql
+from database import get_db_connection
+from starlette.middleware.sessions import SessionMiddleware  # Ensure correct import
 
 # Define models
 class User(BaseModel):
-    USER: str
+    username: str
     password: str
 
 class UserResponse(BaseModel):
@@ -18,88 +19,84 @@ class UserResponse(BaseModel):
     email_id: str
     address: str
 
-
 # Initialize router
 validate_user_route = APIRouter()
 
-@validate_user_route.post("/", tags=["Validate User"])
-async def validate_user(user: User, request: Request, response: Response):
+@validate_user_route.post("/validate-user/")
+async def validate_user(username: str, password: str, response: Response):
     """
-    Validates the user credentials and saves session details via cookies.
+    Validates the user credentials against the database.
     """
     connection = get_db_connection()
     try:
-        with connection.cursor() as cursor:
-            # Query to validate username
+        with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+            # Prepare the query to fetch user credentials
             query = "SELECT pass, user_type FROM Members WHERE LOWER(username) = LOWER(%s)"
-            cursor.execute(query, (user.USER,))
-            result = cursor.fetchone()
-
-            if not result:
-                return {"status": "USER NOT FOUND"}
-            
-
-            stored_password = result["pass"].strip()
-            user_type = result["user_type"]
-
-            if stored_password != user.password.strip():
-                return {"status": "INVALID PASSWORD"}            
-
-            # Set session cookie
-            response.set_cookie(key="kokomo_session", value=user.USER, httponly=True)
-
-            # Save session details
-            session = request.session
-            session["username"] = user.USER
-            session["user_type"] = user_type
-            
-            # Set session cookie
-            response.set_cookie(key="kokomo_session", value=user.USER, httponly=True)
-
-            # Return response based on user type
-            if user_type == "User":
-                return {"status": "SUCCESS", "user_type": "USER"}
-                
-            elif user_type == "Admin":
-                return {"status": "SUCCESS", "user_type": "ADMIN"}
-                
-            else:
-                return {"status": "ERROR", "message": "Invalid user_type in database"}
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
-
-    finally:
-        connection.close()
-
-@validate_user_route.get("/", response_model=UserResponse, tags=["Validate User"])
-async def get_user_details(request: Request):
-    """
-    Retrieves user details from session and database. This endpoint does not require parameters
-    and relies on session data set during the POST request.
-    """
-    # Retrieve username from session
-    session = request.session
-    username = session.get(username)
-    if not username:
-       raise HTTPException(status_code=401, detail="SESSION EXPIRED OR INVALID.")
-
-    query = """
-        SELECT member_id, CONCAT(first_name, ' ', last_name) AS full_name, 
-               membership_type, points, picture_url, phone_number, address, email_id, username
-        FROM Members
-        WHERE LOWER(username) = LOWER(%s) AND is_deleted = "N"
-        LIMIT 1
-    """
-    connection = get_db_connection()
-
-    try:
-        with connection.cursor() as cursor:
             cursor.execute(query, (username,))
             result = cursor.fetchone()
 
+            # Debugging logs
+            print("Query executed:", query)
+            print("Query parameters:", username)
+            print("Result fetched:", result)
+
+            # Check if the user exists
             if not result:
-                raise HTTPException(status_code=404, detail="USER NOT FOUND.")
+                raise HTTPException(status_code=404, detail="User not found.")
+
+            # Check if the provided password matches
+            if result["pass"] != password:
+                raise HTTPException(status_code=401, detail="Invalid username or password.")
+
+            # Save session details if validation is successful using SessionMiddleware
+            # Setting session data for user, stored in request.session
+            response.set_cookie(key="kokomo_session", value=username, httponly=True)
+
+            return {
+                "status": "SUCCESS",
+                "user_type": result["user_type"],
+                "message": "User authenticated successfully.",
+            }
+
+    except pymysql.MySQLError as e:
+        # Catch and log any database-related errors
+        print("Database error:", str(e))
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    finally:
+        # Ensure the database connection is closed
+        connection.close()
+
+
+@validate_user_route.get("/current-user/")
+async def current_user(request: Request):
+    """
+    Retrieves the current user based on session.
+    """
+    kokomo_session = request.cookies.get("kokomo_session")
+    if not kokomo_session:
+        raise HTTPException(status_code=401, detail="Session expired or invalid.")
+    
+    print("Received kokomo_session:", kokomo_session)  # Debugging log
+
+    # Query database for user details based on kokomo_session
+    connection = get_db_connection()
+    try:
+        with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+            query = """
+                SELECT member_id, CONCAT(first_name, ' ', last_name) AS full_name,
+                       membership_type, points, picture_url, phone_number, address, email_id
+                FROM Members
+                WHERE LOWER(username) = LOWER(%s) AND is_deleted = "N"
+                LIMIT 1
+            """
+            cursor.execute(query, (kokomo_session,))
+            result = cursor.fetchone()
+            
+            # Log for debugging purpose
+            print(f"Query result: {result}")
+        
+            if not result:
+                raise HTTPException(status_code=401, detail="Session expired or invalid.")
 
             return {
                 "member_id": result["member_id"],
@@ -111,9 +108,18 @@ async def get_user_details(request: Request):
                 "email_id": result["email_id"],
                 "address": result["address"],
             }
-
-    except pymysql.Error as e:
-        raise HTTPException(status_code=500, detail=f"Database query error: {e}")
-
+    
+    except pymysql.MySQLError as e:
+        print("Database error:", str(e))
+        raise HTTPException(status_code=500, detail="Database error")
+    
     finally:
         connection.close()
+
+@validate_user_route.post("/logout/")
+async def logout(request: Request, response: Response):
+    """
+    Clears session data and logs the user out.
+    """
+    response.delete_cookie("kokomo_session")
+    return {"status": "SUCCESS", "message": "Logged out successfully"}
