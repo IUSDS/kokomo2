@@ -8,26 +8,6 @@ class User(BaseModel):
     USER: str
     password: str
 
-
-class UserResponse(BaseModel):
-    member_id: int
-    full_name: str
-    membership_type: str
-    points: int
-    picture_url: str
-    phone_number: str
-    email_id: str
-    address: str
-
-
-# Initialize router
-
-# Define models
-class User(BaseModel):
-    USER: str
-    password: str
-
-
 class UserResponse(BaseModel):
     member_id: int
     full_name: str
@@ -41,7 +21,6 @@ class UserResponse(BaseModel):
 
 # Initialize router
 validate_user_route = APIRouter()
-
 
 @validate_user_route.post("/", tags=["Validate User"])
 async def validate_user(user: User, request: Request, response: Response):
@@ -93,19 +72,6 @@ async def validate_user(user: User, request: Request, response: Response):
     finally:
         connection.close()
 
-
-@validate_user_route.get("/", response_model=UserResponse, tags=["Validate User"])
-async def get_user_details(request: Request):
-    """
-    Retrieves user details from session and database. This endpoint does not require parameters
-    and relies on session data set during the POST request.
-    """
-    # Retrieve username from session
-    
-    session = request.session
-    username = session.get(username)
-    if not username:
-       raise HTTPException(status_code=401, detail="SESSION EXPIRED OR INVALID.")
 @validate_user_route.get("/", response_model=UserResponse, tags=["Validate User"])
 async def get_user_details(request: Request):
     """
