@@ -21,6 +21,25 @@ class UserResponse(BaseModel):
 
 
 # Initialize router
+
+# Define models
+class User(BaseModel):
+    USER: str
+    password: str
+
+
+class UserResponse(BaseModel):
+    member_id: int
+    full_name: str
+    membership_type: str
+    points: int
+    picture_url: str
+    phone_number: str
+    email_id: str
+    address: str
+
+
+# Initialize router
 validate_user_route = APIRouter()
 
 
@@ -39,28 +58,32 @@ async def validate_user(user: User, request: Request, response: Response):
 
             if not result:
                 return {"status": "USER NOT FOUND"}
+            
 
             stored_password = result["pass"].strip()
             user_type = result["user_type"]
 
-            # Verify password
             if stored_password != user.password.strip():
-                return {"status": "INVALID PASSWORD"}
+                return {"status": "INVALID PASSWORD"}            
+
+            # Set session cookie
+            response.set_cookie(key="kokomo_session", value=user.USER, httponly=True)
 
             # Save session details
             session = request.session
             session["username"] = user.USER
             session["user_type"] = user_type
             
-
             # Set session cookie
             response.set_cookie(key="kokomo_session", value=user.USER, httponly=True)
 
             # Return response based on user type
             if user_type == "User":
                 return {"status": "SUCCESS", "user_type": "USER"}
+                
             elif user_type == "Admin":
                 return {"status": "SUCCESS", "user_type": "ADMIN"}
+                
             else:
                 return {"status": "ERROR", "message": "Invalid user_type in database"}
 
@@ -71,6 +94,18 @@ async def validate_user(user: User, request: Request, response: Response):
         connection.close()
 
 
+@validate_user_route.get("/", response_model=UserResponse, tags=["Validate User"])
+async def get_user_details(request: Request):
+    """
+    Retrieves user details from session and database. This endpoint does not require parameters
+    and relies on session data set during the POST request.
+    """
+    # Retrieve username from session
+    
+    session = request.session
+    username = session.get(username)
+    if not username:
+       raise HTTPException(status_code=401, detail="SESSION EXPIRED OR INVALID.")
 @validate_user_route.get("/", response_model=UserResponse, tags=["Validate User"])
 async def get_user_details(request: Request):
     """
