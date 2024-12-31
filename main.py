@@ -42,7 +42,7 @@ app.include_router(update_points_route, prefix="/update", tags=["Update Points"]
 
 # Health check endpoint
 @app.get("/health", tags=["Health"])
-async def health_check():
+async def health_check():                                                                           
     """Health check endpoint"""
     return {
         "status": "healthy",
