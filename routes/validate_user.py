@@ -31,7 +31,11 @@ async def validate_user(username: str, password: str, response: Response):
     try:
         with connection.cursor(pymysql.cursors.DictCursor) as cursor:
             # Prepare the query to fetch user credentials
-            query = "SELECT pass, user_type FROM Members WHERE LOWER(username) = LOWER(%s)"
+            query = """
+                SELECT pass, user_type 
+                FROM Members WHERE LOWER(username) = LOWER(%s) 
+                AND is_deleted = "N"
+            """
             cursor.execute(query, (username,))
             result = cursor.fetchone()
 
