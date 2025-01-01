@@ -14,7 +14,7 @@ from starlette.middleware.sessions import SessionMiddleware
 app = FastAPI()
 
 # Load the secret key
-SECRET_KEY = "key_here"
+SECRET_KEY = "3003d57aaae374611f2cd2897ec6b92345d195f7cce32a452ddcf59dfa5565fd"
 
 # Add SessionMiddleware with customized cookie name
 app.add_middleware(
