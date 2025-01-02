@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Form, UploadFile, File
-from passlib.context import CryptContext
+#from passlib.context import CryptContext
 from database import get_db_connection
 import boto3
 from botocore.exceptions import ClientError
@@ -8,7 +8,7 @@ from botocore.exceptions import ClientError
 update_user_route = APIRouter()
 
 # Password hashing context
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+#pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # AWS S3 Configuration
 S3_BUCKET_NAME = "image-bucket-kokomo-yacht-club"
@@ -19,8 +19,8 @@ ACCESS_POINT_ALIAS = "first-kokomo-access-y1pahkde96c1mfspxs7cbiaro94hyaps2a-s3a
 s3_client = boto3.client("s3", region_name=S3_REGION)
 
 # Function to hash passwords
-def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+#def hash_password(password: str) -> str:
+    #return pwd_context.hash(password)
 
 @update_user_route.put("/update/user/")
 async def update_user(
@@ -78,7 +78,7 @@ async def update_user(
                 raise HTTPException(status_code=404, detail="User not found.")
 
             # Determine values to update
-            updated_password = hash_password(password) if password else existing_data["pass"]
+            updated_password = password or existing_data["pass"]
             updated_first_name = first_name or existing_data["first_name"]
             updated_last_name = last_name or existing_data["last_name"]
             updated_phone_number = phone_number or existing_data["phone_number"]

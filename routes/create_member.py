@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Form, UploadFile, File, Request
 from pydantic import EmailStr
 from botocore.exceptions import ClientError
-from passlib.context import CryptContext
+#from passlib.context import CryptContext
 from database import get_db_connection
 import boto3
 
@@ -9,7 +9,7 @@ import boto3
 create_member_route = APIRouter()
 
 # Password hashing context
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+#pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # AWS S3 Configuration
 S3_BUCKET_NAME = "image-bucket-kokomo-yacht-club"
@@ -50,7 +50,7 @@ async def add_member(
             raise HTTPException(status_code=400, detail="Account already exists for this email, try logging in.")
 
         # Hash the password
-        hashed_password = pwd_context.hash(password)
+        #hashed_password = pwd_context.hash(password)
 
         # Handle file upload to S3
         picture_url = None
@@ -73,12 +73,12 @@ async def add_member(
         # Insert the member into the database
         query = """
         INSERT INTO Members (username, pass, first_name, last_name, phone_number, address,
-                             email_id, membership_type, points, picture_url, is_deleted)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, "N")
+                             email_id, membership_type, points, picture_url, user_type, is_deleted)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, "User", "N")
         """
         cursor.execute(
             query,
-            (username, hashed_password, first_name, last_name, phone_number, address, email_id, membership_type, points, picture_url),
+            (username, password, first_name, last_name, phone_number, address, email_id, membership_type, points, picture_url),
         )
         connection.commit()
 

@@ -3,6 +3,7 @@ from pydantic import BaseModel
 import pymysql
 from database import get_db_connection
 from starlette.middleware.sessions import SessionMiddleware  # Ensure correct import
+#import bcrypt
 
 # Define models
 class User(BaseModel):
@@ -31,7 +32,11 @@ async def validate_user(username: str, password: str, response: Response):
     try:
         with connection.cursor(pymysql.cursors.DictCursor) as cursor:
             # Prepare the query to fetch user credentials
-            query = "SELECT pass, user_type FROM Members WHERE LOWER(username) = LOWER(%s)"
+            query = """
+                SELECT pass, user_type 
+                FROM Members WHERE LOWER(username) = LOWER(%s) 
+                AND is_deleted = "N"
+            """
             cursor.execute(query, (username,))
             result = cursor.fetchone()
 
@@ -43,7 +48,7 @@ async def validate_user(username: str, password: str, response: Response):
             # Check if the user exists
             if not result:
                 raise HTTPException(status_code=404, detail="User not found.")
-
+            #if bcrypt.checkpw(password.encode('utf-8'),result["pass"]):
             # Check if the provided password matches
             if result["pass"] != password:
                 raise HTTPException(status_code=401, detail="Invalid username or password.")
@@ -115,6 +120,14 @@ async def current_user(request: Request):
     
     finally:
         connection.close()
+
+@validate_user_route.post("/logout/")
+async def logout(request: Request, response: Response):
+    """
+    Clears session data and logs the user out.
+    """
+    response.delete_cookie("kokomo_session")
+    return {"status": "SUCCESS", "message": "Logged out successfully"}
 
 @validate_user_route.post("/logout/")
 async def logout(request: Request, response: Response):
