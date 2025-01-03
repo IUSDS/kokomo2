@@ -66,7 +66,10 @@ async def get_user_details(
         # Ensure correct data types
         try:
             result["member_id"] = int(result["member_id"])
-            result["points"] = int(result["points"])
+            result["points"] = int(result["points"])# Clean the URL by removing unwanted characters
+            raw_picture_url = result["picture_url"]
+            result["picture_url"] = raw_picture_url.replace("('", "").replace("',)", "")
+            print("Cleaned Picture URL:", result["picture_url"])
         except (ValueError, TypeError) as e:
             raise HTTPException(
                 status_code=500, 
