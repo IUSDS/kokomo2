@@ -1,6 +1,8 @@
 from fastapi import APIRouter, HTTPException, Query, Depends
 from pydantic import BaseModel
 from database import get_db_connection
+from pymysql.cursors import DictCursor
+
 
 # Initialize the router
 user_details_route = APIRouter()
@@ -21,20 +23,15 @@ async def get_user_details(
     email: str = Query(None), 
     username: str = Query(None)
 ):
-    """
-    Fetch user details based on email or username.
-    """
-    # Ensure at least one parameter is provided
     if not email and not username:
         raise HTTPException(
             status_code=400, 
             detail="Provide at least 'email' or 'username' to fetch details."
         )
 
-    # Establish database connection
-    connection = get_db_connection()
+    connection = None
+    cursor = None
 
-    # Define the query
     query = """
         SELECT 
             member_id, 
@@ -55,15 +52,27 @@ async def get_user_details(
     params = (email, username)
 
     try:
-        cursor = connection.cursor(dictionary=True)
+        connection = get_db_connection()
+        cursor = connection.cursor(DictCursor)
         cursor.execute(query, params)
         result = cursor.fetchone()
 
-        # Handle user not found
         if not result:
             raise HTTPException(status_code=404, detail="User not found.")
 
-        # Return formatted user details
+        # Debugging: Print raw result
+        print("Query Result:", result)
+
+        # Ensure correct data types
+        try:
+            result["member_id"] = int(result["member_id"])
+            result["points"] = int(result["points"])
+        except (ValueError, TypeError) as e:
+            raise HTTPException(
+                status_code=500, 
+                detail=f"Data type error for 'member_id' or 'points': {str(e)}"
+            )
+
         return {
             "member_id": result["member_id"],
             "full_name": result["full_name"],
@@ -76,12 +85,10 @@ async def get_user_details(
         }
 
     except Exception as e:
-        # Handle database query errors
         raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
 
     finally:
-        # Ensure resources are closed properly
-        if "cursor" in locals():
+        if cursor:
             cursor.close()
-        if "connection" in locals():
+        if connection:
             connection.close()
