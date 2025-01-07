@@ -3,9 +3,12 @@ from pydantic import BaseModel
 from database import get_db_connection
 from pymysql.cursors import DictCursor
 
-
 # Initialize the router
 user_details_route = APIRouter()
+
+# AWS S3 Configuration
+S3_BUCKET_NAME = "image-bucket-kokomo-yacht-club"
+S3_REGION = "ap-southeast-2"
 
 # Define the UserResponse model
 class UserResponse(BaseModel):
@@ -66,10 +69,15 @@ async def get_user_details(
         # Ensure correct data types
         try:
             result["member_id"] = int(result["member_id"])
-            result["points"] = int(result["points"])# Clean the URL by removing unwanted characters
-            raw_picture_url = result["picture_url"]
-            result["picture_url"] = raw_picture_url.replace("('", "").replace("',)", "")
-            print("Cleaned Picture URL:", result["picture_url"])
+            result["points"] = int(result["points"])
+
+            # Get the image name from the DB
+            picture_url = result["picture_url"]
+            image_name = picture_url.split("/")[-1]
+
+            result["picture_url"] = "https://" + S3_BUCKET_NAME + ".s3." + S3_REGION + ".amazonaws.com/profile_pictures/" + username + "/" + image_name
+            print("Processed Picture URL:", result["picture_url"])
+
         except (ValueError, TypeError) as e:
             raise HTTPException(
                 status_code=500, 
