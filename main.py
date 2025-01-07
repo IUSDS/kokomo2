@@ -9,6 +9,7 @@ from routes.delete_user import delete_user_route
 from routes.update_user import update_user_route
 from routes.add_points import update_points_route
 from routes.user_detail import user_details_route
+from routes.webhooks_FH import webhook_route
 from starlette.middleware.sessions import SessionMiddleware 
 
 # Initialize FastAPI app
@@ -43,6 +44,7 @@ app.include_router(update_membership_route, prefix="/update", tags=["Update Memb
 app.include_router(update_user_route, prefix="/update", tags=["Update User"])
 app.include_router(delete_user_route, prefix="/update", tags=["Delete User"])
 app.include_router(user_details_route, prefix="/get", tags=["User detail"])
+app.include_router(webhook_route, prefix="/webhook", tags=["Webhook"])
 
 # Health check endpoint
 @app.get("/health", tags=["Health"])
