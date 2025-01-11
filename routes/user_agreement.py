@@ -13,9 +13,9 @@ ACH_PATH = "ach_filled/"
 s3_client = boto3.client("s3")
 
 # Define router
-forms_route = APIRouter()
+user_agreement_route = APIRouter()
 
-@forms_route.post("/upload-documents/")
+@user_agreement_route.post("/upload-documents/")
 async def upload_documents(
     request: Request,
     agreement_filled: UploadFile = None,
@@ -113,7 +113,7 @@ async def upload_documents(
         connection.close()
         
 # Health check endpoint
-@forms_route.get("/re", tags=["re"])
+@user_agreement_route.get("/re", tags=["re"])
 async def re():                                                                           
     """Health check endpoint"""
     return {

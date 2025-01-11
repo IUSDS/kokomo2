@@ -12,7 +12,7 @@ from routes.user_detail import user_details_route
 from routes.webhooks_FH import webhook_route
 from routes.visitors import visitors_route
 from routes.forgotpass import forgot_password_route
-from routes.forms import forms_route
+from routes.user_agreement import user_agreement_route
 
 from starlette.middleware.sessions import SessionMiddleware 
 
@@ -51,7 +51,7 @@ app.include_router(user_details_route, prefix="/get", tags=["User detail"])
 app.include_router(webhook_route, prefix="/webhook", tags=["Webhook"])
 app.include_router(visitors_route, prefix="/vistors", tags=["Visitors"])
 app.include_router(forgot_password_route, prefix="/forgot", tags=["Forgot"])
-app.include_router(forms_route, prefix="/forms", tags=["Forms"])
+app.include_router(user_agreement_route, prefix="/user_agreement", tags=["User Agreement"])
 
 # Health check endpoint
 @app.get("/health", tags=["Health"])
