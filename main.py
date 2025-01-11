@@ -10,6 +10,10 @@ from routes.update_user import update_user_route
 from routes.add_points import update_points_route
 from routes.user_detail import user_details_route
 from routes.webhooks_FH import webhook_route
+from routes.visitors import visitors_route
+from routes.forgotpass import forgot_password_route
+from routes.forms import forms_route
+
 from starlette.middleware.sessions import SessionMiddleware 
 
 # Initialize FastAPI app
@@ -45,6 +49,9 @@ app.include_router(update_user_route, prefix="/update", tags=["Update User"])
 app.include_router(delete_user_route, prefix="/update", tags=["Delete User"])
 app.include_router(user_details_route, prefix="/get", tags=["User detail"])
 app.include_router(webhook_route, prefix="/webhook", tags=["Webhook"])
+app.include_router(visitors_route, prefix="/vistors", tags=["Visitors"])
+app.include_router(forgot_password_route, prefix="/forgot", tags=["Forgot"])
+app.include_router(forms_route, prefix="/forms", tags=["Forms"])
 
 # Health check endpoint
 @app.get("/health", tags=["Health"])
@@ -54,3 +61,8 @@ async def health_check():
         "status": "healthy",
         "message": "Service is running normally"
     }
+    
+if __name__ == "__main__":
+    import uvicorn
+    # Run the application with uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=80)
