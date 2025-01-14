@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, APIRouter
 from pydantic import BaseModel, EmailStr
 from database import get_db_connection
+import boto3
 
 visitors_route = APIRouter()
 
@@ -61,3 +62,22 @@ async def add_visitor(request: VisitorRequest):
     finally:
         connection.close()
     
+# API to generate pre-signed url for pdf
+@visitors_route.get("/get-pdf")
+async def get_pdf():
+    s3_client = boto3.client('s3', region_name='ap-southeast-2')
+    bucket_name = "image-bucket-kokomo-yacht-club"
+    object_key = "pdfs/KokomoYachtClubBrochure8-24.pdf"
+
+    try:
+        presigned_url = s3_client.generate_presigned_url(
+            ClientMethod='get_object',
+            Params={
+                'Bucket': bucket_name,
+                'Key': object_key
+            },
+            ExpiresIn=3600
+        )
+        return {"url": presigned_url}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
