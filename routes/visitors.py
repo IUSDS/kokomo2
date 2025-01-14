@@ -67,7 +67,7 @@ async def add_visitor(request: VisitorRequest):
 async def get_pdf():
     s3_client = boto3.client('s3', region_name='ap-southeast-2')
     bucket_name = "image-bucket-kokomo-yacht-club"
-    object_key = "pdfs/KokomoYachtClubBrochure8-24.pdf"
+    object_key = "pdfs/KokomoYachtClubBrochure8-24_compressed.pdf"
 
     try:
         presigned_url = s3_client.generate_presigned_url(
