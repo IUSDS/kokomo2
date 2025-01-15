@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles  # Import for serving static files
 from routes.validate_user import validate_user_route
 from routes.create_member import create_member_route
 from routes.get_points import get_points_route
@@ -14,7 +15,7 @@ from routes.visitors import visitors_route
 from routes.forgotpass import forgot_password_route
 from routes.user_agreement import user_agreement_route
 
-from starlette.middleware.sessions import SessionMiddleware 
+from starlette.middleware.sessions import SessionMiddleware
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -26,7 +27,7 @@ SECRET_KEY = "3003d57aaae374611f2cd2897ec6b92345d195f7cce32a452ddcf59dfa5565fd"
 app.add_middleware(
     SessionMiddleware,
     secret_key=SECRET_KEY,
-    session_cookie="kokomo_session"  
+    session_cookie="kokomo_session"
 )
 
 # Add CORS middleware
@@ -37,6 +38,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount React static files
+app.mount("/", StaticFiles(directory="dist", html=True), name="static")
 
 # Include Routes
 app.include_router(validate_user_route, prefix="/validate-user", tags=["Validate User"])
@@ -61,7 +65,7 @@ async def health_check():
         "status": "healthy",
         "message": "Service is running normally"
     }
-    
+
 if __name__ == "__main__":
     import uvicorn
     # Run the application with uvicorn
