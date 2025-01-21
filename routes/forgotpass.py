@@ -21,32 +21,34 @@ class ResetPasswordRequest(BaseModel):
 
 # Send reset password email
 def send_reset_email(email: str, token: str):
-    reset_link = f"https://api.kokomoyachtclub.vip/reset-password?token={token}"
+    reset_link = f"https://{api-here}/reset-password?token={token}"
 
     subject = "Password Reset Request"
     body_text = f"""Dear User,
 
-        You have requested to reset your password. Click the link below to reset your password:
-        {reset_link}
+        We received a request to reset your password. To proceed, please click the link below:
+        Reset Password: {reset_link}
 
-        If you didn't request this, please ignore this email.
-
+        This link is valid for 30 minutes. If you didn’t request a password reset, please disregard this email.
+        For assistance, feel free to reach out to our support team.
+        
         Best regards,
+        
         Kokomo Yacht Club Team
         """
     print(body_text)
-    body_html = f"""
-    <html>
-    <body>
-        <p>Dear User,</p>
-        <p>You have requested to reset your password. Click the link below to reset your password:</p>
-        <a href="{reset_link}">{reset_link}</a>
-        <p>If you didn't request this, please ignore this email.</p>
-        <p>Best regards,<br>Kokomo Yacht Club Team</p>
-    </body>
-    </html>
-    """
-    print(body_html)
+    # body_html = f"""
+    # <html>
+    # <body>
+    #     <p>Dear User,</p>
+    #     <p>You have requested to reset your password. Click the link below to reset your password:</p>
+    #     <a href="{reset_link}">{reset_link}</a>
+    #     <p>If you didn't request this, please ignore this email.</p>
+    #     <p>Best regards,<br>Kokomo Yacht Club Team</p>
+    # </body>
+    # </html>
+    # """
+    # print(body_html)
 
     # SMTP configuration
     sender_email = "info@kokomoyachtclub.vip"
@@ -64,7 +66,7 @@ def send_reset_email(email: str, token: str):
 
         # Add plain text and HTML parts
         message.attach(MIMEText(body_text, "plain"))
-        message.attach(MIMEText(body_html, "html"))
+        #message.attach(MIMEText(body_html, "html"))
 
         # Connect to SMTP server
         with smtplib.SMTP(smtp_host, smtp_port) as server:
@@ -125,7 +127,7 @@ def reset_password(request: ResetPasswordRequest):
                 raise HTTPException(status_code=404, detail="Invalid or expired token.")
 
             # Check token expiry
-            if datetime.utcnow() > token_data["expiry_time"]:
+            if datetime.datetime() > token_data["expiry_time"]:
                 raise HTTPException(status_code=400, detail="Token has expired.")
 
             # Update the user's password
