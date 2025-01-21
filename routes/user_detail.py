@@ -17,9 +17,10 @@ class UserResponse(BaseModel):
     membership_type: str
     points: int
     picture_url: str
-    phone_number: str
+    phone_number: int
     email_id: str
     address: str
+    emergency_contact: int
 
 @user_details_route.get("/user-details/", response_model=UserResponse)
 async def get_user_details(
@@ -44,7 +45,8 @@ async def get_user_details(
             picture_url, 
             phone_number, 
             email_id, 
-            address
+            address,
+            emergency_contact
         FROM 
             Members
         WHERE 
@@ -70,6 +72,7 @@ async def get_user_details(
         try:
             result["member_id"] = int(result["member_id"])
             result["points"] = int(result["points"])
+            result["emergency_contact"] = int(result["emergency_contact"])
 
             # Get the image name from the DB
             picture_url = result["picture_url"]
@@ -93,6 +96,7 @@ async def get_user_details(
             "phone_number": result["phone_number"],
             "email_id": result["email_id"],
             "address": result["address"],
+            "emergency_contact": result["emergency_contact"],
         }
 
     except Exception as e:

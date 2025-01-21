@@ -1,7 +1,9 @@
 from fastapi import FastAPI, HTTPException, Depends, Form, APIRouter
 from pydantic import BaseModel, EmailStr
 from database import get_db_connection
-from datetime import datetime, timedelta
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
 import secrets
 import smtplib
 from datetime import datetime, timedelta
@@ -19,33 +21,59 @@ class ResetPasswordRequest(BaseModel):
 
 # Send reset password email
 def send_reset_email(email: str, token: str):
-    reset_link = f"http://127.0.0.1:8000/reset-password?token={token}"
-    
+    reset_link = f"https://api.kokomoyachtclub.vip/reset-password?token={token}"
+
     subject = "Password Reset Request"
-    body = f"""Dear User,
+    body_text = f"""Dear User,
 
-    You have requested to reset your password. Click the link below to reset your password:
-    {reset_link}
+        You have requested to reset your password. Click the link below to reset your password:
+        {reset_link}
 
-    If you didn't request this, please ignore this email.
+        If you didn't request this, please ignore this email.
 
-    Best regards,
-    Kokomo Yacht Club Team
+        Best regards,
+        Kokomo Yacht Club Team
+        """
+    print(body_text)
+    body_html = f"""
+    <html>
+    <body>
+        <p>Dear User,</p>
+        <p>You have requested to reset your password. Click the link below to reset your password:</p>
+        <a href="{reset_link}">{reset_link}</a>
+        <p>If you didn't request this, please ignore this email.</p>
+        <p>Best regards,<br>Kokomo Yacht Club Team</p>
+    </body>
+    </html>
     """
-    message = f"Subject: {subject}\n\n{body}"
+    print(body_html)
 
-    # Replace these with your email configuration
-    sender_email = "kokomocharters@icloud.com"
-    sender_password = "your-email-password"
-    smtp_server = "smtp.gmail.com"
-    smtp_port = 587
-
+    # SMTP configuration
+    sender_email = "info@kokomoyachtclub.vip"
+    smtp_host = "email-smtp.ap-southeast-2.amazonaws.com"
+    smtp_port = 587  # Use port 587 for STARTTLS
+    smtp_username = "AKIAXKPUZZCOOVVEAYFO"  # Replace with your SMTP username
+    smtp_password = "BHKOxcPTOlHVjTYDBOTOsVN5wRN7fNiTHanieVM4a5i1"  # Replace with your SMTP password
+    print("Parsed")
     try:
-        with smtplib.SMTP(smtp_server, smtp_port) as server:
-            server.starttls()
-            server.login(sender_email, sender_password)
-            server.sendmail(sender_email, email, message)
-            print(f"Password reset email sent to {email}.")
+        # Create the email content
+        message = MIMEMultipart("alternative")
+        message["Subject"] = subject
+        message["From"] = sender_email
+        message["To"] = email
+
+        # Add plain text and HTML parts
+        message.attach(MIMEText(body_text, "plain"))
+        message.attach(MIMEText(body_html, "html"))
+
+        # Connect to SMTP server
+        with smtplib.SMTP(smtp_host, smtp_port) as server:
+            server.starttls()  # Upgrade to secure connection
+            server.login(smtp_username, smtp_password)
+            server.sendmail(sender_email, email, message.as_string())
+
+        print(f"Password reset email sent to {email}.")
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
 
@@ -54,31 +82,28 @@ def send_reset_email(email: str, token: str):
 def forgot_password(email: str = Form(...)):
     # Generate a secure token
     token = secrets.token_hex(16)  # Generates a 32-character hexadecimal string
-    expiry_time = datetime.utcnow() + timedelta(hours=1)  # Token valid for 1 hour
-
+    expiry_time = datetime.utcnow() + timedelta(hours=0.5)  # Token valid for 30 mins
+    print("Right before DB")
     # Check if the email exists in the database
     connection = get_db_connection()
     try:
         with connection.cursor() as cursor:
             # Check if email exists in the database
-            cursor.execute("SELECT email FROM visitors WHERE email = %s", (request.email,))
+            cursor.execute("SELECT email_id FROM Members WHERE email_id = %s", (email,))
             user = cursor.fetchone()
+            print(user)
             if not user:
                 raise HTTPException(status_code=404, detail="Email not found.")
-
-            # Generate a secure token
-            token = secrets.token_hex(16)
-            expiry_time = datetime.utcnow() + timedelta(hours=1)
 
             # Store the token in the database
             cursor.execute(
                 "INSERT INTO password_reset_tokens (email, token, expiry_time) VALUES (%s, %s, %s)",
-                (request.email, token, expiry_time),
+                (email, token, expiry_time),
             )
             connection.commit()
-
+            print("Right after DB")
             # Send the reset email
-            send_reset_email(request.email, token)
+            send_reset_email(email, token)
 
         return {"message": "Password reset email sent."}
     finally:
@@ -105,7 +130,7 @@ def reset_password(request: ResetPasswordRequest):
 
             # Update the user's password
             cursor.execute(
-                "UPDATE visitors SET password = %s WHERE email = %s",
+                "UPDATE Members SET pass = %s WHERE email_id = %s",
                 (request.new_password, token_data["email"]),
             )
             connection.commit()

@@ -6,3 +6,4 @@ passlib[bcrypt]
 boto3
 python-multipart
 starlette
+sqlalchemy

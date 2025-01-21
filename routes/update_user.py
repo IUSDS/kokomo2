@@ -28,30 +28,29 @@ async def update_user(
     password: str = Form(None, description="The new password"),
     first_name: str = Form(None, description="The new first name"),
     last_name: str = Form(None, description="The new last name"),
-    phone_number: str = Form(None, description="The new phone number"),
+    phone_number: int = Form(None, description="The new phone number"),
     address: str = Form(None, description="The new address"),
     file: UploadFile = File(None, description="The new profile picture"),
+    emergency_contact: int = Form(None, description="Emergency Contact"),
 ):
+    connection = get_db_connection()
     """
     Update user details. Fields left blank will retain their previous values.
     """
     # SQL to fetch existing values
     fetch_query = """
-        SELECT pass, first_name, last_name, phone_number, address, picture_url
+        SELECT pass, first_name, last_name, phone_number, address, picture_url, emergency_contact
         FROM Members
         WHERE username = %s AND is_deleted = "N"
     """
-
+    print(fetch_query)
     # SQL to update values
     update_query = """
         UPDATE Members
         SET pass = %s, first_name = %s, last_name = %s, 
-            phone_number = %s, address = %s, picture_url = %s
+            phone_number = %s, address = %s, picture_url = %s, emergency_contact = %s
         WHERE username = %s AND is_deleted = "N"
     """
-
-    connection = get_db_connection()
-    
     # Upload the file to S3 if provided
     picture_s3_url = None
     if file:
@@ -64,7 +63,10 @@ async def update_user(
                 Body=file_content,
                 ContentType=file.content_type,
             )
-            picture_s3_url = f"https://{ACCESS_POINT_ALIAS}.s3.{S3_REGION}.amazonaws.com/{object_name}"
+            #picture_url = f"https://{ACCESS_POINT_ALIAS}.s3.{S3_REGION}.amazonaws.com/{object_name}"
+            picture_s3_url = f"https://{S3_BUCKET_NAME}.s3.{S3_REGION}.amazonaws.com/{object_name}"
+
+            print(picture_s3_url)
         except ClientError as e:
             raise HTTPException(status_code=500, detail=f"S3 Upload error: {e.response['Error']['Message']}")
 
@@ -84,7 +86,8 @@ async def update_user(
             updated_phone_number = phone_number or existing_data["phone_number"]
             updated_address = address or existing_data["address"]
             updated_picture_url = picture_s3_url or existing_data["picture_url"]
-
+            updated_ec = emergency_contact or existing_data["emergency_contact"]
+            
             # Execute update query
             cursor.execute(
                 update_query,
@@ -95,6 +98,7 @@ async def update_user(
                     updated_phone_number,
                     updated_address,
                     updated_picture_url,
+                    updated_ec,
                     username,
                 ),
             )
@@ -111,6 +115,7 @@ async def update_user(
                     "phone_number": updated_phone_number,
                     "address": updated_address,
                     "picture_url": updated_picture_url,
+                    "emergency_contact": updated_ec,
                 },
             }
 
