@@ -26,8 +26,8 @@ security = HTTPBasic()
 
 # A simple function to verify the credentials (this could be more complex in production)
 def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)):
-    correct_username = "Admin"
-    correct_password = "Iuds@4321"
+    correct_username = ""
+    correct_password = ""
 
     if credentials.username != correct_username or credentials.password != correct_password:
         raise HTTPException(status_code=401, detail="Incorrect credentials")
@@ -37,8 +37,8 @@ def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)):
 # Add SessionMiddleware with customized cookie name
 app.add_middleware(
     SessionMiddleware,
-    secret_key="3003d57aaae374611f2cd2897ec6b92345d195f7cce32a452ddcf59dfa5565fd",  # Replace with your secret key
-    session_cookie="kokomo_session"  
+    secret_key="",  # Replace with your secret key
+    session_cookie=""  
 )
 
 # Add CORS middleware
@@ -96,11 +96,6 @@ async def on_startup():
     app.include_router(
         adminEmail_route, prefix="/adminEmail", tags=["Admin Email"], dependencies=[Depends(verify_credentials)]
     )
-
-# Example of a general route with authentication
-@app.get("/secure-data", tags=["secure"])
-def get_secure_data(username: str = Depends(verify_credentials)):
-    return {"message": f"Hello, {username}, you have access to this secure data!"}
 
 # Health check endpoint
 @app.get("/health", tags=["Health"])
