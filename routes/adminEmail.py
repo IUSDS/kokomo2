@@ -1,120 +1,92 @@
 import boto3
 from botocore.exceptions import NoCredentialsError, PartialCredentialsError
-from fastapi import FastAPI, APIRouter, HTTPException
-from sqlalchemy import event
+from fastapi import FastAPI, APIRouter, HTTPException, Request
 from sqlalchemy.orm import Session
-from database import get_db_connection
+from fastapi import APIRouter, HTTPException, Depends
+from database import get_db_connection  # Adjust based on your DB setup
 
+# Helper function to send email using AWS SES
 def send_email(sender_email, recipient_email, subject, body_text, body_html, aws_region="ap-southeast-2"):
-    """
-    Send an email using AWS SES.
-
-    :param sender_email: Email address of the sender (must be verified in AWS SES).
-    :param recipient_email: Email address of the recipient.
-    :param subject: Subject of the email.
-    :param body_text: Plain text version of the email body.
-    :param body_html: HTML version of the email body.
-    :param aws_region: AWS region where SES is set up 
-    """
     try:
-        # Create a new SES client
         ses_client = boto3.client('ses', region_name=aws_region)
-
-        # Send email
         response = ses_client.send_email(
             Source=sender_email,
-            Destination={
-                'ToAddresses': [recipient_email],
-            },
+            Destination={'ToAddresses': [recipient_email]},
             Message={
-                'Subject': {
-                    'Data': subject,
-                    'Charset': 'UTF-8'
-                },
+                'Subject': {'Data': subject, 'Charset': 'UTF-8'},
                 'Body': {
-                    'Text': {
-                        'Data': body_text,
-                        'Charset': 'UTF-8'
-                    },
-                    'Html': {
-                        'Data': body_html,
-                        'Charset': 'UTF-8'
-                    }
+                    'Text': {'Data': body_text, 'Charset': 'UTF-8'},
+                    'Html': {'Data': body_html, 'Charset': 'UTF-8'}
                 }
             }
         )
-
         print("Email sent successfully! Message ID:", response['MessageId'])
-
-    except NoCredentialsError:
-        print("Error: AWS credentials not found.")
-    except PartialCredentialsError:
-        print("Error: Incomplete AWS credentials.")
+    except (NoCredentialsError, PartialCredentialsError) as e:
+        print(f"Error sending email: {e}")
     except Exception as e:
         print(f"Error: {e}")
 
+# APIRouter for admin email functionality
 adminEmail_route = APIRouter()
 
-@adminEmail_route.post("/adminEmail/")
-def trigger_email_on_new_visitor():
-    """
-    Route to manually trigger email for a new visitor entry.
-    """
-    sender = "info@kokomoyachtclub.vip"
-    recipient = "nainika@iusdigitalsolutions.com"
-    email_subject = "New Visitor Entry at Kokomo Yacht Club"
-    email_body_text = "A new visitor entry has been added to the database."
-    email_body_html = """
-    <html>
-    <head></head>
-    <body>
-      <h1>New Visitor Entry</h1>
-      <p>A new visitor entry has been added to the database of <b>Kokomo Yacht Club</b>.</p>
-    </body>
-    </html>
-    """
+# Callback request route (similar to Node.js callbackReq function)
+@adminEmail_route.post("/callbackReq/")
+async def callback_req(request: Request, db: Session = Depends(get_db_connection)):
+    data = await request.json()
+    name, number, email = data.get("name"), data.get("number"), data.get("email")
 
-    send_email(sender, recipient, email_subject, email_body_text, email_body_html)
-    return {"message": "Email triggered successfully."}
+    if not name or not number or not email:
+        raise HTTPException(status_code=400, detail="All fields are required: name, number, email")
 
-# Database event listener for Visitors table
-def after_insert_listener():
-    """
-    Listener to trigger email when a new entry is added to the Visitors table.
-    """
-    connection = get_db_connection()
+    # Save to the database (callback requests)
     try:
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT * FROM visitors ORDER BY email DESC LIMIT 1")
-            latest_entry = cursor.fetchone()
-            if latest_entry:
-                sender = "info@kokomoyachtclub.vip"
-                recipient = latest_entry['email']
-                email_subject = "New Visitor Entry at Kokomo Yacht Club"
-                email_body_text = f"A new visitor entry has been added:\n\nVisitor Name: {latest_entry['visitor_name']}\nPhone Number: {latest_entry['phone_no']}\nRequest Help: {latest_entry['req_help']}\nQuestions: {latest_entry['ques']}"
-                email_body_html = f"""
-                <html>
-                <head></head>
-                <body>
-                  <h1>New Visitor Entry</h1>
-                  <p>A new visitor entry has been added to the database of <b>Kokomo Yacht Club</b>:</p>
-                  <ul>
-                    <li><b>Visitor Name:</b> {latest_entry['visitor_name']}</li>
-                    <li><b>Phone Number:</b> {latest_entry['phone_no']}</li>
-                    <li><b>Request Help:</b> {latest_entry['req_help']}</li>
-                    <li><b>Questions:</b> {latest_entry['ques']}</li>
-                  </ul>
-                </body>
-                </html>
-                """
+        callback = UserCall(name=name, number=number, email=email)
+        db.add(callback)
+        db.commit()
+        db.refresh(callback)
+        print("Callback request saved to DB:", callback)
 
-                send_email(sender, recipient, email_subject, email_body_text, email_body_html)
-    finally:
-        connection.close()
+        # Send email notification
+        sender = "info@kokomoyachtclub.vip"
+        recipient = "admin@kokomoyachtclub.vip"
+        subject = "New Callback Request"
+        body_text = f"You have a new callback request from {name}, phone: {number}, email: {email}"
+        body_html = f"<html><body><p>You have a new callback request from <b>{name}</b>, phone: <b>{number}</b>, email: <b>{email}</b>.</p></body></html>"
 
-@adminEmail_route.on_event("startup")
-def setup_listener():
-    """
-    Setup the database trigger.
-    """
-    after_insert_listener()
+        send_email(sender, recipient, subject, body_text, body_html)
+
+        return {"message": "Callback request submitted successfully."}
+    except Exception as e:
+        print(f"Error saving callback request: {e}")
+        raise HTTPException(status_code=500, detail="Error saving callback request")
+
+# Visit request route (similar to Node.js visitReq function)
+@adminEmail_route.post("/visitReq/")
+async def visit_req(request: Request, db: Session = Depends(get_db_connection)):
+    data = await request.json()
+    name, number, date = data.get("name"), data.get("number"), data.get("date")
+
+    if not name or not number or not date:
+        raise HTTPException(status_code=400, detail="All fields are required: name, number, date")
+
+    # Save to the database (visit requests)
+    try:
+        visit = UserVisit(name=name, number=number, date=date)
+        db.add(visit)
+        db.commit()
+        db.refresh(visit)
+        print("Visit request saved to DB:", visit)
+
+        # Send email notification
+        sender = "info@kokomoyachtclub.vip"
+        recipient = "admin@kokomoyachtclub.vip"
+        subject = "New Visit Request"
+        body_text = f"You have a new visit request from {name}, phone: {number}, requested date: {date}"
+        body_html = f"<html><body><p>You have a new visit request from <b>{name}</b>, phone: <b>{number}</b>, requested date: <b>{date}</b>.</p></body></html>"
+
+        send_email(sender, recipient, subject, body_text, body_html)
+
+        return {"message": "Visit request submitted successfully."}
+    except Exception as e:
+        print(f"Error saving visit request: {e}")
+        raise HTTPException(status_code=500, detail="Error saving visit request")

@@ -33,17 +33,17 @@ async def add_member(
     points: int = Form(...),
     file: UploadFile = File(...),  # Correctly set as a File parameter
     emergency_contact: int = Form(...),
-
-):
+    Emergency_Contact_Relationship: str = Form(...),
+    Emergency_Contact_Name: str = Form(...),
+    DL: str = Form(...),
+    spouse: str = Form(...),
+    ):
     """
     Adds a new member to the database with optional profile picture upload.
     """
-    print("1")
     try:
         connection = get_db_connection()
         cursor = connection.cursor()
-        print("11")
-
 
         # Validate username and email
         cursor.execute("SELECT COUNT(*) AS count FROM Members WHERE username = %s", (username,))
@@ -53,12 +53,7 @@ async def add_member(
         cursor.execute("SELECT COUNT(*) AS count FROM Members WHERE email_id = %s", (email_id,))
         if cursor.fetchone()["count"] > 0:
             raise HTTPException(status_code=400, detail="Account already exists for this email, try logging in.")
-        print("11")
 
-        # Hash the password
-        #hashed_password = pwd_context.hash(password)
-
-        # Handle file upload to S3
         picture_url = None
         if file:
             if file.content_type not in ["image/jpeg", "image/png"]:
@@ -75,21 +70,18 @@ async def add_member(
                 )
                 picture_url = f"https://{ACCESS_POINT_ALIAS}.s3.{S3_REGION}.amazonaws.com/{object_name}"
             except ClientError as e:
-                print("1                        1")
                 raise HTTPException(status_code=500, detail=f"S3 Upload error: {e.response['Error']['Message']}")
-        print("10")
 
         # Insert the member into the database
         query = """
         INSERT INTO Members (username, pass, first_name, last_name, phone_number, address,
-                             email_id, membership_type, points, picture_url, user_type, is_deleted, emergency_contact)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, "User", "N", %s)
+                             email_id, membership_type, points, picture_url, user_type, is_deleted, emergency_contact, Emergency_Contact_Relationship, Emergency_Contact_Name, DL, spouse)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, "User", "N", %s, %s, %s, %s, %s)
         """
-        print("2")
 
         cursor.execute(
             query,
-            (username, password, first_name, last_name, phone_number, address, email_id, membership_type, points, picture_url, emergency_contact),
+            (username, password, first_name, last_name, phone_number, address, email_id, membership_type, points, picture_url, emergency_contact, Emergency_Contact_Relationship, Emergency_Contact_Name, DL, spouse),
         )
         connection.commit()
 
@@ -100,9 +92,7 @@ async def add_member(
         session["picture_url"] = picture_url
 
         return {"status": "success", "message": "Member added successfully", "picture_url": picture_url}
-        print("IR++")
     except Exception as e:
-        print("IR+++++++++")
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
     finally:
@@ -110,7 +100,6 @@ async def add_member(
             cursor.close()
         if "connection" in locals():
             connection.close()
-
 
 @create_member_route.get("/validate-member/")
 async def validate_member(username: str = None, email_id: str = None):
