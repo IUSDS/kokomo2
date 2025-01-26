@@ -3,6 +3,7 @@ from pydantic import BaseModel
 import pymysql
 from database import get_db_connection
 from starlette.middleware.sessions import SessionMiddleware  # Ensure correct import
+from datetime import datetime, timedelta
 #import bcrypt
 
 # Define models
@@ -10,15 +11,17 @@ class User(BaseModel):
     username: str
     password: str
 
+# Define response model for user details
 class UserResponse(BaseModel):
     member_id: int
     full_name: str
     membership_type: str
     points: int
     picture_url: str
-    phone_number: str
+    phone_number: int
     email_id: str
     address: str
+    emergency_contact: int
 
 # Initialize router
 validate_user_route = APIRouter()
@@ -55,7 +58,8 @@ async def validate_user(username: str, password: str, response: Response):
 
             # Save session details if validation is successful using SessionMiddleware
             # Setting session data for user, stored in request.session
-            response.set_cookie(key="kokomo_session", value=username, httponly=True)
+             # Session expires in 30 minutes {expires= (datetime.utcnow() + timedelta(minutes=30)}
+            response.set_cookie(key="kokomo_session", value=username, httponly=True, )
 
             return {
                 "status": "SUCCESS",
@@ -71,8 +75,7 @@ async def validate_user(username: str, password: str, response: Response):
         # Ensure the database connection is closed
         connection.close()
 
-
-@validate_user_route.get("/current-user/")
+@validate_user_route.get("/current-user/", response_model=UserResponse)
 async def current_user(request: Request):
     """
     Retrieves the current user based on session.
@@ -89,7 +92,8 @@ async def current_user(request: Request):
         with connection.cursor(pymysql.cursors.DictCursor) as cursor:
             query = """
                 SELECT member_id, CONCAT(first_name, ' ', last_name) AS full_name,
-                       membership_type, points, picture_url, phone_number, address, email_id
+                       membership_type, points, picture_url, phone_number, address, email_id,
+                       emergency_contact
                 FROM Members
                 WHERE LOWER(username) = LOWER(%s) AND is_deleted = "N"
                 LIMIT 1
@@ -103,16 +107,17 @@ async def current_user(request: Request):
             if not result:
                 raise HTTPException(status_code=401, detail="Session expired or invalid.")
 
-            return {
-                "member_id": result["member_id"],
-                "full_name": result["full_name"],
-                "membership_type": result["membership_type"],
-                "points": result["points"],
-                "picture_url": result["picture_url"],
-                "phone_number": result["phone_number"],
-                "email_id": result["email_id"],
-                "address": result["address"],
-            }
+            return UserResponse(
+                member_id=result["member_id"],
+                full_name=result["full_name"],
+                membership_type=result["membership_type"],
+                points=result["points"],
+                picture_url=result["picture_url"],
+                phone_number=result["phone_number"],
+                email_id=result["email_id"],
+                address=result["address"],
+                emergency_contact=result["emergency_contact"]
+            )
     
     except pymysql.MySQLError as e:
         print("Database error:", str(e))
@@ -120,14 +125,6 @@ async def current_user(request: Request):
     
     finally:
         connection.close()
-
-@validate_user_route.post("/logout/")
-async def logout(request: Request, response: Response):
-    """
-    Clears session data and logs the user out.
-    """
-    response.delete_cookie("kokomo_session")
-    return {"status": "SUCCESS", "message": "Logged out successfully"}
 
 @validate_user_route.post("/logout/")
 async def logout(request: Request, response: Response):

@@ -14,3 +14,4 @@ class UserResponse(BaseModel):
     address: set
     email_id: str
     phone_number: int
+    emergency_contact: int

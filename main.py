@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from routes.validate_user import validate_user_route
 from routes.create_member import create_member_route
@@ -13,45 +13,89 @@ from routes.webhooks_FH import webhook_route
 from routes.visitors import visitors_route
 from routes.forgotpass import forgot_password_route
 from routes.user_agreement import user_agreement_route
+from routes.adminEmail import adminEmail_route
 
-from starlette.middleware.sessions import SessionMiddleware 
+from starlette.middleware.sessions import SessionMiddleware
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 # Initialize FastAPI app
 app = FastAPI()
 
-# Load the secret key
-SECRET_KEY = "3003d57aaae374611f2cd2897ec6b92345d195f7cce32a452ddcf59dfa5565fd"
+# Define security scheme (Basic Auth)
+security = HTTPBasic()
+
+# A simple function to verify the credentials (this could be more complex in production)
+def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)):
+    correct_username = ""
+    correct_password = ""
+
+    if credentials.username != correct_username or credentials.password != correct_password:
+        raise HTTPException(status_code=401, detail="Incorrect credentials")
+
+    return credentials.username
 
 # Add SessionMiddleware with customized cookie name
 app.add_middleware(
     SessionMiddleware,
-    secret_key=SECRET_KEY,
-    session_cookie="kokomo_session"  
+    secret_key="",  # Replace with your secret key
+    session_cookie=""  
 )
 
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  
+    allow_origins=["*"],  # Define your allowed origins
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include Routes
-app.include_router(validate_user_route, prefix="/validate-user", tags=["Validate User"])
-app.include_router(create_member_route, prefix="/create-member", tags=["Create Member"])
-app.include_router(get_points_route, prefix="/get", tags=["Points"])
-app.include_router(update_points_route, prefix="/update", tags=["Update Points"])
-app.include_router(get_membership_route, prefix="/get", tags=["Membership"])
-app.include_router(update_membership_route, prefix="/update", tags=["Update Membership"])
-app.include_router(update_user_route, prefix="/update", tags=["Update User"])
-app.include_router(delete_user_route, prefix="/update", tags=["Delete User"])
-app.include_router(user_details_route, prefix="/get", tags=["User detail"])
-app.include_router(webhook_route, prefix="/webhook", tags=["Webhook"])
-app.include_router(visitors_route, prefix="/visitors", tags=["Visitors"])
-app.include_router(forgot_password_route, prefix="/forgot", tags=["Forgot"])
-app.include_router(user_agreement_route, prefix="/user_agreement", tags=["User Agreement"])
+# Apply the `verify_credentials` function to all routes
+@app.on_event("startup")
+async def on_startup():
+    # Apply authentication to all routes globally
+    app.include_router(
+        validate_user_route, prefix="/validate-user", tags=["Validate User"], dependencies=[Depends(verify_credentials)]
+    )
+    app.include_router(
+        create_member_route, prefix="/create-member", tags=["Create Member"], dependencies=[Depends(verify_credentials)]
+    )
+    app.include_router(
+        get_points_route, prefix="/get", tags=["Points"], dependencies=[Depends(verify_credentials)]
+    )
+    app.include_router(
+        update_points_route, prefix="/update", tags=["Update Points"], dependencies=[Depends(verify_credentials)]
+    )
+    app.include_router(
+        get_membership_route, prefix="/get", tags=["Membership"], dependencies=[Depends(verify_credentials)]
+    )
+    app.include_router(
+        update_membership_route, prefix="/update", tags=["Update Membership"], dependencies=[Depends(verify_credentials)]
+    )
+    app.include_router(
+        update_user_route, prefix="/update", tags=["Update User"], dependencies=[Depends(verify_credentials)]
+    )
+    app.include_router(
+        delete_user_route, prefix="/update", tags=["Delete User"], dependencies=[Depends(verify_credentials)]
+    )
+    app.include_router(
+        user_details_route, prefix="/get", tags=["User detail"], dependencies=[Depends(verify_credentials)]
+    )
+    app.include_router(
+        webhook_route, prefix="/webhook", tags=["Webhook"], dependencies=[Depends(verify_credentials)]
+    )
+    app.include_router(
+        visitors_route, prefix="/vistors", tags=["Visitors"], dependencies=[Depends(verify_credentials)]
+    )
+    app.include_router(
+        forgot_password_route, prefix="/forgot", tags=["Forgot"], dependencies=[Depends(verify_credentials)]
+    )
+    app.include_router(
+        user_agreement_route, prefix="/user_agreements", tags=["User Agreements"], dependencies=[Depends(verify_credentials)]
+    )
+    app.include_router(
+        adminEmail_route, prefix="/adminEmail", tags=["Admin Email"], dependencies=[Depends(verify_credentials)]
+    )
 
 # Health check endpoint
 @app.get("/health", tags=["Health"])
@@ -61,7 +105,7 @@ async def health_check():
         "status": "healthy",
         "message": "Service is running normally"
     }
-    
+
 if __name__ == "__main__":
     import uvicorn
     # Run the application with uvicorn
