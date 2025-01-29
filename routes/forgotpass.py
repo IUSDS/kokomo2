@@ -21,7 +21,7 @@ class ResetPasswordRequest(BaseModel):
 
 # Send reset password email
 def send_reset_email(email: str, token: str):
-    reset_link = f"https://{api-here}/reset-password?token={token}"
+    reset_link = f"https://{kokomo-link}/{}route}?token={token}"
 
     subject = "Password Reset Request"
     body_text = f"""Dear User,
@@ -37,20 +37,7 @@ def send_reset_email(email: str, token: str):
         Kokomo Yacht Club Team
         """
     print(body_text)
-    # body_html = f"""
-    # <html>
-    # <body>
-    #     <p>Dear User,</p>
-    #     <p>You have requested to reset your password. Click the link below to reset your password:</p>
-    #     <a href="{reset_link}">{reset_link}</a>
-    #     <p>If you didn't request this, please ignore this email.</p>
-    #     <p>Best regards,<br>Kokomo Yacht Club Team</p>
-    # </body>
-    # </html>
-    # """
-    # print(body_html)
-
-    # SMTP configuration
+    
     sender_email = "info@kokomoyachtclub.vip"
     smtp_host = "email-smtp.ap-southeast-2.amazonaws.com"
     smtp_port = 587  # Use port 587 for STARTTLS
