@@ -41,7 +41,7 @@ def send_reset_email(email: str, token: str):
     smtp_host = "email-smtp.ap-southeast-2.amazonaws.com"
     smtp_port = 587  # port 587 for STARTTLS
     smtp_username = "AKIAXKPUZZCOOVVEAYFO"  
-    smtp_password = "BHKOxcPTOlHVjTYDBOTOsVN5wRN7fNiTHanieVM4a5i1"  
+    smtp_password = ""  
     try:
         # Create the email content
         message = MIMEMultipart("alternative")
