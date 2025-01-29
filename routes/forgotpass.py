@@ -21,40 +21,27 @@ class ResetPasswordRequest(BaseModel):
 
 # Send reset password email
 def send_reset_email(email: str, token: str):
-    reset_link = f"https://api.kokomoyachtclub.vip/reset-password?token={token}"
+    reset_link = f"https://{kokomo-link}/{route}?token={token}"
 
     subject = "Password Reset Request"
     body_text = f"""Dear User,
 
-        You have requested to reset your password. Click the link below to reset your password:
-        {reset_link}
+        We received a request to reset your password. To proceed, please click the link below:
+        Reset Password: {reset_link}
 
-        If you didn't request this, please ignore this email.
-
+        This link is valid for 30 minutes. If you didn’t request a password reset, please disregard this email.
+        For assistance, feel free to reach out to our support team.
+        
         Best regards,
+        
         Kokomo Yacht Club Team
         """
-    print(body_text)
-    body_html = f"""
-    <html>
-    <body>
-        <p>Dear User,</p>
-        <p>You have requested to reset your password. Click the link below to reset your password:</p>
-        <a href="{reset_link}">{reset_link}</a>
-        <p>If you didn't request this, please ignore this email.</p>
-        <p>Best regards,<br>Kokomo Yacht Club Team</p>
-    </body>
-    </html>
-    """
-    print(body_html)
-
-    # SMTP configuration
-    sender_email = "info@kokomoyachtclub.vip"
+    
+    sender_email = "brian@kokomoyachtclub.vip"
     smtp_host = "email-smtp.ap-southeast-2.amazonaws.com"
-    smtp_port = 587  # Use port 587 for STARTTLS
-    smtp_username = "AKIAXKPUZZCOOVVEAYFO"  # Replace with your SMTP username
-    smtp_password = "BHKOxcPTOlHVjTYDBOTOsVN5wRN7fNiTHanieVM4a5i1"  # Replace with your SMTP password
-    print("Parsed")
+    smtp_port = 587  # port 587 for STARTTLS
+    smtp_username = "AKIAXKPUZZCOOVVEAYFO"  
+    smtp_password = ""  # MAIN: add password here
     try:
         # Create the email content
         message = MIMEMultipart("alternative")
@@ -64,15 +51,13 @@ def send_reset_email(email: str, token: str):
 
         # Add plain text and HTML parts
         message.attach(MIMEText(body_text, "plain"))
-        message.attach(MIMEText(body_html, "html"))
+        #message.attach(MIMEText(body_html, "html"))
 
         # Connect to SMTP server
         with smtplib.SMTP(smtp_host, smtp_port) as server:
             server.starttls()  # Upgrade to secure connection
             server.login(smtp_username, smtp_password)
             server.sendmail(sender_email, email, message.as_string())
-
-        print(f"Password reset email sent to {email}.")
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
@@ -83,7 +68,6 @@ def forgot_password(email: str = Form(...)):
     # Generate a secure token
     token = secrets.token_hex(16)  # Generates a 32-character hexadecimal string
     expiry_time = datetime.utcnow() + timedelta(hours=0.5)  # Token valid for 30 mins
-    print("Right before DB")
     # Check if the email exists in the database
     connection = get_db_connection()
     try:
@@ -91,7 +75,6 @@ def forgot_password(email: str = Form(...)):
             # Check if email exists in the database
             cursor.execute("SELECT email_id FROM Members WHERE email_id = %s", (email,))
             user = cursor.fetchone()
-            print(user)
             if not user:
                 raise HTTPException(status_code=404, detail="Email not found.")
 
@@ -101,7 +84,6 @@ def forgot_password(email: str = Form(...)):
                 (email, token, expiry_time),
             )
             connection.commit()
-            print("Right after DB")
             # Send the reset email
             send_reset_email(email, token)
 
@@ -125,7 +107,7 @@ def reset_password(request: ResetPasswordRequest):
                 raise HTTPException(status_code=404, detail="Invalid or expired token.")
 
             # Check token expiry
-            if datetime.utcnow() > token_data["expiry_time"]:
+            if datetime.datetime() > token_data["expiry_time"]:
                 raise HTTPException(status_code=400, detail="Token has expired.")
 
             # Update the user's password
