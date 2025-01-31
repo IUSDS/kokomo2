@@ -24,8 +24,8 @@ security = HTTPBasic()
 
 # A simple function to verify the credentials (this could be more complex in production)
 def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)):
-    correct_username = ""
-    correct_password = ""
+    correct_username = "Admin"
+    correct_password = JWT_SECRET
 
     if credentials.username != correct_username or credentials.password != correct_password:
         raise HTTPException(status_code=401, detail="Incorrect credentials")
@@ -35,8 +35,8 @@ def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)):
 # Add SessionMiddleware with customized cookie name
 app.add_middleware(
     SessionMiddleware,
-    secret_key="",  # Replace with your secret key
-    session_cookie=""  
+    secret_key=SECRET_KEY,
+    session_cookie = SESSION_COOKIES
 )
 
 # Add CORS middleware
@@ -87,12 +87,6 @@ async def on_startup():
     )
     app.include_router(
         forgot_password_route, prefix="/forgot", tags=["Forgot"], dependencies=[Depends(verify_credentials)]
-    )
-    app.include_router(
-        user_agreement_route, prefix="/user_agreements", tags=["User Agreements"], dependencies=[Depends(verify_credentials)]
-    )
-    app.include_router(
-        adminEmail_route, prefix="/adminEmail", tags=["Admin Email"], dependencies=[Depends(verify_credentials)]
     )
 
 # Example of a general route with authentication
