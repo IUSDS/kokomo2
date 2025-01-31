@@ -14,6 +14,7 @@ S3_REGION = "ap-southeast-2"
 class UserResponse(BaseModel):
     member_id: int
     username: str
+    password: str
     first_name: str
     last_name: str
     phone_number: int
@@ -31,7 +32,7 @@ class UserResponse(BaseModel):
     emergency_email: EmailStr | None
     emergency_relationship: str | None
     emergency_name: str | None
-    dl: str
+    dl: str | None
     spouse: str | None
     spouse_email: EmailStr | None
     spouse_phone: int | None
@@ -39,6 +40,7 @@ class UserResponse(BaseModel):
     child_dob: str | None
     child_email: EmailStr | None
     child_phone: int | None
+    company_name: str | None
 
 @user_details_route.get("/user-details/", response_model=UserResponse)
 async def get_user_details(username: str = Query(...)):
@@ -50,9 +52,9 @@ async def get_user_details(username: str = Query(...)):
         
         # Fetch Member details
         cursor.execute("""
-            SELECT member_id, username, first_name, last_name, phone_number, 
+            SELECT member_id, username, pass AS password, first_name, last_name, phone_number, 
                    member_address1, member_address2, member_city, member_state, member_zip, email_id, 
-                   membership_type, points, referral_information, picture_url, dl
+                   membership_type, points, referral_information, picture_url, dl, company_name
             FROM Members WHERE username = %s AND is_deleted = 'N'
         """, (username,))
         member = cursor.fetchone()

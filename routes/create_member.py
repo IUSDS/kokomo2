@@ -38,24 +38,21 @@ async def add_member(
     member_address2: str = Form(None),
     member_city: str = Form(...),
     member_state: str = Form(...),
-    member_zip: str = Form(...),    
+    member_zip: int = Form(...),    
     email_id: EmailStr = Form(...),
     membership_type: str = Form(...),
     points: int = Form(...),
     referral_information: str = Form(...),
+    company_name: str = Form(None),
     file: UploadFile = File(...),
     emergency_contact: int = Form(...),
     emergency_email: EmailStr = Form(...),
     emergency_relationship: str = Form(...),
     emergency_name: str = Form(...),
-    dl: str = Form(...),
+    dl: str = Form(None),
     spouse: str = Form(None),
     spouse_email: EmailStr = Form(None),
     spouse_phone: int = Form(None),
-    child_name: str = Form(None),
-    child_dob: str = Form(None),
-    child_email: EmailStr = Form(None),
-    child_phone: int = Form(None),
     depository_name: str = Form(...),
     branch: str = Form(...),
     city: str = Form(...),
@@ -109,11 +106,11 @@ async def add_member(
         # Insert member data
         query = """
             INSERT INTO Members (username, pass, first_name, last_name, phone_number, member_address1, member_address2, member_city, member_state, member_zip,
-                                email_id, membership_type, points, referral_information, picture_url, user_type, is_deleted, dl)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                                email_id, membership_type, points, referral_information, picture_url, user_type, is_deleted, dl, company_name)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
         """
         cursor.execute(query, (username, hashed_password, first_name, last_name, phone_number, member_address1, member_address2, member_city, member_state, member_zip, 
-            email_id, membership_type, points, referral_information, picture_url, "User", "N", dl, ))
+            email_id, membership_type, points, referral_information, picture_url, "User", "N", dl, company_name,))
         member_id = cursor.lastrowid
         if member_id is None:
             raise HTTPException(status_code=500, detail="Failed to retrieve member_id after insertion.")
@@ -123,11 +120,6 @@ async def add_member(
         INSERT INTO Member_Emergency_Details (member_id, ec_name, ec_relationship, ec_phone_number, ec_email, spouse, spouse_email, spouse_phone_number)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """, (member_id, emergency_name, emergency_relationship, emergency_contact, emergency_email, spouse or None, spouse_email or None, spouse_phone or None))
-
-        cursor.execute("""
-        INSERT INTO Member_Childern_Details (member_id, child_name, child_dob, child_email, child_phone_number)
-        VALUES (%s, %s, %s, %s, %s)
-        """, (member_id, child_name or None, datetime.strptime(child_dob, '%Y-%m-%d').date() if child_dob else None, child_email or None, child_phone or None))
 
         cursor.execute("""
         INSERT INTO Member_ACH_Details (member_id, depository, branch, city, state, zip, routing_no, acc_no, name_on_acc, type_of_acc, date_sub)

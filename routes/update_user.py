@@ -25,7 +25,7 @@ async def update_user(
     member_address2: str = Form(None),
     member_city: str = Form(None),
     member_state: str = Form(None),
-    member_zip: str = Form(None),    
+    member_zip: int = Form(None),    
     membership_type: str = Form(None),
     points: int = Form(None),
     file: UploadFile = File(None),
@@ -37,10 +37,8 @@ async def update_user(
     spouse: str = Form(None),
     spouse_email: EmailStr = Form(None),
     spouse_phone: int = Form(None),
-    child_name: str = Form(None),
-    child_dob: str = Form(None),
-    child_email: EmailStr = Form(None),
-    child_phone: int = Form(None)
+    company_name: str = Form(None),
+
     ):
     """
     Update user details. Fields left blank will retain their previous values.
@@ -49,7 +47,7 @@ async def update_user(
     
     fetch_query ="""
             SELECT first_name, last_name, phone_number, member_address1, member_address2, member_city, 
-                   member_state, member_zip, email_id, membership_type, points, referral_information, 
+                   member_state, member_zip, email_id, membership_type, points, referral_information, company_name, 
                    picture_url, dl FROM Members WHERE username = %s AND is_deleted = 'N' LIMIT 1;
         """
 
@@ -58,7 +56,7 @@ async def update_user(
         SET first_name = COALESCE(%s, first_name), last_name = COALESCE(%s, last_name), phone_number = COALESCE(%s, phone_number), 
             member_address1 = COALESCE(%s, member_address1), member_address2 = COALESCE(%s, member_address2), member_city = COALESCE(%s, member_city), 
             member_state = COALESCE(%s, member_state), member_zip = COALESCE(%s, member_zip), picture_url = COALESCE(%s, picture_url), 
-            referral_information = COALESCE(%s, referral_information), points = COALESCE(%s, points), membership_type = COALESCE(%s, membership_type), 
+            referral_information = COALESCE(%s, referral_information), company_name = COALESCE(%s, company_name), points = COALESCE(%s, points), membership_type = COALESCE(%s, membership_type), 
             dl = COALESCE(%s, dl), email_id = COALESCE(%s, email_id)
         WHERE username = %s AND is_deleted = 'N'
     """
@@ -89,7 +87,7 @@ async def update_user(
             
             cursor.execute(update_query, (
                 first_name, last_name, phone_number, member_address1, member_address2, member_city, 
-                member_state, member_zip, picture_s3_url, existing_data['referral_information'], points, membership_type, 
+                member_state, member_zip, picture_s3_url, existing_data['referral_information'], company_name, points, membership_type, 
                 dl, existing_data['email_id'], username
             ))
         
