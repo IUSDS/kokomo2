@@ -14,7 +14,7 @@ from typing import List
 create_member_route = APIRouter()
 
 # Password hashing context
-#pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # AWS S3 Configuration
 S3_BUCKET_NAME = "image-bucket-kokomo-yacht-club"

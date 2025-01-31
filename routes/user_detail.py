@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, EmailStr
-from database import get_db_connection
+from utils.database import get_db_connection
 from pymysql.cursors import DictCursor
 
 # Initialize the router
@@ -36,10 +36,6 @@ class UserResponse(BaseModel):
     spouse: str | None
     spouse_email: EmailStr | None
     spouse_phone: int | None
-    child_name: str | None
-    child_dob: str | None
-    child_email: EmailStr | None
-    child_phone: int | None
     company_name: str | None
 
 @user_details_route.get("/user-details/", response_model=UserResponse)
@@ -69,20 +65,9 @@ async def get_user_details(username: str = Query(...)):
             FROM Member_Emergency_Details WHERE member_id = %s
         """, (member["member_id"],))
         emergency = cursor.fetchone() or {}
-        
-        # Fetch Children details
-        cursor.execute("""
-            SELECT child_name, child_dob, child_email, child_phone_number AS child_phone
-            FROM Member_Childern_Details WHERE member_id = %s
-        """, (member["member_id"],))
-        children = cursor.fetchone() or {}
-        
-        # Convert date fields to string safely
-        if "child_dob" in children and children["child_dob"]:
-            children["child_dob"] = str(children["child_dob"])
-        
+       
         # Merge all data into a single response
-        response_data = {**member, **emergency, **children}
+        response_data = {**member, **emergency}
         
         # Ensure None values for missing fields
         for key in UserResponse.__annotations__.keys():

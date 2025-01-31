@@ -12,10 +12,7 @@ from routes.user_detail import user_details_route
 from routes.webhooks_FH import webhook_route
 from routes.visitors import visitors_route
 from routes.forgotpass import forgot_password_route
-from routes.user_agreement import user_agreement_route
-#from routes.adminEmail import adminEmail_route
-#from routes.temp import user_details_route2
-from utils import SECRET_KEY, SESSION_COOKIES, JWT_SECRET
+from utils.secrets import SECRET_KEY, SESSION_COOKIES, JWT_SECRET
 from starlette.middleware.sessions import SessionMiddleware
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
