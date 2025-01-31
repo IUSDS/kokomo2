@@ -12,9 +12,7 @@ from routes.user_detail import user_details_route
 from routes.webhooks_FH import webhook_route
 from routes.visitors import visitors_route
 from routes.forgotpass import forgot_password_route
-from routes.user_agreement import user_agreement_route
-from routes.adminEmail import adminEmail_route
-
+from utils.secrets import SECRET_KEY, SESSION_COOKIES, JWT_SECRET
 from starlette.middleware.sessions import SessionMiddleware
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
@@ -59,7 +57,7 @@ async def on_startup():
     )
     app.include_router(
         create_member_route, prefix="/create-member", tags=["Create Member"], dependencies=[Depends(verify_credentials)]
-    )
+    )  
     app.include_router(
         get_points_route, prefix="/get", tags=["Points"], dependencies=[Depends(verify_credentials)]
     )
@@ -96,6 +94,11 @@ async def on_startup():
     app.include_router(
         adminEmail_route, prefix="/adminEmail", tags=["Admin Email"], dependencies=[Depends(verify_credentials)]
     )
+
+# Example of a general route with authentication
+@app.get("/secure-data", tags=["secure"])
+def get_secure_data(username: str = Depends(verify_credentials)):
+    return {"message": f"Hello, {username}, you have access to this secure data!"}
 
 # Health check endpoint
 @app.get("/health", tags=["Health"])

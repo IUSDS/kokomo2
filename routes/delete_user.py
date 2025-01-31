@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Form
-from database import get_db_connection
+from utils.database import get_db_connection
 
 # Initialize router
 delete_user_route = APIRouter()

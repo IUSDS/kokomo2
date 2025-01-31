@@ -18,3 +18,4 @@ def get_db_connection():
         port=db_config["port"],
         cursorclass=pymysql.cursors.DictCursor,  # Use DictCursor for dictionary-like results
     )
+

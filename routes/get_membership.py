@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Query
-from database import get_db_connection
+from utils.database import get_db_connection
 
 # Initialize router
 get_membership_route = APIRouter()

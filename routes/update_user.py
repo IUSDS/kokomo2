@@ -1,6 +1,5 @@
 from fastapi import APIRouter, HTTPException, Form, UploadFile, File
-#from passlib.context import CryptContext
-from database import get_db_connection
+from utils.database import get_db_connection
 import boto3
 from botocore.exceptions import ClientError
 
@@ -24,20 +23,28 @@ s3_client = boto3.client("s3", region_name=S3_REGION)
 
 @update_user_route.put("/update/user/")
 async def update_user(
-    username: str = Form(..., description="The username of the user to update"),
-    password: str = Form(None, description="The new password"),
-    first_name: str = Form(None, description="The new first name"),
-    last_name: str = Form(None, description="The new last name"),
-    phone_number: int = Form(None, description="The new phone number"),
-    address: str = Form(None, description="The new address"),
-    file: UploadFile = File(None, description="The new profile picture"),  # File is optional
-    emergency_contact: int = Form(None, description="Emergency Contact"),
-    Emergency_Contact_Relationship: str = Form(None, description="Emergency Contact Relationship"),
-    Emergency_Contact_Name: str = Form(None, description="Emergency Contact Name"),
-    DL: str = Form(None, description="DL"),
-    spouse: str = Form(None, description="Spouse of main user"),
-):
-    connection = get_db_connection()
+    username: str = Form(...),
+    first_name: str = Form(None),
+    last_name: str = Form(None),
+    phone_number: int = Form(None),
+    member_address1: str = Form(None),
+    member_address2: str = Form(None),
+    member_city: str = Form(None),
+    member_state: str = Form(None),
+    member_zip: int = Form(None),    
+    membership_type: str = Form(None),
+    points: int = Form(None),
+    file: UploadFile = File(None),
+    # emergency_contact: int = Form(None),
+    # emergency_email: EmailStr = Form(None),
+    # emergency_relationship: str = Form(None),
+    # emergency_name: str = Form(None),
+    dl: str = Form(None),
+    # spouse: str = Form(None),
+    # spouse_email: EmailStr = Form(None),
+    # spouse_phone: int = Form(None),
+    company_name: str = Form(None),
+    ):
     """
     Update user details. Fields left blank will retain their previous values.
     """
