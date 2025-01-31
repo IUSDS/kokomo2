@@ -3,11 +3,10 @@ from pydantic import BaseModel, EmailStr
 from database import get_db_connection
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-
+from utils import SMTP_USER, SMTP_PASS
 import secrets
 import smtplib
 from datetime import datetime, timedelta
-import requests
 
 forgot_password_route = APIRouter()
 
@@ -18,10 +17,10 @@ class ForgotPasswordRequest(BaseModel):
 class ResetPasswordRequest(BaseModel):
     token: str
     new_password: str
-
+ 
 # Send reset password email
 def send_reset_email(email: str, token: str):
-    reset_link = f"https://{kokomo-link}/{route}?token={token}"
+    reset_link = f"https://kokomoyachtclub.vip/new_password?token={token}"
 
     subject = "Password Reset Request"
     body_text = f"""Dear User,
@@ -40,8 +39,8 @@ def send_reset_email(email: str, token: str):
     sender_email = "brian@kokomoyachtclub.vip"
     smtp_host = "email-smtp.ap-southeast-2.amazonaws.com"
     smtp_port = 587  # port 587 for STARTTLS
-    smtp_username = "AKIAXKPUZZCOOVVEAYFO"  
-    smtp_password = ""  # MAIN: add password here
+    smtp_username = SMTP_USER
+    smtp_password = SMTP_PASS  
     try:
         # Create the email content
         message = MIMEMultipart("alternative")
@@ -51,7 +50,6 @@ def send_reset_email(email: str, token: str):
 
         # Add plain text and HTML parts
         message.attach(MIMEText(body_text, "plain"))
-        #message.attach(MIMEText(body_html, "html"))
 
         # Connect to SMTP server
         with smtplib.SMTP(smtp_host, smtp_port) as server:
@@ -67,7 +65,7 @@ def send_reset_email(email: str, token: str):
 def forgot_password(email: str = Form(...)):
     # Generate a secure token
     token = secrets.token_hex(16)  # Generates a 32-character hexadecimal string
-    expiry_time = datetime.utcnow() + timedelta(hours=0.5)  # Token valid for 30 mins
+    expiry_time = datetime.now() + timedelta(hours=0.5)  # Token valid for 30 mins
     # Check if the email exists in the database
     connection = get_db_connection()
     try:
@@ -80,7 +78,7 @@ def forgot_password(email: str = Form(...)):
 
             # Store the token in the database
             cursor.execute(
-                "INSERT INTO password_reset_tokens (email, token, expiry_time) VALUES (%s, %s, %s)",
+                "INSERT INTO Password_Reset_Tokens (email, token, expiry_time) VALUES (%s, %s, %s)",
                 (email, token, expiry_time),
             )
             connection.commit()
@@ -90,7 +88,7 @@ def forgot_password(email: str = Form(...)):
         return {"message": "Password reset email sent."}
     finally:
         connection.close()
-
+        
 # Endpoint to reset the password
 @forgot_password_route.post("/reset-password")
 def reset_password(request: ResetPasswordRequest):
@@ -99,7 +97,7 @@ def reset_password(request: ResetPasswordRequest):
         with connection.cursor() as cursor:
             # Validate the token
             cursor.execute(
-                "SELECT email, expiry_time FROM password_reset_tokens WHERE token = %s",
+                "SELECT email, expiry_time FROM Password_Reset_Tokens WHERE token = %s",
                 (request.token,),
             )
             token_data = cursor.fetchone()
@@ -107,7 +105,7 @@ def reset_password(request: ResetPasswordRequest):
                 raise HTTPException(status_code=404, detail="Invalid or expired token.")
 
             # Check token expiry
-            if datetime.datetime() > token_data["expiry_time"]:
+            if datetime.now() > token_data["expiry_time"]:
                 raise HTTPException(status_code=400, detail="Token has expired.")
 
             # Update the user's password
@@ -118,7 +116,7 @@ def reset_password(request: ResetPasswordRequest):
             connection.commit()
 
             # Delete the token after use
-            cursor.execute("DELETE FROM password_reset_tokens WHERE token = %s", (request.token,))
+            cursor.execute("DELETE FROM Password_Reset_Tokens WHERE token = %s", (request.token,))
             connection.commit()
 
         return {"message": "Password reset successfully."}
