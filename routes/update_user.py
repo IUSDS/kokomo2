@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Form, UploadFile, File
-from database import get_db_connection
+from utils.database import get_db_connection
 import boto3
 from botocore.exceptions import ClientError
 from pydantic import BaseModel, EmailStr
@@ -29,14 +29,14 @@ async def update_user(
     membership_type: str = Form(None),
     points: int = Form(None),
     file: UploadFile = File(None),
-    emergency_contact: int = Form(None),
-    emergency_email: EmailStr = Form(None),
-    emergency_relationship: str = Form(None),
-    emergency_name: str = Form(None),
+    # emergency_contact: int = Form(None),
+    # emergency_email: EmailStr = Form(None),
+    # emergency_relationship: str = Form(None),
+    # emergency_name: str = Form(None),
     dl: str = Form(None),
-    spouse: str = Form(None),
-    spouse_email: EmailStr = Form(None),
-    spouse_phone: int = Form(None),
+    # spouse: str = Form(None),
+    # spouse_email: EmailStr = Form(None),
+    # spouse_phone: int = Form(None),
     company_name: str = Form(None),
 
     ):

@@ -1,5 +1,5 @@
 import pymysql
-from utils import DB_PASSWORD
+from secrets import DB_PASSWORD
 
 # Database configuration
 db_config = {
