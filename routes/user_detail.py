@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from database import get_db_connection
 from pymysql.cursors import DictCursor
 
@@ -13,113 +13,83 @@ S3_REGION = "ap-southeast-2"
 # Define the UserResponse model
 class UserResponse(BaseModel):
     member_id: int
-    full_name: str
+    username: str
+    first_name: str
+    last_name: str
+    phone_number: int
+    member_address1: str
+    member_address2: str | None
+    member_city: str
+    member_state: str
+    member_zip: int
+    email_id: EmailStr
     membership_type: str
     points: int
-    picture_url: str
-    phone_number: int
-    email_id: str
-    address: str
-    emergency_contact: int
-    Emergency_Contact_Relationship: str
-    Emergency_Contact_Name: str 
-    DL: str
-    spouse: str 
+    referral_information: str | None
+    picture_url: str | None
+    emergency_contact: int | None
+    emergency_email: EmailStr | None
+    emergency_relationship: str | None
+    emergency_name: str | None
+    dl: str
+    spouse: str | None
+    spouse_email: EmailStr | None
+    spouse_phone: int | None
+    child_name: str | None
+    child_dob: str | None
+    child_email: EmailStr | None
+    child_phone: int | None
 
 @user_details_route.get("/user-details/", response_model=UserResponse)
-async def get_user_details(
-    email: str = Query(None), 
-    username: str = Query(None)
-):
-    if not email and not username:
-        raise HTTPException(
-            status_code=400, 
-            detail="Provide at least 'email' or 'username' to fetch details."
-        )
-
+async def get_user_details(username: str = Query(...)):
     connection = None
     cursor = None
-
-    query = """
-        SELECT 
-            member_id, 
-            CONCAT(first_name, ' ', last_name) AS full_name, 
-            membership_type, 
-            points, 
-            picture_url, 
-            phone_number, 
-            email_id, 
-            address,
-            emergency_contact,
-            Emergency_Contact_Relationship,
-            Emergency_Contact_Name,
-            DL,
-            spouse
-        FROM 
-            Members
-        WHERE 
-            (email_id = %s OR username = %s) 
-            AND is_deleted = "N"
-        LIMIT 1;
-    """
-    params = (email, username)
-
     try:
         connection = get_db_connection()
         cursor = connection.cursor(DictCursor)
-        cursor.execute(query, params)
-        result = cursor.fetchone()
-
-        if not result:
+        
+        # Fetch Member details
+        cursor.execute("""
+            SELECT member_id, username, first_name, last_name, phone_number, 
+                   member_address1, member_address2, member_city, member_state, member_zip, email_id, 
+                   membership_type, points, referral_information, picture_url, dl
+            FROM Members WHERE username = %s AND is_deleted = 'N'
+        """, (username,))
+        member = cursor.fetchone()
+        if not member:
             raise HTTPException(status_code=404, detail="User not found.")
-
-        # Debugging: Print raw result
-        print("Query Result:", result)
-
-        # Ensure correct data types and prevent possible None values
-        try:
-            result["member_id"] = int(result["member_id"])
-            result["points"] = int(result["points"])
-            result["emergency_contact"] = int(result["emergency_contact"])
-            result["phone_number"] = int(result["phone_number"])
-
-            # Handling CHAR fields as string explicitly
-            result["Emergency_Contact_Relationship"] = str(result.get("Emergency_Contact_Relationship", ""))
-            result["Emergency_Contact_Name"] = str(result.get("Emergency_Contact_Name", ""))
-            result["DL"] = str(result.get("DL", ""))
-            result["spouse"] = str(result.get("spouse", ""))
-
-            # Generate the picture URL
-            picture_url = result.get("picture_url")
-            if picture_url:
-                image_name = picture_url.split("/")[-1]  # Extract image filename from URL
-                result["picture_url"] = f"https://{S3_BUCKET_NAME}.s3.{S3_REGION}.amazonaws.com/profile_pictures/{username}/{image_name}"
-
-        except (ValueError, TypeError) as e:
-            raise HTTPException(
-                status_code=500, 
-                detail=f"Data type error for 'member_id' or 'points': {str(e)}"
-            )
-
-        return {
-            "member_id": result["member_id"],
-            "full_name": result["full_name"],
-            "membership_type": result["membership_type"],
-            "points": result["points"],
-            "picture_url": result["picture_url"],
-            "phone_number": result["phone_number"],
-            "email_id": result["email_id"],
-            "address": result["address"],
-            "emergency_contact": result["emergency_contact"],
-            "Emergency_Contact_Relationship": result["Emergency_Contact_Relationship"],
-            "Emergency_Contact_Name": result["Emergency_Contact_Name"],
-            "DL": result["DL"],
-            "spouse": result["spouse"],
-        }
-
+        
+        # Fetch Emergency details
+        cursor.execute("""
+            SELECT ec_name AS emergency_name, ec_relationship AS emergency_relationship, 
+                   ec_phone_number AS emergency_contact, ec_email AS emergency_email, 
+                   spouse, spouse_email, spouse_phone_number AS spouse_phone
+            FROM Member_Emergency_Details WHERE member_id = %s
+        """, (member["member_id"],))
+        emergency = cursor.fetchone() or {}
+        
+        # Fetch Children details
+        cursor.execute("""
+            SELECT child_name, child_dob, child_email, child_phone_number AS child_phone
+            FROM Member_Childern_Details WHERE member_id = %s
+        """, (member["member_id"],))
+        children = cursor.fetchone() or {}
+        
+        # Convert date fields to string safely
+        if "child_dob" in children and children["child_dob"]:
+            children["child_dob"] = str(children["child_dob"])
+        
+        # Merge all data into a single response
+        response_data = {**member, **emergency, **children}
+        
+        # Ensure None values for missing fields
+        for key in UserResponse.__annotations__.keys():
+            if key not in response_data:
+                response_data[key] = None
+        
+        return response_data
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
-
     finally:
         if cursor:
             cursor.close()
