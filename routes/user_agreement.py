@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Request, Response, UploadFile, Dep
 from pydantic import BaseModel
 import boto3
 import pymysql
-from database import get_db_connection
+from utils.database import get_db_connection
 
 # AWS S3 Configuration
 S3_BUCKET_NAME = "image-bucket-kokomo-yacht-club"
