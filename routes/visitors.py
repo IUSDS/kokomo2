@@ -25,7 +25,7 @@ async def add_email(request: EmailRequest):
     try:
         with connection.cursor() as cursor:
             insert_query = """
-                INSERT INTO visitors (email, visitor_name, phone_no) 
+                INSERT INTO Visitors (email, visitor_name, phone_no) 
                 VALUES (%s, %s, %s) 
                 ON DUPLICATE KEY UPDATE 
                     visitor_name = VALUES(visitor_name),
@@ -46,7 +46,7 @@ async def add_visitor(request: VisitorRequest):
     try:
         with connection.cursor() as cursor:
             insert_query = """
-            INSERT INTO visitors (email, visitor_name, phone_no, req_help, ques)
+            INSERT INTO Visitors (email, visitor_name, phone_no, req_help, ques)
             VALUES (%s, %s, %s, %s, %s)
             ON DUPLICATE KEY UPDATE
                 visitor_name = VALUES(visitor_name),
