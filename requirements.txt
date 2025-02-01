@@ -9,3 +9,4 @@ starlette
 sqlalchemy
 bcrypt
 passlib[bcrypt]
+itsdangerous
