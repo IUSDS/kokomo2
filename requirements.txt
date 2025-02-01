@@ -2,8 +2,10 @@ fastapi
 uvicorn
 pydantic
 pymysql
-passlib[bcrypt]
 boto3
+botocore
 python-multipart
 starlette
 sqlalchemy
+bcrypt
+passlib[bcrypt]
