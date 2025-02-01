@@ -3,7 +3,7 @@ from pydantic import BaseModel, EmailStr
 from utils.database import get_db_connection
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from secrets import SMTP_USER, SMTP_PASS
+from utils.secrets import SMTP_USER, SMTP_PASS
 import secrets
 import smtplib
 from datetime import datetime, timedelta

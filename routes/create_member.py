@@ -29,17 +29,23 @@ def hash_password(password: str) -> str:
 
 @create_member_route.post("/add-member/") 
 async def add_member(
-    request: Request,  # Correctly importing and using the Request object
+    request: Request,
     username: str = Form(...),
     password: str = Form(...),
     first_name: str = Form(...),
     last_name: str = Form(...),
     phone_number: int = Form(...),
-    address: str = Form(...),
+    member_address1: str = Form(...),
+    member_address2: str = Form(None),
+    member_city: str = Form(...),
+    member_state: str = Form(...),
+    member_zip: int = Form(...),    
     email_id: EmailStr = Form(...),
     membership_type: str = Form(...),
     points: int = Form(...),
-    file: UploadFile = File(...),  # Correctly set as a File parameter
+    referral_information: str = Form(None),
+    company_name: str = Form(None),
+    file: UploadFile = File(None),
     emergency_contact: int = Form(...),
     emergency_email: EmailStr = Form(...),
     emergency_relationship: str = Form(...),
@@ -68,6 +74,8 @@ async def add_member(
     """
     Adds a new member to the database with optional profile picture upload and optional children's details.
     """
+    connection = None
+    cursor = None
     try:
         connection = get_db_connection()
         cursor = connection.cursor()
@@ -75,10 +83,13 @@ async def add_member(
         cursor.execute("SELECT COUNT(*) AS count FROM Members WHERE username = %s", (username,))
         if cursor.fetchone()["count"] > 0:
             raise HTTPException(status_code=400, detail="Username already exists, try another one.")
-
+        
         cursor.execute("SELECT COUNT(*) AS count FROM Members WHERE email_id = %s", (email_id,))
         if cursor.fetchone()["count"] > 0:
             raise HTTPException(status_code=400, detail="Account already exists for this email, try logging in.")
+
+        # Hash the password before storing
+        hashed_password = hash_password(password)
 
         picture_url = None
         if file:
@@ -86,7 +97,7 @@ async def add_member(
                 raise HTTPException(status_code=400, detail="Invalid file type. Only JPEG and PNG are allowed.")
             file_content = await file.read()
             object_name = f"profile_pictures/{username}/{file.filename}"
-            print(object_name)
+            
             try:
                 s3_client.put_object(
                     Bucket=S3_BUCKET_NAME,
@@ -97,12 +108,12 @@ async def add_member(
                 picture_url = f"https://{ACCESS_POINT_ALIAS}.s3.{S3_REGION}.amazonaws.com/{object_name}"
             except ClientError as e:
                 raise HTTPException(status_code=500, detail=f"S3 Upload error: {e.response['Error']['Message']}")
-
-        # Insert the member into the database
+                
+        # Insert member data
         query = """
-        INSERT INTO Members (username, pass, first_name, last_name, phone_number, address,
-                             email_id, membership_type, points, picture_url, user_type, is_deleted, emergency_contact, Emergency_Contact_Relationship, Emergency_Contact_Name, DL, spouse)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, "User", "N", %s, %s, %s, %s, %s)
+            INSERT INTO Members (username, pass, first_name, last_name, phone_number, member_address1, member_address2, member_city, member_state, member_zip,
+                                email_id, membership_type, points, referral_information, picture_url, user_type, is_deleted, dl, company_name)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
         """
         cursor.execute(query, (username, hashed_password, first_name, last_name, phone_number, member_address1, member_address2, member_city, member_state, member_zip, 
             email_id, membership_type, points, referral_information, picture_url, "User", "N", dl, company_name,))
@@ -143,44 +154,15 @@ async def add_member(
 
         connection.commit()
 
-        return {"status": "success", "message": "Member added successfully", "member_id": member_id}
+        return {"status": "success", "message": "Member added successfully", "member_id": member_id, "children_added": num_children}
     
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
-
+    
     finally:
-        if "cursor" in locals():
+        if cursor:
             cursor.close()
-        if "connection" in locals():
-            connection.close()
-
-@create_member_route.get("/validate-member/")
-async def validate_member(username: str = None, email_id: str = None):
-    """
-    Validates if a username or email is already registered.
-    """
-    try:
-        connection = get_db_connection()
-        cursor = connection.cursor()
-
-        if username:
-            cursor.execute("SELECT COUNT(*) AS count FROM Members WHERE username = %s", (username,))
-            if cursor.fetchone()["count"] > 0:
-                raise HTTPException(status_code=400, detail="Username already exists.")
-
-        if email_id:
-            cursor.execute("SELECT COUNT(*) AS count FROM Members WHERE email_id = %s", (email_id,))
-            if cursor.fetchone()["count"] > 0:
-                raise HTTPException(status_code=400, detail="Email is already registered.")
-
-        return {"status": "success", "message": "Username and email are available"}
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
-
-    finally:
-        if "cursor" in locals():
-            cursor.close()
-        if "connection" in locals():
+        if connection:
             connection.close()
             

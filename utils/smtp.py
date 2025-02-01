@@ -1,6 +1,6 @@
 
 from fastapi import HTTPException
-from utils import SMTP_USER, SMTP_PASS
+from utils.secrets import SMTP_USER, SMTP_PASS
 import smtplib
 from pydantic import BaseModel, EmailStr
 

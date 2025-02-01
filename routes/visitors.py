@@ -63,9 +63,11 @@ async def become_a_member(request: VisitorRequest):
             INSERT INTO Visitors (email, visitor_name, phone_no, req_help, ques)
             VALUES (%s, %s, %s, %s, %s)
             ON DUPLICATE KEY UPDATE
-                visitor_name = VALUES(visitor_name),
-	@@ -56,28 +70,16 @@ async def add_visitor(request: VisitorRequest):
-            """
+                    visitor_name = VALUES(visitor_name),
+                    phone_no = VALUES(phone_no),
+                    req_help = VALUES(req_help),
+                    ques = VALUES(ques);
+                """
             cursor.execute(insert_query, (request.email, request.visitor_name, request.phone_no, request.req_help, request.ques))
             connection.commit()
 

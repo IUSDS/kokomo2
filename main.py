@@ -91,13 +91,7 @@ async def on_startup():
     app.include_router(
         forgot_password_route, prefix="/forgot", tags=["Forgot"], dependencies=[Depends(verify_credentials)]
     )
-    app.include_router(
-        user_agreement_route, prefix="/user_agreements", tags=["User Agreements"], dependencies=[Depends(verify_credentials)]
-    )
-    app.include_router(
-        adminEmail_route, prefix="/adminEmail", tags=["Admin Email"], dependencies=[Depends(verify_credentials)]
-    )
-
+    
 # Example of a general route with authentication
 @app.get("/secure-data", tags=["secure"])
 def get_secure_data(username: str = Depends(verify_credentials)):
