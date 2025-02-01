@@ -45,7 +45,7 @@ async def add_member(
     points: int = Form(...),
     referral_information: str = Form(None),
     company_name: str = Form(None),
-    file: UploadFile = File(None),
+    file: UploadFile = File(...),
     emergency_contact: int = Form(...),
     emergency_email: EmailStr = Form(...),
     emergency_relationship: str = Form(...),
