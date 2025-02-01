@@ -2,11 +2,10 @@ from fastapi import APIRouter, HTTPException, Request, FastAPI, Header
 from pydantic import BaseModel
 import hmac
 import hashlib
+from utils.secrets import SECRET_KEY
 
 # Initialize router
 webhook_route = APIRouter()
-
-SECRET_key = "b5b966d614b3b78f7573e8e4a6a90cff2a2f162b1893f8a02b797165f77dbd8a"
 
 # Define a BaseModel for the payload
 class WebhookPayload(BaseModel):
@@ -25,7 +24,7 @@ async def webhook_listener(request: Request):
 
         # Compute the HMAC-SHA256 hash using the secret key
         computed_signature = hmac.new(
-            bytes.fromhex(SECRET_key),
+            bytes.fromhex(SECRET_KEY),
             raw_body,
             hashlib.sha256
         ).hexdigest()
