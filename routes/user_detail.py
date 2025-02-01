@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, EmailStr
 from utils.database import get_db_connection
 from pymysql.cursors import DictCursor
+from typing import Optional
 
 # Initialize the router
 user_details_route = APIRouter()
@@ -19,24 +20,24 @@ class UserResponse(BaseModel):
     last_name: str
     phone_number: int
     member_address1: str
-    member_address2: str | None
+    member_address2: Optional[str]
     member_city: str
     member_state: str
     member_zip: int
     email_id: EmailStr
     membership_type: str
     points: int
-    referral_information: str | None
-    picture_url: str | None
-    emergency_contact: int | None
-    emergency_email: EmailStr | None
-    emergency_relationship: str | None
-    emergency_name: str | None
-    dl: str | None
-    spouse: str | None
-    spouse_email: EmailStr | None
-    spouse_phone: int | None
-    company_name: str | None
+    referral_information: Optional[str]
+    picture_url: Optional[str]
+    emergency_contact: Optional[int]
+    emergency_email: Optional[EmailStr]
+    emergency_relationship: Optional[str]
+    emergency_name: Optional[str]
+    dl: Optional[str]
+    spouse: Optional[str]
+    spouse_email: Optional[EmailStr]
+    spouse_phone: Optional[int]
+    company_name: Optional[str]
 
 @user_details_route.get("/user-details/", response_model=UserResponse)
 async def get_user_details(username: str = Query(...)):
