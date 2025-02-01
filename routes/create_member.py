@@ -166,3 +166,32 @@ async def add_member(
         if connection:
             connection.close()
             
+@create_member_route.get("/validate-member/")
+async def validate_member(username: str = None, email_id: str = None):
+    """
+    Validates if a username or email is already registered.
+    """
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        if username:
+            cursor.execute("SELECT COUNT(*) AS count FROM Members WHERE username = %s", (username,))
+            if cursor.fetchone()["count"] > 0:
+                raise HTTPException(status_code=400, detail="Username already exists.")
+
+        if email_id:
+            cursor.execute("SELECT COUNT(*) AS count FROM Members WHERE email_id = %s", (email_id,))
+            if cursor.fetchone()["count"] > 0:
+                raise HTTPException(status_code=400, detail="Email is already registered.")
+
+        return {"status": "success", "message": "Username and email are available"}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
+    finally:
+        if "cursor" in locals():
+            cursor.close()
+        if "connection" in locals():
+            connection.close()
