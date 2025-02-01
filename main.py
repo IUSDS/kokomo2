@@ -12,9 +12,8 @@ from routes.user_detail import user_details_route
 from routes.webhooks_FH import webhook_route
 from routes.visitors import visitors_route
 from routes.forgotpass import forgot_password_route
-from routes.user_agreement import user_agreement_route
-from routes.adminEmail import adminEmail_route
 
+from utils.secrets import SECRET_KEY, SESSION_COOKIES, JWT_SECRET
 from starlette.middleware.sessions import SessionMiddleware
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
@@ -24,21 +23,11 @@ app = FastAPI()
 # Define security scheme (Basic Auth)
 security = HTTPBasic()
 
-# A simple function to verify the credentials (this could be more complex in production)
-def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)):
-    correct_username = ""
-    correct_password = ""
-
-    if credentials.username != correct_username or credentials.password != correct_password:
-        raise HTTPException(status_code=401, detail="Incorrect credentials")
-
-    return credentials.username
-
 # Add SessionMiddleware with customized cookie name
 app.add_middleware(
     SessionMiddleware,
-    secret_key="",  # Replace with your secret key
-    session_cookie=""  
+    secret_key=SECRET_KEY,
+    session_cookie= SESSION_COOKIES
 )
 
 # Add CORS middleware
@@ -50,6 +39,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# A simple function to verify the credentials (this could be more complex in production)
+def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)):
+    correct_username = "Admin"
+    correct_password = JWT_SECRET
+
+    if credentials.username != correct_username or credentials.password != correct_password:
+        raise HTTPException(status_code=401, detail="Incorrect credentials")
+
+    return credentials.username
+
 # Apply the `verify_credentials` function to all routes
 @app.on_event("startup")
 async def on_startup():
@@ -59,6 +58,9 @@ async def on_startup():
     )
     app.include_router(
         create_member_route, prefix="/create-member", tags=["Create Member"], dependencies=[Depends(verify_credentials)]
+    )
+    app.include_router(
+        user_details_route, prefix="/new-userdetail", tags=["New userdetail"], dependencies=[Depends(verify_credentials)]
     )
     app.include_router(
         get_points_route, prefix="/get", tags=["Points"], dependencies=[Depends(verify_credentials)]
