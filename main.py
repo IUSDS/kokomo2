@@ -5,7 +5,7 @@ from fastapi.responses import RedirectResponse, Response
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
 import base64
-
+from routes.export_data import export_data_route
 from routes.validate_user import validate_user_route
 from routes.create_member import create_member_route
 from routes.get_points import get_points_route
@@ -102,6 +102,7 @@ app.include_router(delete_user_route, prefix="/update", tags=["Delete User"])
 app.include_router(webhook_route, prefix="/webhook", tags=["Webhook"])
 app.include_router(visitors_route, prefix="/vistors", tags=["Visitors"])
 app.include_router(forgot_password_route, prefix="/forgot", tags=["Forgot"])
+app.include_router(export_data_route, prefix="/export-data", tags=["Export Data"])
 
 # Public Health Check Endpoint
 @app.get("/health", tags=["Health"])
