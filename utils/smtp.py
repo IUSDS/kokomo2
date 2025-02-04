@@ -1,8 +1,6 @@
-
 from fastapi import HTTPException
 from utils.secrets import SMTP_USER, SMTP_PASS
 import smtplib
-from pydantic import BaseModel, EmailStr
 
 # Function to create an SMTP connection
 def smtp_connection():
