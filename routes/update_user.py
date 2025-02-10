@@ -3,6 +3,7 @@ from utils.database import get_db_connection
 import boto3
 from botocore.exceptions import ClientError
 from pydantic import BaseModel, EmailStr
+from typing import Optional, Union
 
 # Initialize the router
 update_user_route = APIRouter()
@@ -14,6 +15,11 @@ ACCESS_POINT_ALIAS = "first-kokomo-access-y1pahkde96c1mfspxs7cbiaro94hyaps2a-s3a
 
 # Initialize S3 client
 s3_client = boto3.client("s3", region_name=S3_REGION)
+
+DEFAULT_PICTURE_URL = (
+    "https://image-bucket-kokomo-yacht-club.s3.ap-southeast-2.amazonaws.com/"
+    "profile_pictures/default.png"
+)
 
 @update_user_route.put("/update/user/")
 async def update_user(
@@ -28,7 +34,7 @@ async def update_user(
     member_zip: int = Form(None),    
     membership_type: str = Form(None),
     points: int = Form(None),
-    file: UploadFile = File(None),
+    file: Optional[Union[UploadFile, str]] = File(None),
     # emergency_contact: int = Form(None),
     # emergency_email: EmailStr = Form(None),
     # emergency_relationship: str = Form(None),
@@ -61,8 +67,13 @@ async def update_user(
         WHERE username = %s AND is_deleted = 'N'
     """
     
+    # Determine the picture_url update value
     picture_s3_url = None
-    if file:
+    if file is None:
+        # File not provided: leave picture_url unchanged (pass None so COALESCE uses existing value)
+        picture_s3_url = None
+    elif isinstance(file, UploadFile):
+        # A file was provided; attempt to upload it to S3
         file_content = await file.read()
         object_name = f"profile_pictures/{username}/{file.filename}"
         try:
@@ -74,7 +85,13 @@ async def update_user(
             )
             picture_s3_url = f"https://{S3_BUCKET_NAME}.s3.{S3_REGION}.amazonaws.com/{object_name}"
         except ClientError as e:
-            raise HTTPException(status_code=500, detail=f"S3 Upload error: {e.response['Error']['Message']}")
+            raise HTTPException(
+                status_code=500, 
+                detail=f"S3 Upload error: {e.response['Error']['Message']}"
+            )
+    elif isinstance(file, str) and file == "":
+        # An empty string was sent for file; update with default picture URL.
+        picture_s3_url = DEFAULT_PICTURE_URL
 
     try:
         with connection.cursor() as cursor:
@@ -87,8 +104,8 @@ async def update_user(
             
             cursor.execute(update_query, (
                 first_name, last_name, phone_number, member_address1, member_address2, member_city, 
-                member_state, member_zip, picture_s3_url, existing_data['referral_information'], company_name, points, membership_type, 
-                dl, existing_data['email_id'], username
+                member_state, member_zip, picture_s3_url, existing_data['referral_information'], 
+                company_name, points, membership_type, dl, existing_data['email_id'], username
             ))
         
         connection.commit()
