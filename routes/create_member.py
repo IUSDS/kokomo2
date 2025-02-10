@@ -8,7 +8,7 @@ import traceback
 from starlette.middleware.sessions import SessionMiddleware 
 from fastapi import  Depends, HTTPException
 from datetime import datetime
-from typing import List
+from typing import List,  Optional, Union
 
 # Initialize router
 create_member_route = APIRouter()
@@ -19,7 +19,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # AWS S3 Configuration
 S3_BUCKET_NAME = "image-bucket-kokomo-yacht-club"
 S3_REGION = "ap-southeast-2"
-ACCESS_POINT_ALIAS = "first-kokomo-access-y1pahkde96c1mfspxs7cbiaro94hyaps2a-s3alias",
+ACCESS_POINT_ALIAS = "first-kokomo-access-y1pahkde96c1mfspxs7cbiaro94hyaps2a-s3alias"
 
 # Initialize S3 client
 s3_client = boto3.client("s3", region_name=S3_REGION)
@@ -45,7 +45,7 @@ async def add_member(
     points: int = Form(...),
     referral_information: str = Form(None),
     company_name: str = Form(None),
-    file: UploadFile = File(...),
+    file: Optional[Union[UploadFile, str]] = File(None),
     emergency_contact: int = Form(...),
     emergency_email: EmailStr = Form(...),
     emergency_relationship: str = Form(...),
@@ -56,9 +56,9 @@ async def add_member(
     spouse_phone: str = Form(""),
     depository_name: str = Form(...),
     branch: str = Form(...),
-    city: str = Form(...),
-    state: str = Form(...),
-    zip_code: int = Form(...),
+    city: str = Form(None),
+    state: str = Form(None),
+    zip_code: int = Form(0),
     routing_no: int = Form(...),
     acc_no: int = Form(...),
     name_on_acc: str = Form(...),
@@ -91,13 +91,12 @@ async def add_member(
         # Hash the password before storing
         hashed_password = hash_password(password)
 
-        picture_url = None
-        if file:
+        # Process profile picture upload or assign default photo
+        if file and isinstance(file, UploadFile):
             if file.content_type not in ["image/jpeg", "image/png"]:
                 raise HTTPException(status_code=400, detail="Invalid file type. Only JPEG and PNG are allowed.")
             file_content = await file.read()
             object_name = f"profile_pictures/{username}/{file.filename}"
-            
             try:
                 s3_client.put_object(
                     Bucket=S3_BUCKET_NAME,
@@ -108,7 +107,10 @@ async def add_member(
                 picture_url = f"https://{ACCESS_POINT_ALIAS}.s3.{S3_REGION}.amazonaws.com/{object_name}"
             except ClientError as e:
                 raise HTTPException(status_code=500, detail=f"S3 Upload error: {e.response['Error']['Message']}")
-                
+        else:
+            # Either file was not provided or an empty string was sent
+            picture_url = "https://image-bucket-kokomo-yacht-club.s3.ap-southeast-2.amazonaws.com/profile_pictures/default.png"
+        
         # Insert member data
         query = """
             INSERT INTO Members (username, pass, first_name, last_name, phone_number, member_address1, member_address2, member_city, member_state, member_zip,
