@@ -156,7 +156,7 @@ async def add_member(
 
         connection.commit()
 
-        return {"status": "success", "message": "Member added successfully", "member_id": member_id, "children_added": num_children}
+        return {"status": "success", "message": "Member added successfully", "member_id": member_id}
     
     except Exception as e:
         traceback.print_exc()
