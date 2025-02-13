@@ -125,9 +125,9 @@ async def add_member(
         
         # Insert emergency details
         cursor.execute("""
-        INSERT INTO Member_Emergency_Details (member_id, ec_name, ec_relationship, ec_phone_number, ec_email, spouse, spouse_email, spouse_phone_number)
+        INSERT INTO Member_Emergency_Details (member_id, ec_name, ec_relationship, ec_phone_number, spouse, spouse_email, spouse_phone_number)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        """, (member_id, emergency_name, emergency_relationship, emergency_contact, emergency_email, spouse or None, spouse_email or None, spouse_phone or None))
+        """, (member_id, emergency_name, emergency_relationship, emergency_contact, spouse or None, spouse_email or None, spouse_phone or None))
 
         # Insert bank details
         cursor.execute("""
