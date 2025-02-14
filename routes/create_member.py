@@ -9,6 +9,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from fastapi import  Depends, HTTPException
 from datetime import datetime
 from typing import List,  Optional, Union
+from emails.welcome_email import send_welcome_email, generate_temp_password
 
 # Initialize router
 create_member_route = APIRouter()
@@ -31,7 +32,7 @@ def hash_password(password: str) -> str:
 async def add_member(
     request: Request,
     username: str = Form(...),
-    password: str = Form(...),
+    #password: str = Form(...),
     first_name: str = Form(...),
     last_name: str = Form(...),
     phone_number: int = Form(...),
@@ -47,7 +48,7 @@ async def add_member(
     company_name: str = Form(None),
     file: Optional[Union[UploadFile, str]] = File(None),
     emergency_contact: int = Form(...),
-    emergency_email: EmailStr = Form(...),
+    #emergency_email: EmailStr = Form(...),
     emergency_relationship: str = Form(...),
     emergency_name: str = Form(...),
     dl: str = Form(""),
@@ -64,6 +65,7 @@ async def add_member(
     name_on_acc: str = Form(...),
     type_of_acc: str = Form(...),
     date_sub: str = Form(default=datetime.utcnow().strftime('%Y-%m-%d')),
+    existing_membership_id: Optional[int] = Form(None),  # New field to allow linking to an existing membership
 
     # Adding children details
     child_names: List[str] = Form([]),
@@ -88,8 +90,15 @@ async def add_member(
         if cursor.fetchone()["count"] > 0:
             raise HTTPException(status_code=400, detail="Account already exists for this email, try logging in.")
 
-        # Hash the password before storing
-        hashed_password = hash_password(password)
+        # Assign Membership ID (either existing or new)
+        if existing_membership_id:
+            membership_id = existing_membership_id
+        else:
+            cursor.execute("SELECT COALESCE(MAX(membership_id) + 1, 1) FROM Members")
+            membership_id = cursor.fetchone()[0]
+        
+        temp_password = generate_temp_password()
+        hashed_password = hash_password(temp_password)
 
         # Process profile picture upload or assign default photo
         if file and isinstance(file, UploadFile):
@@ -114,20 +123,29 @@ async def add_member(
         # Insert member data
         query = """
             INSERT INTO Members (username, pass, first_name, last_name, phone_number, member_address1, member_address2, member_city, member_state, member_zip,
-                                email_id, membership_type, points, referral_information, picture_url, user_type, is_deleted, dl, company_name)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                                email_id, membership_type, points, referral_information, picture_url, user_type, is_deleted, dl, company_name, membership_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
         """
         cursor.execute(query, (username, hashed_password, first_name, last_name, phone_number, member_address1, member_address2, member_city, member_state, member_zip, 
-            email_id, membership_type, points, referral_information, picture_url, "User", "N", dl, company_name,))
+            email_id, membership_type, points, referral_information, picture_url, "User", "N", dl, company_name, membership_id,))
         member_id = cursor.lastrowid
         if member_id is None:
             raise HTTPException(status_code=500, detail="Failed to retrieve member_id after insertion.")
         
+        email_response = send_welcome_email(
+            to_email=email_id,
+            first_name=first_name,
+            last_name=last_name,
+            member_id=member_id,
+            temp_password = temp_password,
+            username=username
+        )
+        
         # Insert emergency details
         cursor.execute("""
-        INSERT INTO Member_Emergency_Details (member_id, ec_name, ec_relationship, ec_phone_number, ec_email, spouse, spouse_email, spouse_phone_number)
+        INSERT INTO Member_Emergency_Details (member_id, ec_name, ec_relationship, ec_phone_number, spouse, spouse_email, spouse_phone_number)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        """, (member_id, emergency_name, emergency_relationship, emergency_contact, emergency_email, spouse or None, spouse_email or None, spouse_phone or None))
+        """, (member_id, emergency_name, emergency_relationship, emergency_contact, spouse or None, spouse_email or None, spouse_phone or None))
 
         # Insert bank details
         cursor.execute("""
@@ -156,7 +174,7 @@ async def add_member(
 
         connection.commit()
 
-        return {"status": "success", "message": "Member added successfully", "member_id": member_id}
+        return {"status": "success", "message": "Member added successfully", "member_id": member_id, "email_status": email_response}
     
     except Exception as e:
         traceback.print_exc()
