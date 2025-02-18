@@ -123,11 +123,11 @@ async def add_member(
         # Insert member data
         query = """
             INSERT INTO Members (username, pass, first_name, last_name, phone_number, member_address1, member_address2, member_city, member_state, member_zip,
-                                email_id, membership_type, points, referral_information, picture_url, user_type, is_deleted, dl, company_name, membership_id)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                                email_id, membership_type, points, referral_information, picture_url, user_type, is_deleted, dl, company_name)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
         """
         cursor.execute(query, (username, hashed_password, first_name, last_name, phone_number, member_address1, member_address2, member_city, member_state, member_zip, 
-            email_id, membership_type, points, referral_information, picture_url, "User", "N", dl, company_name, membership_id,))
+            email_id, membership_type, points, referral_information, picture_url, "User", "N", dl, company_name,))
         member_id = cursor.lastrowid
         if member_id is None:
             raise HTTPException(status_code=500, detail="Failed to retrieve member_id after insertion.")
