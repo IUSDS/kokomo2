@@ -7,8 +7,15 @@ from datetime import datetime, timedelta
 from pymysql.err import IntegrityError
 import pymysql
 from emails.forgot_pass_email import send_reset_email
+from passlib.context import CryptContext
 
 forgot_password_route = APIRouter()
+
+# Password hashing context
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)
 
 # Request schemas
 class ForgotPasswordRequest(BaseModel):
@@ -79,10 +86,13 @@ def reset_password(request: ResetPasswordRequest):
             if datetime.now() > token_data["expiry_time"]:
                 raise HTTPException(status_code=400, detail="Token has expired.")
 
+            # Hash the new password before updating it in the database
+            hashed_password = hash_password(request.new_password)
+
             # Update the user's password
             cursor.execute(
                 "UPDATE Members SET pass = %s WHERE email_id = %s",
-                (request.new_password, token_data["email"]),
+                (hashed_password, token_data["email"]),
             )
             connection.commit()
 
