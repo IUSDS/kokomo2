@@ -30,7 +30,6 @@ class UserResponse(BaseModel):
     referral_information: Optional[str]
     picture_url: Optional[str]
     emergency_contact: Optional[int]
-    emergency_email: Optional[EmailStr]
     emergency_relationship: Optional[str]
     emergency_name: Optional[str]
     dl: Optional[str]
@@ -61,7 +60,7 @@ async def get_user_details(username: str = Query(...)):
         # Fetch Emergency details
         cursor.execute("""
             SELECT ec_name AS emergency_name, ec_relationship AS emergency_relationship, 
-                   ec_phone_number AS emergency_contact, ec_email AS emergency_email, 
+                   ec_phone_number AS emergency_contact, 
                    spouse, spouse_email, spouse_phone_number AS spouse_phone
             FROM Member_Emergency_Details WHERE member_id = %s
         """, (member["member_id"],))
