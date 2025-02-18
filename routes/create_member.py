@@ -65,7 +65,7 @@ async def add_member(
     name_on_acc: str = Form(...),
     type_of_acc: str = Form(...),
     date_sub: str = Form(default=datetime.utcnow().strftime('%Y-%m-%d')),
-    existing_membership_id: Optional[int] = Form(None),  # New field to allow linking to an existing membership
+    existing_membership_id: Union[int, None] = Form(None),  # New field to allow linking to an existing membership
 
     # Adding children details
     child_names: List[str] = Form([]),
