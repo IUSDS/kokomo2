@@ -65,7 +65,7 @@ async def add_member(
     name_on_acc: str = Form(...),
     type_of_acc: str = Form(...),
     date_sub: str = Form(default=datetime.utcnow().strftime('%Y-%m-%d')),
-    existing_membership_id: Union[int, None] = Form(None),  # New field to allow linking to an existing membership
+    #existing_membership_id: Union[int, None] = Form(None),  # New field to allow linking to an existing membership
 
     # Adding children details
     child_names: List[str] = Form([]),
@@ -91,11 +91,11 @@ async def add_member(
             raise HTTPException(status_code=400, detail="Account already exists for this email, try logging in.")
 
         # Assign Membership ID (either existing or new)
-        if existing_membership_id:
-            membership_id = existing_membership_id
-        else:
-            cursor.execute("SELECT COALESCE(MAX(membership_id) + 1, 1) FROM Members")
-            membership_id = cursor.fetchone()[0]
+        #if existing_membership_id:
+            #membership_id = existing_membership_id
+        #else:
+            #cursor.execute("SELECT COALESCE(MAX(membership_id) + 1, 1) FROM Members")
+            #membership_id = cursor.fetchone()[0]
         
         temp_password = generate_temp_password()
         hashed_password = hash_password(temp_password)
@@ -144,7 +144,7 @@ async def add_member(
         # Insert emergency details
         cursor.execute("""
         INSERT INTO Member_Emergency_Details (member_id, ec_name, ec_relationship, ec_phone_number, spouse, spouse_email, spouse_phone_number)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (member_id, emergency_name, emergency_relationship, emergency_contact, spouse or None, spouse_email or None, spouse_phone or None))
 
         # Insert bank details
