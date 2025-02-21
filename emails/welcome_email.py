@@ -6,7 +6,7 @@ from email.mime.text import MIMEText
 from fastapi import HTTPException
 
 SENDER_EMAIL = "brian@kokomoyachtclub.vip"
-PASSWORD_UPDATE_URL = "https://kokomoyachtclub.vip/forgot_password"
+Login_URL = "https://kokomoyachtclub.vip/login"
 
 def generate_temp_password(length=10):
     """Generate a random temporary password."""
@@ -73,9 +73,9 @@ def send_welcome_email(to_email: str, first_name: str, last_name: str, member_id
                 <p><span class="highlight">Username:</span> {username}</p>
                 <p><span class="highlight">Temporary Password:</span> {temp_password}</p>
                 
-                <p>To ensure security, please change your password as soon as possible by clicking the button below:</p>
+                <p>Use the above mentioned information for logging in!</p>
                 
-                <a class="button" href="{PASSWORD_UPDATE_URL}">Update Password</a>
+                <a class="button" href="{Login_URL}">LOGIN</a>
                 
                 <p class="footer">If you have any questions or need assistance, feel free to contact our support team.</p>
                 
