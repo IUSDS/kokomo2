@@ -55,15 +55,15 @@ async def add_member(
     spouse: str = Form(""),
     spouse_email: str = Form(""),
     spouse_phone: str = Form(""),
-    depository_name: str = Form(...),
-    branch: str = Form(...),
+    depository_name: str = Form(None),
+    branch: str = Form(None),
     city: str = Form(None),
     state: str = Form(None),
     zip_code: int = Form(0),
-    routing_no: int = Form(...),
-    acc_no: int = Form(...),
-    name_on_acc: str = Form(...),
-    type_of_acc: str = Form(...),
+    routing_no: int = Form(0),
+    acc_no: int = Form(0),
+    name_on_acc: str = Form(None),
+    type_of_acc: str = Form(None),
     date_sub: str = Form(default=datetime.utcnow().strftime('%Y-%m-%d')),
     #existing_membership_id: Union[int, None] = Form(None),  # New field to allow linking to an existing membership
 
@@ -133,7 +133,7 @@ async def add_member(
             raise HTTPException(status_code=500, detail="Failed to retrieve member_id after insertion.")
         
         email_response = send_welcome_email(
-            to_email=email_id,
+            #to_email=email_id,
             first_name=first_name,
             last_name=last_name,
             member_id=member_id,
