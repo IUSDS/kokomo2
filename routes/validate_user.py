@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Request, Response, Depends, Form
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from utils.database import get_db_connection
 from passlib.context import CryptContext
 import pymysql
@@ -22,7 +22,7 @@ class UserResponse(BaseModel):
     member_city: str
     member_state: str
     member_zip: int
-    #email_id: EmailStr
+    email_id: EmailStr
     membership_type: str
     points: int
     referral_information: Optional[str]
