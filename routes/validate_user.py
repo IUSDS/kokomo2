@@ -22,7 +22,7 @@ class UserResponse(BaseModel):
     member_city: str
     member_state: str
     member_zip: int
-    email_id: EmailStr
+    #email_id: EmailStr
     membership_type: str
     points: int
     referral_information: Optional[str]
