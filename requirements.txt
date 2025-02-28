@@ -12,4 +12,3 @@ bcrypt
 passlib[bcrypt]
 itsdangerous
 pandas
-logging
