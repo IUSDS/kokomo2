@@ -198,4 +198,4 @@ async def validate_member(username: str = None, email_id: str = None):
         if "cursor" in locals():
             cursor.close()
         if "connection" in locals():
-connection.close()
+            connection.close()
