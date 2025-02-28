@@ -12,3 +12,6 @@ bcrypt
 passlib[bcrypt]
 itsdangerous
 pandas
+logging
+pillow 
+pillow-heif
