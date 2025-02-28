@@ -9,10 +9,11 @@ DB_PASSWORD = None
 JWT_SECRET = None
 SESSION_COOKIES = None
 SMTP_USER = None
+Access_Point_ALIAS = None
 
 def load_secrets(secret_name="my-fastapi-secret-key", region_name="ap-southeast-2"):
     """Fetches secrets from AWS Secrets Manager and assigns them to global variables."""
-    global SECRET_KEY, SMTP_PASS, DB_PASSWORD, JWT_SECRET, SESSION_COOKIES, SMTP_USER
+    global SECRET_KEY, SMTP_PASS, DB_PASSWORD, JWT_SECRET, SESSION_COOKIES, SMTP_USER, Access_Point_ALIAS
 
     session = boto3.session.Session()
     client = session.client(service_name='secretsmanager', region_name=region_name)
@@ -41,6 +42,7 @@ def load_secrets(secret_name="my-fastapi-secret-key", region_name="ap-southeast-
     JWT_SECRET = secrets_dict.get("JWT_SECRET", "default_jwt_secret")
     SESSION_COOKIES = secrets_dict.get("SESSION_COOKIES", "default_session_cookies")
     SMTP_USER = secrets_dict.get("SMTP_USER", "default_smtp_user")
+    Access_Point_ALIAS = secrets_dict.get("Access_Point_ALIAS", "default_access_point_ALIAS")
 
 # Load secrets when imported
 load_secrets()
