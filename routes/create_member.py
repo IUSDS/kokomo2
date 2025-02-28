@@ -3,6 +3,7 @@ from pydantic import EmailStr
 from botocore.exceptions import ClientError
 from passlib.context import CryptContext
 from utils.database import get_db_connection
+from utils.secrets import Access_Point_ALIAS
 import boto3
 import traceback
 from starlette.middleware.sessions import SessionMiddleware 
@@ -18,7 +19,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # AWS S3 Configuration
 S3_BUCKET_NAME = "image-bucket-kokomo-yacht-club"
 S3_REGION = "ap-southeast-2"
-ACCESS_POINT_ALIAS = "first-kokomo-access-y1pahkde96c1mfspxs7cbiaro94hyaps2a-s3alias"
+ACCESS_POINT_ALIAS = Access_Point_ALIAS
 # Initialize S3 client
 s3_client = boto3.client("s3", region_name=S3_REGION)
 def hash_password(password: str) -> str:
