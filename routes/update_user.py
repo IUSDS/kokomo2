@@ -24,27 +24,26 @@ DEFAULT_PICTURE_URL = (
 @update_user_route.put("/update/user/")
 async def update_user(
     username: str = Form(...),
-    first_name: str = Form(None),
-    last_name: str = Form(None),
-    phone_number: int = Form(None),
-    member_address1: str = Form(None),
-    member_address2: str = Form(None),
-    member_city: str = Form(None),
-    member_state: str = Form(None),
-    member_zip: int = Form(None),    
-    membership_type: str = Form(None),
-    points: int = Form(None),
+    first_name: Optional[str] = Form(None),
+    last_name: Optional[str] = Form(None),
+    phone_number: Optional[int] = Form(None),
+    member_address1: Optional[str] = Form(None),
+    member_address2: Optional[str] = Form(None),
+    member_city: Optional[str] = Form(None),
+    member_state: Optional[str] = Form(None),
+    member_zip: Optional[int] = Form(None),    
+    membership_type: Optional[str] = Form(None),
+    points: Optional[int] = Form(None),
     file: Optional[Union[UploadFile, str]] = File(None),
     # emergency_contact: int = Form(None),
     # emergency_email: EmailStr = Form(None),
     # emergency_relationship: str = Form(None),
     # emergency_name: str = Form(None),
-    dl: str = Form(None),
+    dl: Optional[str] = Form(None),
     # spouse: str = Form(None),
     # spouse_email: EmailStr = Form(None),
     # spouse_phone: int = Form(None),
-    company_name: str = Form(None),
-
+    company_name: Optional[str] = Form(None),
     ):
     """
     Update user details. Fields left blank will retain their previous values.
@@ -101,6 +100,18 @@ async def update_user(
 
             if not existing_data:
                 raise HTTPException(status_code=404, detail="User not found.")
+
+            # Ensure fields don't default to "string" or 0 but retain None
+            first_name = None if first_name == "string" else first_name
+            last_name = None if last_name == "string" else last_name
+            phone_number = None if phone_number == 0 else phone_number
+            member_address1 = None if member_address1 == "string" else member_address1
+            member_address2 = None if member_address2 == "string" else member_address2
+            member_city = None if member_city == "string" else member_city
+            member_state = None if member_state == "string" else member_state
+            membership_type = None if membership_type == "string" else membership_type
+            company_name = None if company_name == "string" else company_name
+            dl = None if dl == "string" else dl
             
             cursor.execute(update_query, (
                 first_name, last_name, phone_number, member_address1, member_address2, member_city, 
