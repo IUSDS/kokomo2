@@ -17,6 +17,16 @@ class EmailRequest(BaseModel):
     visitor_name: str
     phone_no: int
 
+class YachtVisitorRequest(BaseModel):
+    visitor_first_name: str
+    visitor_last_name: str
+    visitor_email: EmailStr
+    visitor_phone_number: str
+    yatch_model: str
+    yatch_manufacture_year: int
+    yatch_size: int
+    visitor_message: str = None
+
 # Admin Email Address
 ADMIN_EMAIL = "brian@kokomoyachtclub.vip"
 
@@ -89,3 +99,46 @@ def send_admin_notification_email_request(request: EmailRequest):
         return {"status": "success", "message": "Email request notification sent successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to send email request notification: {str(e)}")
+
+# Function to Send Email Notification for Yacht Visitor Request
+def send_admin_notification_yacht_visitor(request: YachtVisitorRequest):
+    subject = "New Yacht Visitor Form Entry"
+    body_text = f"""
+    Hello Brian,
+
+    A new yacht visitor form has been submitted. Please find the details below:
+
+    ----------------------------------------
+    **Visitor Details**
+    ----------------------------------------
+     **Name:** {request.visitor_first_name} {request.visitor_last_name}
+     **Email:** {request.visitor_email}
+     **Phone Number:** {request.visitor_phone_number}
+    
+    ----------------------------------------
+    **Yacht Details**
+    ----------------------------------------
+     **Model:** {request.yatch_model}
+     **Manufacture Year:** {request.yatch_manufacture_year}
+     **Size:** {request.yatch_size} ft
+    {f' **Message:** {request.visitor_message}' if request.visitor_message else ''}
+
+    Best regards,  
+    **Kokomo Yacht Club System**
+    """
+
+    try:
+        server = smtp_connection()
+        message = MIMEMultipart()
+        message["Subject"] = subject
+        message["From"] = ADMIN_EMAIL
+        message["To"] = ADMIN_EMAIL
+        message.attach(MIMEText(body_text, "plain"))
+
+        server.sendmail(ADMIN_EMAIL, ADMIN_EMAIL, message.as_string())
+        server.quit()
+
+        return {"status": "success", "message": "Yacht visitor notification email sent successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to send yacht visitor notification email: {str(e)}")
+        
