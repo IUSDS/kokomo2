@@ -1,15 +1,12 @@
 import logging
 import logging.config
-import os
-
-# Ensure the logs directory exists
-LOG_DIR = "logs"
-os.makedirs(LOG_DIR, exist_ok=True)
+#import os
 
 # Define log file paths
-APP_LOG_FILE = os.path.join(LOG_DIR, "app.log")
-UVICORN_ACCESS_LOG_FILE = os.path.join(LOG_DIR, "uvicorn_access.log")
-UVICORN_ERROR_LOG_FILE = os.path.join(LOG_DIR, "uvicorn_error.log")
+APP_LOG_FILE = "logs/app.log"
+UVICORN_ACCESS_LOG_FILE = "logs/uvicorn_access.log"
+UVICORN_ERROR_LOG_FILE = "logs/uvicorn_error.log"
+WEBHOOK_LOG_FILE = "logs/webhooks.log"
 
 # Logging Configuration
 LOGGING_CONFIG = {
@@ -72,7 +69,7 @@ uvicorn_error_logger = logging.getLogger("uvicorn.error")
 
 # Configure logging
 logging.basicConfig(
-    filename="logs/webhooks.log",
+    filename=WEBHOOK_LOG_FILE,
     filemode="a",  # Append to the log file
     format="%(asctime)s - %(levelname)s - %(message)s",
     level=logging.INFO
