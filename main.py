@@ -20,7 +20,7 @@ from routes.visitors import visitors_route
 from routes.forgotpass import forgot_password_route
 from utils.secrets import SECRET_KEY, SESSION_COOKIES, JWT_SECRET
 from starlette.middleware.sessions import SessionMiddleware
-from logger_config import app_logger
+#from logger_config import app_logger
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -81,12 +81,12 @@ async def docs_auth_middleware(request: Request, call_next):
     return await call_next(request)
 
 #added logger file for saving responses
-async def log_requests(request: Request, call_next):
-    """Middleware to log requests."""
-    app_logger.info(f"Received request: {request.method} {request.url}")
-    response = await call_next(request)
-    app_logger.info(f"Response status: {response.status_code}")
-    return response
+#async def log_requests(request: Request, call_next):
+  #  """Middleware to log requests."""
+   # app_logger.info(f"Received request: {request.method} {request.url}")
+ #   response = await call_next(request)
+  #  app_logger.info(f"Response status: {response.status_code}")
+  #  return response
 
 # Secure the Swagger UI
 @app.get("/docs", include_in_schema=False)
