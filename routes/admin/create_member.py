@@ -1,29 +1,27 @@
-from fastapi import APIRouter, HTTPException, Form, UploadFile, File, Request, Query
+from fastapi import APIRouter, Form, UploadFile, File, Request
 from pydantic import EmailStr
 from botocore.exceptions import ClientError
-from passlib.context import CryptContext
+from utils.password import hash_password
 from utils.database import get_db_connection
 from utils.secrets import Access_Point_ALIAS
 import boto3
 import traceback
-from starlette.middleware.sessions import SessionMiddleware 
-from fastapi import  Depends, HTTPException
+from fastapi import HTTPException
 from datetime import datetime
 from typing import List,  Optional, Union
 from emails.welcome_email import send_welcome_email, generate_temp_password
 
 # Initialize router
 create_member_route = APIRouter()
-# Password hashing context
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 # AWS S3 Configuration
 S3_BUCKET_NAME = "image-bucket-kokomo-yacht-club"
 S3_REGION = "ap-southeast-2"
 ACCESS_POINT_ALIAS = Access_Point_ALIAS
+
 # Initialize S3 client
 s3_client = boto3.client("s3", region_name=S3_REGION)
-def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+
 @create_member_route.post("/add-member/") 
 async def add_member(
     request: Request,
@@ -127,7 +125,7 @@ async def add_member(
             raise HTTPException(status_code=500, detail="Failed to retrieve member_id after insertion.")
         
         email_response = send_welcome_email(
-            #to_email=email_id,
+            to_email=email_id,
             first_name=first_name,
             last_name=last_name,
             member_id=member_id,
@@ -175,15 +173,17 @@ async def add_member(
             cursor.close()
         if connection:
             connection.close()
-            
+
+
 @create_member_route.get("/validate-member/")
 async def validate_member(username: str = None, email_id: str = None):
     """
     Validates if a username or email is already registered.
     """
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
     try:
-        connection = get_db_connection()
-        cursor = connection.cursor()
         if username:
             cursor.execute("SELECT COUNT(*) AS count FROM Members WHERE username = %s", (username,))
             if cursor.fetchone()["count"] > 0:

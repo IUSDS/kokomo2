@@ -1,50 +1,43 @@
 from fastapi import APIRouter, HTTPException, Request, Response, Depends, Form
 from pydantic import BaseModel, EmailStr
 from utils.database import get_db_connection
-from passlib.context import CryptContext
+from utils.session import get_logged_in_username
+from utils.password import verify_password
 import pymysql
 from pymysql.cursors import DictCursor
 from typing import Optional
-from starlette.middleware.sessions import SessionMiddleware  # Ensure correct import
 
 # Initialize router
 validate_user_route = APIRouter()
 
-class UserResponse(BaseModel):
-    member_id: int
-    username: str
-    password: str
-    first_name: str
-    last_name: str
-    phone_number: int
-    member_address1: str
-    member_address2: Optional[str]
-    member_city: str
-    member_state: str
-    member_zip: int
-    email_id: EmailStr
-    membership_type: str
-    points: int
-    referral_information: Optional[str]
-    picture_url: Optional[str]
-    emergency_contact: Optional[int]
-    emergency_relationship: Optional[str]
-    emergency_name: Optional[str]
-    dl: Optional[str]
-    spouse: Optional[str]
-    spouse_email: Optional[EmailStr]
-    spouse_phone: Optional[int]
-    company_name: Optional[str]
-
-# Password hashing context
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-def hash_password(password: str) -> str:
-    """Hashes a password using bcrypt"""
-    return pwd_context.hash(password)
+# class UserResponse(BaseModel):
+#     member_id: int
+#     username: str
+#     password: str
+#     first_name: str
+#     last_name: str
+#     phone_number: int
+#     member_address1: str
+#     member_address2: Optional[str]
+#     member_city: str
+#     member_state: str
+#     member_zip: int
+#     email_id: EmailStr
+#     membership_type: str
+#     points: int
+#     referral_information: Optional[str]
+#     picture_url: Optional[str]
+#     emergency_contact: Optional[int]
+#     emergency_relationship: Optional[str]
+#     emergency_name: Optional[str]
+#     dl: Optional[str]
+#     spouse: Optional[str]
+#     spouse_email: Optional[EmailStr]
+#     spouse_phone: Optional[int]
+#     company_name: Optional[str]
 
 @validate_user_route.post("/validate-user/")
-async def validate_user(response: Response, username: str = Form(...), password: str = Form(...)):
+async def validate_user(request: Request, username: str = Form(...), password: str = Form(...)):
     """
     Validates the user credentials against the database.
     """
@@ -66,14 +59,12 @@ async def validate_user(response: Response, username: str = Form(...), password:
                 raise HTTPException(status_code=404, detail="User not found.")
 
             # Verify the hashed password
-            if not pwd_context.verify(password, result["pass"]):
+            if not verify_password(password, result["pass"]):
                 raise HTTPException(status_code=401, detail="Invalid username or password.")
 
             # Save session details if validation is successful using SessionMiddleware
-            # Setting session data for user, stored in request.session
-            # Session expires in 30 minutes {expires= (datetime.utcnow() + timedelta(minutes=30)}
-            response.set_cookie(key="kokomo_session", value=username, httponly=True, )
-            
+            request.session["username"] = username
+
             return {
                 "status": "SUCCESS",
                 "user_type": result["user_type"],
@@ -87,11 +78,12 @@ async def validate_user(response: Response, username: str = Form(...), password:
     finally:
         connection.close()
 
-@validate_user_route.get("/current-user/", response_model=UserResponse)
+# @validate_user_route.get("/current-user/", response_model=UserResponse)
+@validate_user_route.get("/current-user/")
 async def current_user(request: Request):
     # Retrieve the session cookie
-    kokomo_session = request.cookies.get("kokomo_session")
-    if not kokomo_session:
+    username = get_logged_in_username(request)
+    if not username:
         raise HTTPException(status_code=401, detail="Session expired or invalid.")
     
     connection = None
@@ -108,7 +100,7 @@ async def current_user(request: Request):
             FROM Members 
             WHERE LOWER(username) = LOWER(%s) AND is_deleted = 'N'
             LIMIT 1
-        """, (kokomo_session,))
+        """, (username,))
         member = cursor.fetchone()
         if not member:
             raise HTTPException(status_code=401, detail="Session expired or invalid.")
@@ -125,12 +117,14 @@ async def current_user(request: Request):
         
         # Merge member and emergency data into a single response
         response_data = {**member, **emergency}
-        # Ensure all fields defined in the UserResponse model are present
-        for key in UserResponse.__annotations__.keys():
-            if key not in response_data:
-                response_data[key] = None
-        
+
+        # # Ensure all fields defined in the UserResponse model are present
+        # for key in UserResponse.model_fields:
+        #     if key not in response_data:
+        #         response_data[key] = None
+
         return response_data
+    
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
     finally:
@@ -140,9 +134,9 @@ async def current_user(request: Request):
             connection.close()
             
 @validate_user_route.post("/logout/")
-async def logout(request: Request, response: Response):
+async def logout(request: Request):
     """
     Clears session data and logs the user out.
     """
-    response.delete_cookie("kokomo_session")
+    request.session.clear()
     return {"status": "SUCCESS", "message": "Logged out successfully"}

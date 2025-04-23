@@ -9,7 +9,7 @@ async def delete_user(
     username: str = Form(..., description="The username of the user to delete")
 ):
     """
-    Mark a user as deleted by updating the `is_deleted` column to "Y".
+    Mark a user as deleted by updating the is_deleted column to "Y".
     """
     query = """
         UPDATE Members

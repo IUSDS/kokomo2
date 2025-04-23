@@ -1,21 +1,13 @@
-from sqlite3 import Cursor
 from fastapi import HTTPException, Depends, Form, APIRouter
 from pydantic import BaseModel, EmailStr
 from utils.database import get_db_connection
 import secrets
 from datetime import datetime, timedelta
 from pymysql.err import IntegrityError
-import pymysql
 from emails.forgot_pass_email import send_reset_email
-from passlib.context import CryptContext
+from utils.password import hash_password
 
 forgot_password_route = APIRouter()
-
-# Password hashing context
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
 
 # Request schemas
 class ForgotPasswordRequest(BaseModel):
@@ -56,7 +48,7 @@ def forgot_password(email: str = Form(...)):
             send_reset_email(email, token)
         return {"message": "Password reset email sent successfully."}
 
-    except pymysql.err.IntegrityError as e:
+    except IntegrityError as e:
         print(f"IntegrityError: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -103,27 +95,3 @@ def reset_password(request: ResetPasswordRequest):
         return {"message": "Password reset successfully."}
     finally:
         connection.close()
-
-
-async def forgot_password(email: str, token: str, expiry_time: datetime):
-    try:
-        # Check if member_id exists in Members table
-        Cursor.execute("SELECT member_id FROM Members WHERE email_id = %s", (email,))
-        connection = get_db_connection()
-        member = Cursor.fetchone()
-
-        if not member:
-            raise HTTPException(status_code=404, detail="Member not found")
-
-        member_id = member['member_id']
-
-        # Insert into Password_Reset_Tokens table
-        Cursor.execute(
-            "INSERT INTO Password_Reset_Tokens (member_id, email, token, expiry_time) VALUES (%s, %s, %s, %s)",
-            (member_id, email, token, expiry_time)
-        )
-        connection.commit()
-    except IntegrityError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail="Internal Server Error")
