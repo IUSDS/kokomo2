@@ -5,15 +5,13 @@ from fastapi.responses import RedirectResponse, Response
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
 import base64
-from routes.export_data import export_data_route
+from routes.admin.export_data import export_data_route
 from routes.validate_user import validate_user_route
-from routes.create_member import create_member_route
-from routes.get_points import get_points_route
-from routes.get_membership import get_membership_route
-from routes.update_membership import update_membership_route
-from routes.delete_user import delete_user_route
-from routes.update_user import update_user_route
-from routes.add_points import update_points_route
+from routes.admin.create_member import create_member_route
+from routes.admin.points import points_route
+from routes.admin.membership import membership_route
+from routes.admin.delete_user import delete_user_route
+from routes.admin.update_user import update_user_route
 from routes.user_detail import user_details_route
 from routes.webhooks_FH import webhook_route
 from routes.visitors import visitors_route
@@ -80,14 +78,6 @@ async def docs_auth_middleware(request: Request, call_next):
 
     return await call_next(request)
 
-#added logger file for saving responses
-#async def log_requests(request: Request, call_next):
-  #  """Middleware to log requests."""
-   # app_logger.info(f"Received request: {request.method} {request.url}")
- #   response = await call_next(request)
-  #  app_logger.info(f"Response status: {response.status_code}")
-  #  return response
-
 # Secure the Swagger UI
 @app.get("/docs", include_in_schema=False)
 async def get_documentation():
@@ -102,10 +92,8 @@ async def get_open_api_endpoint():
 app.include_router(validate_user_route, prefix="/validate-user", tags=["Validate User"])
 app.include_router(create_member_route, prefix="/create-member", tags=["Create Member"])
 app.include_router(user_details_route, prefix="/new-userdetail", tags=["New userdetail"])
-app.include_router(get_points_route, prefix="/get", tags=["Points"])
-app.include_router(update_points_route, prefix="/update", tags=["Update Points"])
-app.include_router(get_membership_route, prefix="/get", tags=["Membership"])
-app.include_router(update_membership_route, prefix="/update", tags=["Update Membership"])
+app.include_router(points_route, prefix="/points", tags=["Points"])
+app.include_router(membership_route, prefix="/get-membership", tags=["Membership"])
 app.include_router(update_user_route, prefix="/update", tags=["Update User"])
 app.include_router(delete_user_route, prefix="/update", tags=["Delete User"])
 app.include_router(webhook_route, prefix="/webhook", tags=["Webhook"])
