@@ -38,11 +38,15 @@ app.add_middleware(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "https://kokomoyachtclub.vip"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # Function to enforce authentication for Swagger UI & OpenAPI
 async def enforce_docs_auth(request: Request):
