@@ -7,7 +7,6 @@ from fastapi import HTTPException
 
 SENDER_EMAIL = "brian@kokomoyachtclub.vip"
 Login_URL = "https://kokomoyachtclub.vip/login"
-SENDING_TO = "brian@kokomoyachtclub.vip"
 CC_EMAIL = "ali@iusdigitalsolutions.com"
 
 def generate_temp_password(length=10):
@@ -17,7 +16,7 @@ def generate_temp_password(length=10):
 
 #when we start sending to the emails to user directly 
 #def send_welcome_email(to_email: str, first_name: str, last_name: str, member_id: int, temp_password: str,username: str):
-def send_welcome_email(first_name: str, last_name: str, member_id: int, temp_password: str,username: str):
+def send_welcome_email(to_email: str, first_name: str, last_name: str, member_id: int, temp_password: str, username: str):
     """Sends a welcome email with temporary password and password update link."""
     try:
         server = smtp_connection()
@@ -55,11 +54,13 @@ def send_welcome_email(first_name: str, last_name: str, member_id: int, temp_pas
                 .button {{
                     display: inline-block;
                     background-color: #007BFF;
-                    color: #ffffff;
+                    color: #ffffff !important;
                     padding: 10px 20px;
                     text-decoration: none;
                     border-radius: 5px;
                     font-weight: bold;
+                    border: none;
+                    text-align: center;
                 }}
                 .footer {{
                     margin-top: 20px;
@@ -73,7 +74,6 @@ def send_welcome_email(first_name: str, last_name: str, member_id: int, temp_pas
                 <h2>Welcome to Kokomo Yacht Club, {first_name}!</h2>
                 <p>We're thrilled to have you on board. Your account has been successfully created!</p>
                 
-                <p><span class="highlight">Member ID:</span> {member_id}</p>
                 <p><span class="highlight">Username:</span> {username}</p>
                 <p><span class="highlight">Temporary Password:</span> {temp_password}</p>
                 
@@ -92,15 +92,12 @@ def send_welcome_email(first_name: str, last_name: str, member_id: int, temp_pas
 
         msg = MIMEMultipart()
         msg["From"] = SENDER_EMAIL
-        #msg["To"] = to_email
-        msg["To"] = SENDING_TO
+        msg["To"] = to_email
         msg["Cc"] = CC_EMAIL 
         msg["Subject"] = subject
         msg.attach(MIMEText(body, "html"))
 
-        recipients = [SENDING_TO, CC_EMAIL]
-        server.sendmail(SENDER_EMAIL, recipients, msg.as_string())
-        #server.sendmail(SENDER_EMAIL, to_email, msg.as_string())
+        server.sendmail(SENDER_EMAIL, to_email, msg.as_string())
         server.quit()
         return {"status": "success", "message": "Email sent successfully"}
     

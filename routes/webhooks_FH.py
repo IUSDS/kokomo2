@@ -1,49 +1,83 @@
-from fastapi import APIRouter, HTTPException, Request, FastAPI, Header
-from pydantic import BaseModel
+from fastapi import APIRouter, HTTPException, Request
+from utils.secrets import SECRET_KEY
 import hmac
 import hashlib
-from utils.secrets import SECRET_KEY
+from utils.booking_parser import parse_booking_payload
+from utils.booking_db import store_booking_to_db
 
 # Initialize router
 webhook_route = APIRouter()
 
-# Define a BaseModel for the payload
-class WebhookPayload(BaseModel):
-    event: str
-    data: dict
-
 @webhook_route.post("/webhook")
 async def webhook_listener(request: Request):
     try:
-        # Read the JSON payload from the request
         payload = await request.json()
-        print("Received Payload:", payload)
-
-        # Retrieve the raw body of the request for hash verification
         raw_body = await request.body()
 
-        # Compute the HMAC-SHA256 hash using the secret key
+        # Compute signature (optional for now)
+        computed_signature = hmac.new(
+            bytes.fromhex(SECRET_KEY),
+            raw_body,
+            hashlib.sha256
+        ).hexdigest()
+        print("Computed Signature:", computed_signature)
+
+        # Since there's no "event" or "data", just use payload directly
+        booking_data = payload.get("booking")
+        if not booking_data:
+            raise HTTPException(status_code=400, detail="Invalid payload: 'booking' key missing")
+
+        print("Processing Booking")
+        member_id = 1053  # Use dynamic value if needed
+
+        # Parse & store booking
+        parsed_data = parse_booking_payload(booking_data, member_id)
+        print(parsed_data)
+        store_booking_to_db({"data": parsed_data})
+
+        return {"status": "success", "message": "Booking processed"}
+
+    except Exception as e:
+        print("Webhook Error:", e)
+        raise HTTPException(status_code=400, detail=f"Webhook failed: {e}")
+
+    try:
+        # Read and verify request
+        payload = await request.json()
+        raw_body = await request.body()
+
         computed_signature = hmac.new(
             bytes.fromhex(SECRET_KEY),
             raw_body,
             hashlib.sha256
         ).hexdigest()
 
-        # Log the computed signature (optional)
         print("Computed Signature:", computed_signature)
 
-        # Process the payload
+        # Extract booking payload
         event_type = payload.get("event")
+        booking_data = payload
+
         if event_type == "order_created":
-            print("Order Created:", payload["data"])
+            print("Processing Order Created")
+
+            # TEMP: Hardcode or dynamically assign member_id
+            member_id = 1053  # Replace with real logic if available
+
+            # Parse booking data
+            parsed_data = parse_booking_payload(booking_data, member_id)
+            print(parsed_data)
+
+            # Store to DB
+            store_booking_to_db({"data": parsed_data})
+
         elif event_type == "order_cancelled":
-            print("Order Cancelled:", payload["data"])
+            print("Order Cancelled — no DB action taken.")
         else:
             print("Unhandled Event:", event_type)
 
-        # Return a success response
-        return {"status": "success", "message": "Webhook received"}
+        return {"status": "success", "message": "Webhook processed"}
+
     except Exception as e:
-        # Handle errors
-        print("Error processing webhook:", e)
-        raise HTTPException(status_code=400, detail=f"Error processing webhook: {e}")
+        print("Webhook Error:", e)
+        raise HTTPException(status_code=400, detail=f"Webhook failed: {e}")
