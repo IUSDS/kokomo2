@@ -4,6 +4,7 @@ import hmac
 import hashlib
 from utils.booking_parser import parse_booking_payload
 from utils.booking_db import store_booking_to_db
+from utils.session import get_logged_in_member_id
 
 # Initialize router
 webhook_route = APIRouter()
@@ -28,7 +29,9 @@ async def webhook_listener(request: Request):
             raise HTTPException(status_code=400, detail="Invalid payload: 'booking' key missing")
 
         print("Processing Booking")
-        member_id = 1053  # Use dynamic value if needed
+        # member_id = 1053  # Use dynamic value if needed
+        member_id = get_logged_in_member_id(request)
+        # print(member_id)
 
         # Parse & store booking
         parsed_data = parse_booking_payload(booking_data, member_id)
