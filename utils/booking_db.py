@@ -9,6 +9,7 @@ def store_booking_to_db(payload: dict):
         data = payload.get("data", {})
         member_id = data.get("member_id")
         # print(member_id)
+        # print(data)
 
         if not member_id:
             raise HTTPException(status_code=400, detail="member_id is required in the payload.")

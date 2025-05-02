@@ -15,6 +15,9 @@ def extract_int(value, default=0):
 def parse_booking_payload(booking: dict, member_id: int) -> dict:
     availability = booking.get("availability", {})
     custom_fields = booking.get("custom_field_values", [])
+    # print("created at: ",booking.get("created_at"))
+    # print("start at: ",booking.get("availiblity", {}).get("start_at"))
+    # print("end at: ",booking.get("availiblity", {}).get("end_at"))
 
     def get_custom_value(name: str, default=None):
         for field in custom_fields:
@@ -25,7 +28,7 @@ def parse_booking_payload(booking: dict, member_id: int) -> dict:
     return {
         "member_id": member_id,
         "booking_id": booking.get("pk"),
-        "dashboard_url": f"https://kokomoyachtclub.vip/dashboard/{booking.get('pk')}",
+        "dashboard_url": booking.get("dashboard_url"),
         "created_at": booking.get("created_at"),
         "start_at": availability.get("start_at"),
         "end_at": availability.get("end_at"),
