@@ -4,7 +4,7 @@ import hmac
 import hashlib
 from utils.booking_parser import parse_booking_payload
 from utils.booking_db import store_booking_to_db
-from utils.session import get_logged_in_member_id
+from utils.session import get_logged_in_member_id_from_email
 
 # Initialize router
 webhook_route = APIRouter()
@@ -15,7 +15,7 @@ async def webhook_listener(request: Request):
         payload = await request.json()
         raw_body = await request.body()
 
-        # Compute signature (optional for now)
+        # Compute signature (optional but recommended for security)
         computed_signature = hmac.new(
             bytes.fromhex(SECRET_KEY),
             raw_body,
@@ -23,19 +23,25 @@ async def webhook_listener(request: Request):
         ).hexdigest()
         print("Computed Signature:", computed_signature)
 
-        # Since there's no "event" or "data", just use payload directly
+        # Check if the 'booking' data exists in the payload
         booking_data = payload.get("booking")
         if not booking_data:
             raise HTTPException(status_code=400, detail="Invalid payload: 'booking' key missing")
 
-        print("Processing Booking")
-        # member_id = 1053  # Use dynamic value if needed
-        member_id = get_logged_in_member_id(request)
-        # print(member_id)
+        # Extract email from booking data safely
+        email = booking_data.get('contact', {}).get('email')
+        if not email:
+            raise HTTPException(status_code=400, detail="Email missing in booking data")
 
-        # Parse & store booking
+        print("Processing Booking")
+        
+        # Retrieve member ID based on the email
+        member_id = get_logged_in_member_id_from_email(email)
+        print("MemberID:", member_id)
+
+        # Parse & store booking data
         parsed_data = parse_booking_payload(booking_data, member_id)
-        print(parsed_data)
+        # print(parsed_data)
         store_booking_to_db({"data": parsed_data})
 
         return {"status": "success", "message": "Booking processed"}
@@ -43,7 +49,6 @@ async def webhook_listener(request: Request):
     except Exception as e:
         print("Webhook Error:", e)
         raise HTTPException(status_code=400, detail=f"Webhook failed: {e}")
-
     try:
         # Read and verify request
         payload = await request.json()

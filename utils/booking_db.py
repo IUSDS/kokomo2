@@ -8,7 +8,7 @@ def store_booking_to_db(payload: dict):
     try:
         data = payload.get("data", {})
         member_id = data.get("member_id")
-        print(member_id)
+        # print(member_id)
 
         if not member_id:
             raise HTTPException(status_code=400, detail="member_id is required in the payload.")
@@ -21,7 +21,7 @@ def store_booking_to_db(payload: dict):
             raise HTTPException(status_code=400, detail=f"member_id {member_id} does not exist in Members table.")
 
         insert_query = """
-            INSERT INTO Bookings (
+            INSERT INTO booking_fh (
                 member_id, booking_id, dashboard_url, created_at, start_at, end_at, vessel_name, tour_type,
                 pickup_point, invoice_price_display, amount_paid_display, receipt_subtotal_display, receipt_taxes_display,
                 receipt_total_display, e_foil_count, sea_bob_count, other_add_ons, adult_beverages, catering_option,
