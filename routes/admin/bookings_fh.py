@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict, Any
 from fastapi import APIRouter, HTTPException
 from utils.database import get_db_connection
 
@@ -6,39 +6,27 @@ booking_route = APIRouter()
 
 # 1. ALL BOOKINGS
 @booking_route.get(
-    "/bookings/",
-    response_model=List[dict],
-    summary="Return all booking records"
+    "/admin/",
+    response_model=List[Dict[str, Any]],
+    summary="Admin: return full booking_fh table"
 )
-async def get_all_bookings():
-    sql = """
-        SELECT
-            CONCAT(b.start_at, ' – ', b.end_at) AS availability,
-            b.booking_id,
-            b.tour_type      AS item,
-            CONCAT(m.first_name, ' ', m.last_name) AS contact,
-            b.receipt_total_display AS debit,
-            NULL                   AS credit,
-            NULL                   AS total_points
-        FROM booking_fh b
-        LEFT JOIN Members m ON m.member_id = b.member_id
-        ORDER BY b.start_at;
-    """
-
+async def get_all_booking_fh():
+    sql = "SELECT * FROM booking_fh ORDER BY id;"
     conn = get_db_connection()
     try:
         with conn.cursor() as cur:
             cur.execute(sql)
-            return cur.fetchall()
+            rows = cur.fetchall()
+        return rows
     except Exception as e:
-        raise HTTPException(500, f"DB error: {e}")
+        raise HTTPException(status_code=500, detail=f"Database error: {e}")
     finally:
         conn.close()
 
 
 # 2. BOOKINGS FOR A SINGLE MEMBER
 @booking_route.get(
-    "/bookings/{member_id}",
+    "/member/{member_id}",
     response_model=List[dict],
     summary="Return bookings for one member"
 )
