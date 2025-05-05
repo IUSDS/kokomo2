@@ -40,7 +40,7 @@ async def add_member(
     points: int = Form(...),
     referral_information: str = Form(None),
     company_name: str = Form(None),
-    file: Optional[Union[UploadFile, str]] = File(None),
+    file: Optional[UploadFile] = File(None),
     emergency_contact: int = Form(...),
     #emergency_email: EmailStr = Form(...),
     emergency_relationship: str = Form(...),
@@ -96,8 +96,10 @@ async def add_member(
         if file and isinstance(file, UploadFile):
             if file.content_type not in ["image/jpeg", "image/png"]:
                 raise HTTPException(status_code=400, detail="Invalid file type. Only JPEG and PNG are allowed.")
+                
             file_content = await file.read()
             object_name = f"profile_pictures/{username}/{file.filename}"
+            
             try:
                 s3_client.put_object(
                     Bucket=S3_BUCKET_NAME,
@@ -105,12 +107,12 @@ async def add_member(
                     Body=file_content,
                     ContentType=file.content_type,
                 )
-                picture_url = f"https://{ACCESS_POINT_ALIAS}.s3.{S3_REGION}.amazonaws.com/{object_name}"
+                picture_url = f"https://{S3_BUCKET_NAME}.s3.{S3_REGION}.amazonaws.com/{object_name}"
             except ClientError as e:
                 raise HTTPException(status_code=500, detail=f"S3 Upload error: {e.response['Error']['Message']}")
         else:
             # Either file was not provided or an empty string was sent
-            picture_url = "https://image-bucket-kokomo-yacht-club.s3.ap-southeast-2.amazonaws.com/profile_pictures/default.png"
+            picture_url = "https://{S3_BUCKET_NAME}.s3.{S3_REGION}.amazonaws.com/profile_pictures/default.png"
 
         # Insert member data
         query = """
