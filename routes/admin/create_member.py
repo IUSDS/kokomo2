@@ -112,7 +112,7 @@ async def add_member(
                 raise HTTPException(status_code=500, detail=f"S3 Upload error: {e.response['Error']['Message']}")
         else:
             # Either file was not provided or an empty string was sent
-            picture_url = "https://{S3_BUCKET_NAME}.s3.{S3_REGION}.amazonaws.com/profile_pictures/default.png"
+            picture_url = f"https://{S3_BUCKET_NAME}.s3.{S3_REGION}.amazonaws.com/profile_pictures/default.png"
 
         # Insert member data
         query = """
