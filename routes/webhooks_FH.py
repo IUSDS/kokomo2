@@ -31,6 +31,8 @@ async def webhook_listener(request: Request):
         booking_data = payload.get("booking")
         if not booking_data:
             raise HTTPException(status_code=400, detail="Invalid payload: 'booking' key missing")
+        
+        print(booking_data)
 
         # Extract email from booking data safely
         email = booking_data.get('contact', {}).get('email')
