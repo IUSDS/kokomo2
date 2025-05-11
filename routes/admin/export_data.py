@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 import pymysql
 import pandas as pd
 from io import StringIO
-from utils.database import db_config
+from utils.db_util import db_config
 
 export_data_route = APIRouter()
 

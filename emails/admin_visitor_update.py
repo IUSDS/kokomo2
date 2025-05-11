@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from pydantic import BaseModel, EmailStr
-from utils.smtp import smtp_connection  # Importing the SMTP connection function
+from utils.email_util import smtp_connection  # Importing the SMTP connection function
 
 # Define Request Models
 class VisitorRequest(BaseModel):

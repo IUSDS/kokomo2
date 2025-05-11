@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Query, Form
-from utils.database import get_db_connection
+from utils.db_util import get_db_connection
 from pydantic import BaseModel
 
 # Initialize router

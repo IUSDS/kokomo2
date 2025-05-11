@@ -1,11 +1,11 @@
 from fastapi import HTTPException, Depends, Form, APIRouter
 from pydantic import BaseModel, EmailStr
-from utils.database import get_db_connection
+from utils.db_util import get_db_connection
 import secrets
 from datetime import datetime, timedelta
 from pymysql.err import IntegrityError
 from emails.forgot_pass_email import send_reset_email
-from utils.password import hash_password
+from utils.password_util import hash_password
 
 forgot_password_route = APIRouter()
 

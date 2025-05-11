@@ -1,5 +1,5 @@
 from fastapi import Request, HTTPException
-from utils.database import get_db_connection
+from utils.db_util import get_db_connection
 from pymysql.cursors import DictCursor
 
 def get_logged_in_username(request: Request) -> str:

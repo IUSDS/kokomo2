@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr
-from utils.database import get_db_connection
-import boto3
+from utils.db_util import get_db_connection
 from emails.admin_visitor_update import send_admin_notification_visitor, send_admin_notification_email_request, send_admin_notification_yacht_visitor
 
 visitors_route = APIRouter()
@@ -28,9 +27,9 @@ class YachtVisitorRequest(BaseModel):
     visitor_last_name: str
     visitor_email: EmailStr
     visitor_phone_number: str
-    yatch_model: str
-    yatch_manufacture_year: int
-    yatch_size: int
+    yacht_model: str
+    yacht_manufacture_year: int
+    yacht_size: int
     visitor_message: str = None
 
 # API to add email only
@@ -115,8 +114,9 @@ async def add_yacht_visitor(request: YachtVisitorRequest):
             except Exception as email_error:
                 print(f"Email notification failed: {email_error}")  
                 return {"message": "Yacht visitor details added successfully, but email notification failed."}
-        return {"message": "Yacht visitor details added successfully."}
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
     finally:
         connection.close()

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Form, UploadFile, File
-from utils.database import get_db_connection
+from utils.db_util import get_db_connection
 import boto3
 from botocore.exceptions import ClientError
 from pydantic import BaseModel, EmailStr

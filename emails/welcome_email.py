@@ -1,6 +1,6 @@
 import random
 import string
-from utils.smtp import smtp_connection
+from utils.email_util import smtp_connection
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from fastapi import HTTPException

@@ -1,7 +1,7 @@
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from fastapi import HTTPException
-from utils.smtp import smtp_connection
+from utils.email_util import smtp_connection
 
 
 def send_reset_email(email: str, token: str):
@@ -33,7 +33,7 @@ def send_reset_email(email: str, token: str):
         # Add plain text and HTML parts
         message.attach(MIMEText(body_text, "plain"))
 
-        # Use the SMTP connection from utils.smtp.py
+        # Use the SMTP connection from utils.email_util.py
         server = smtp_connection()
         server.sendmail(sender_email, email, message.as_string())
         server.quit()
