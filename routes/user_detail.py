@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, EmailStr
-from utils.database import get_db_connection
+from utils.db_util import get_db_connection
 from pymysql.cursors import DictCursor
 from typing import Optional
 

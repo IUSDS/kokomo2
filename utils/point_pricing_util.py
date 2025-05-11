@@ -1,5 +1,5 @@
 from typing import Optional
-from utils.database import get_db_connection
+from utils.db_util import get_db_connection
 
 def get_point_cost(yacht_id: str, tour_type_id: str) -> Optional[int]:
     conn = None
@@ -18,6 +18,30 @@ def get_point_cost(yacht_id: str, tour_type_id: str) -> Optional[int]:
         )
         row = cursor.fetchone()
         return row['point_cost'] if row else None
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+def deduct_member_points(member_id: str, point_cost: int) -> bool:
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            UPDATE Members 
+            SET points = points - %s 
+            WHERE member_id = %s
+            """,
+            (point_cost, member_id)
+        )
+        conn.commit()
+        return cursor.rowcount > 0  # returns True if a row was updated
 
     finally:
         if cursor:

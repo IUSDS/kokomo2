@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Form, UploadFile, File, Request
 from pydantic import EmailStr
 from botocore.exceptions import ClientError
-from utils.password import hash_password
-from utils.database import get_db_connection
-from utils.secrets import Access_Point_ALIAS
+from utils.password_util import hash_password
+from utils.db_util import get_db_connection
+from utils.secrets_util import Access_Point_ALIAS
 import boto3
 import traceback
 from fastapi import HTTPException

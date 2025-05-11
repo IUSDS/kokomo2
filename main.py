@@ -17,7 +17,7 @@ from routes.webhooks_FH import webhook_route
 from routes.visitors import visitors_route
 from routes.forgotpass import forgot_password_route
 from routes.admin.get_usernames import get_usernames_route
-from utils.secrets import SECRET_KEY, SESSION_COOKIES, JWT_SECRET
+from utils.secrets_util import SECRET_KEY, SESSION_COOKIES, JWT_SECRET
 from starlette.middleware.sessions import SessionMiddleware
 from routes.admin.bookings_fh import booking_route
 #from logger_config import app_logger
@@ -103,7 +103,7 @@ app.include_router(membership_route, prefix="/get-membership", tags=["Membership
 app.include_router(update_user_route, prefix="/update", tags=["Update User"])
 app.include_router(delete_user_route, prefix="/update", tags=["Delete User"])
 app.include_router(webhook_route, prefix="/webhook", tags=["Webhook"])
-app.include_router(visitors_route, prefix="/vistors", tags=["Visitors"])
+app.include_router(visitors_route, prefix="/visitors", tags=["Visitors"])
 app.include_router(forgot_password_route, prefix="/forgot", tags=["Forgot"])
 app.include_router(export_data_route, prefix="/export-data", tags=["Export Data"])
 app.include_router(get_usernames_route, prefix="/usernames", tags=["Get Usernames"])

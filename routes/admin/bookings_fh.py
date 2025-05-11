@@ -1,6 +1,6 @@
 from typing import List, Dict, Any
 from fastapi import APIRouter, HTTPException
-from utils.database import get_db_connection
+from utils.db_util import get_db_connection
 
 booking_route = APIRouter()
 

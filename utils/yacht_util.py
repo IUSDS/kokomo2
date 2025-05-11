@@ -1,5 +1,5 @@
 from typing import Optional
-from utils.database import get_db_connection
+from utils.db_util import get_db_connection
 
 # Mapping webhook names to actual DB yacht names
 WEBHOOK_YACHT_MAP = {
