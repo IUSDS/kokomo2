@@ -13,8 +13,8 @@ WEBHOOK_YACHT_MAP = {
     "KYC - Memories Not Dreams": "Memories Not Dreams",
     "KYC - Congetta - The Vinoy in St. Pete": "Congetta",
     "KYC- 40' Aviara - Thirst Trap": "Thirst Trap",
-    "KYC- 63' Prestige - Peace - Reservation": "Peace",
-    "": "Tiara Fly"  # Last empty key wins if duplicate empty strings exist
+    "KYC - 63' Prestige - Peace - Reservation": "Peace",
+    "KYC - Memory Maker" : "Memory Maker",
 }
 
 def get_mapped_yacht_name(webhook_name: str) -> str:

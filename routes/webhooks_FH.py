@@ -56,7 +56,7 @@ async def webhook_listener(request: Request):
         tour_type = booking_data.get('availability', {}).get('headline')
         print("TourType:", tour_type)
         tour_type_id = get_tour_id_by_name(tour_type, start_at)
-        print("Tour typr id: ", tour_type_id)
+        print("Tour type id: ", tour_type_id)
         
         point_cost = get_point_cost(yacht_id, tour_type_id)
         print("Point cost: ", point_cost)
