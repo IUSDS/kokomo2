@@ -6,7 +6,7 @@ from utils.booking_utils import store_booking_to_db, parse_booking_payload
 from utils.session_util import get_logged_in_member_id_from_email
 from utils.yacht_util import get_yacht_id_by_name
 from utils.tour_util import get_tour_id_by_name
-from utils.point_pricing_util import get_point_cost, deduct_member_points
+from utils.point_pricing_util import get_point_cost, deduct_member_points, get_curr_points
 
 # Initialize router
 webhook_route = APIRouter()
@@ -43,6 +43,7 @@ async def webhook_listener(request: Request):
         member_id = get_logged_in_member_id_from_email(email)
         print("MemberID:", member_id)
         
+        # Retrives Yacht ID from DB
         yacht = booking_data.get('availability', {}).get('item', {}).get('name')
         print("Yacht:", yacht)
         yacht_id = get_yacht_id_by_name(yacht)
@@ -50,17 +51,21 @@ async def webhook_listener(request: Request):
             raise ValueError(f"Yacht '{yacht}' not found")
         print("Yacht id: ", yacht_id)
         
+        # We need Start time in case of Half Day reservation(tour_type) to know if the booking is morning or afternoon
         start_at = booking_data.get('availability', {}).get('start_at')
         print("Starting time: ", start_at)
         
+        # Retrives tour_type id
         tour_type = booking_data.get('availability', {}).get('headline')
         print("TourType:", tour_type)
         tour_type_id = get_tour_id_by_name(tour_type, start_at)
-        print("Tour typr id: ", tour_type_id)
+        print("Tour type id: ", tour_type_id)
         
+        # Retrives points cost using yacht_id and tour_type_id
         point_cost = get_point_cost(yacht_id, tour_type_id)
         print("Point cost: ", point_cost)
         
+        # Deducts points from Members table
         success = deduct_member_points(member_id, point_cost)
         if success:
             print("Points updated.")
@@ -70,9 +75,16 @@ async def webhook_listener(request: Request):
         # Parse & store booking data
         parsed_data = parse_booking_payload(booking_data, int(member_id))
         # print(parsed_data)
+        
         store_booking_to_db({"data": parsed_data})
+        
+        curr_points = get_curr_points(member_id)
 
-        return {"status": "success", "message": "Booking processed"}
+        return {
+            "booking_status": "successful",
+            "point_used": point_cost,
+            "current_balance": curr_points
+        }
 
     except Exception as e:
         print("Webhook Error:", e)
