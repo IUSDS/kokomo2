@@ -6,7 +6,7 @@ WEBHOOK_YACHT_MAP = {
     "KYC - Wanderlust": "Wanderlust", 
     "KYC- 43' - Giddy Up": "Giddy Up",
     "KYC - Top Shelf": "Top Shelf",
-    "KYC - 35' Ocean Rode- Half Day Outing": "Aviara",
+    "KYC - 35' Ocean Rode- Half Day Outing": "Ocean Rode",
     "KYC - The Life - 29' - Up to 6 People -OSPREY pickup": "The Life",
     "KYC - 42' Outrage - Anna Maria Half Day Outing": "Outrage",
     "KYC - 50' Lil' Bit Nauti - Bradenton": "Lil' Bit Nauti",

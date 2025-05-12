@@ -48,3 +48,26 @@ def deduct_member_points(member_id: str, point_cost: int) -> bool:
             cursor.close()
         if conn:
             conn.close()
+            
+def get_curr_points(member_id: str):
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute(
+            """
+            SELECT points FROM Members
+            WHERE member_id = %s
+            """,
+            (member_id)
+        )
+        row = cursor.fetchone()
+        return row['points'] if row else None
+    
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
