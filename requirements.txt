@@ -12,3 +12,5 @@ bcrypt
 passlib[bcrypt]
 itsdangerous
 pandas
+websockets
+wsproto

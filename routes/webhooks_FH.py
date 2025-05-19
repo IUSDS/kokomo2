@@ -7,6 +7,7 @@ from utils.session_util import get_logged_in_member_id_from_email
 from utils.yacht_util import get_yacht_id_by_name
 from utils.tour_util import get_tour_id_by_name
 from utils.point_pricing_util import get_point_cost, deduct_member_points, get_curr_points
+from routes.websocket import active_connections
 
 # Initialize router
 webhook_route = APIRouter()
@@ -80,10 +81,18 @@ async def webhook_listener(request: Request):
         
         curr_points = get_curr_points(member_id)
 
-        return {
-            "booking_status": "successful",
+        # websocket payload
+        payload = {
+            "event": "booking_success",
             "point_used": point_cost,
-            "current_balance": curr_points
+            "yacht_name": yacht,   
+            "current_points": curr_points
+        }
+
+        if member_id in active_connections:
+            await active_connections[member_id].send_json(payload)
+        return {
+            "booking_status": "successful"
         }
 
     except Exception as e:
