@@ -20,6 +20,7 @@ from routes.admin.get_usernames import get_usernames_route
 from utils.secrets_util import SECRET_KEY, SESSION_COOKIES, JWT_SECRET
 from starlette.middleware.sessions import SessionMiddleware
 from routes.admin.bookings_fh import booking_route
+from routes.websocket import websocket_router
 #from logger_config import app_logger
 
 # Initialize FastAPI app
@@ -108,6 +109,7 @@ app.include_router(forgot_password_route, prefix="/forgot", tags=["Forgot"])
 app.include_router(export_data_route, prefix="/export-data", tags=["Export Data"])
 app.include_router(get_usernames_route, prefix="/usernames", tags=["Get Usernames"])
 app.include_router(booking_route,prefix="/booking", tags=["Booking History"])
+app.include_router(websocket_router, prefix="/web_socket")
 
 # Public Health Check Endpoint
 @app.get("/health", tags=["Health"])

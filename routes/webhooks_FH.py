@@ -74,7 +74,7 @@ async def webhook_listener(request: Request):
             print("No matching member found or points not updated.")
 
         # Parse & store booking data
-        parsed_data = parse_booking_payload(booking_data, int(member_id))
+        parsed_data = parse_booking_payload(booking_data, int(member_id), point_cost)
         # print(parsed_data)
         
         store_booking_to_db({"data": parsed_data})
