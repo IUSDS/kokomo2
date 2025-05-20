@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from typing import List, Dict, Any
 from utils.db_util import get_db_connection
 
@@ -8,40 +8,50 @@ booking_route = APIRouter()
 @booking_route.get(
     "/admin/",
     response_model=List[Dict[str, Any]],
-    summary="Admin: return selected booking fields"
+    summary="Admin: return booking fields for a specific user"
 )
-async def get_all_booking_fh():
+async def get_booking_fh_for_user(username: str):
     """
-    Retrieve S no., username, booking_id, dashboard_url, created_at,
-    vessel_name, tour_type, points_used, adult_beverages, catering_option,
-    number_of_adults, number_of_kids, booking_status
+    Retrieve for the given username:
+      • S no.
+      • username
+      • booking_id
+      • dashboard_url (as modify_view)
+      • vessel_name
+      • tour_type
+      • points_used
+      • booking_status
     """
     sql = """
         SELECT
-          bf.id                    AS `S no.`,
-          m.username               AS username,
-          bf.booking_id,
-          bf.dashboard_url,
-          bf.created_at,
-          bf.vessel_name,
-          bf.tour_type,
-          bf.points_cost           AS points_used,
-          bf.adult_beverages,
-          bf.catering_option,
-          bf.number_of_adults,
-          bf.number_of_kids,
-          bf.booking_status
+          bf.id                AS `S no.`,
+          m.username           AS username,
+          bf.booking_id        AS booking_id,
+          bf.dashboard_url     AS modify_view,
+          bf.vessel_name       AS vessel_name,
+          bf.tour_type         AS tour_type,
+          bf.points_cost       AS points_used,
+          bf.booking_status    AS booking_status
         FROM booking_fh bf
         JOIN Members m ON bf.member_id = m.member_id
+        WHERE m.username = %s
         ORDER BY bf.id;
     """
+
+    # -- simple debug print before you execute --
+    print("DEBUG SQL:", sql.replace("\n", " "), "| PARAMS:", username)
+
     conn = get_db_connection()
     try:
         with conn.cursor() as cursor:
-            cursor.execute(sql)
-            rows = cursor.fetchall()  # each row is a dict with key "S no."
+            cursor.execute(sql, (username,))
+            rows = cursor.fetchall()
+            if not rows:
+                raise HTTPException(404, f"No bookings for '{username}'")
             return rows
+
     except Exception as e:
+        # you’ll now see exactly the SQL and params in your console above
         raise HTTPException(status_code=500, detail=f"Database query error: {e}")
     finally:
         conn.close()
