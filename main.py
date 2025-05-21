@@ -108,8 +108,8 @@ app.include_router(visitors_route, prefix="/visitors", tags=["Visitors"])
 app.include_router(forgot_password_route, prefix="/forgot", tags=["Forgot"])
 app.include_router(export_data_route, prefix="/export-data", tags=["Export Data"])
 app.include_router(get_usernames_route, prefix="/usernames", tags=["Get Usernames"])
-app.include_router(booking_route, prefix="/booking", tags=["Booking History"])
-app.include_router(websocket_router, prefix="/web_socket", tags=["Web Socket"])
+app.include_router(booking_route,prefix="/booking", tags=["Booking History"])
+app.include_router(websocket_router, prefix="/web_socket")
 
 # Public Health Check Endpoint
 @app.get("/health", tags=["Health"])
