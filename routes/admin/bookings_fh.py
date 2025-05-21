@@ -73,8 +73,8 @@ async def get_bookings_by_member(member_id: str):
           CONCAT(b.start_at, ' – ', b.end_at) AS availability,
           b.booking_id,
           b.tour_type      AS item,
-          m.phone_number   AS contact,
-          b.receipt_total_display AS debit,
+          m.email_id   AS contact,
+          b.points_cost AS debit,
           NULL                   AS credit,
           NULL                   AS total_points
         FROM booking_fh b
