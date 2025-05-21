@@ -132,7 +132,7 @@ def parse_booking_payload(
     return {
         "member_id": member_id,
         "booking_id": booking.get("pk"),
-        "dashboard_url": f"https://kokomoyachtclub.vip/dashboard/{booking.get('pk')}",
+        "dashboard_url": booking.get("dashboard_url"),
         "created_at": booking.get("created_at"),
         "start_at":        availability.get("start_at"),
         "end_at":          availability.get("end_at"),

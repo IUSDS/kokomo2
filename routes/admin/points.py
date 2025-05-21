@@ -5,41 +5,66 @@ points_route = APIRouter()
 
 # Endpoint to update points for a user
 @points_route.put("/update-points/")
-async def update_points(username: str = Form(...), update_points: int = Form(...)):
+async def update_points(
+    username: str      = Form(...),
+    update_points: int = Form(...),
+    description: str   = Form(...),
+):
     """
-        Update points for the given username.
+    Update points for the given username and record the change with a custom description.
     """
-    connection = get_db_connection()
-    cursor = connection.cursor()
-
+    conn   = get_db_connection()
+    cursor = conn.cursor()
     try:
-        # Check if the username exists
-        cursor.execute("SELECT points FROM Members WHERE username = %s", (username,))
-        result = cursor.fetchone()
-
-        if result is None:
+        # 1) Fetch member ID and current points
+        cursor.execute(
+            "SELECT member_id, points FROM Members WHERE username = %s AND is_deleted = 'N'",
+            (username,),
+        )
+        row = cursor.fetchone()
+        if not row:
             return {"status": "error", "message": "Username not found"}
 
-        # Update the points column
-        current_points = result["points"]
-        new_points = current_points + update_points
+        member_id      = row["member_id"]
+        current_points = row["points"]
+        new_points     = current_points + update_points
 
-        cursor.execute("UPDATE Members SET points = %s WHERE username = %s", (new_points, username))
-        connection.commit()
+        # 2) Update Members table
+        cursor.execute(
+            "UPDATE Members SET points = %s WHERE member_id = %s",
+            (new_points, member_id),
+        )
+
+        # 3) Insert into Point_Adjustment using the passed-in description
+        points_added   = max(update_points, 0)
+        points_removed = max(-update_points, 0)
+        cursor.execute(
+            """
+            INSERT INTO Point_Adjustment
+              (member_id, points_added, points_removed, description)
+            VALUES (%s, %s, %s, %s)
+            """,
+            (member_id, points_added, points_removed, description),
+        )
+
+        # 4) Commit both operations
+        conn.commit()
 
         return {
             "status": "success",
-            "message": f"Points updated successfully. Total points for {username}: {new_points}",
+            "message": (
+                f"Points for {username} updated: "
+                f"{current_points} → {new_points}"
+            ),
         }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {e}")
 
     finally:
-        if 'cursor' in locals():
-            cursor.close()
-        if 'connection' in locals():
-            connection.close()
+        cursor.close()
+        conn.close()
 
 @points_route.get("/points/")
 async def get_points(username: str = Query(..., description="The username to retrieve points for")):
