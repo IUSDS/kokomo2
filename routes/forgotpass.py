@@ -22,7 +22,7 @@ class ResetPasswordRequest(BaseModel):
 def forgot_password(email: str = Form(...)):
     # Generate a secure token
     token = secrets.token_hex(16)  # Generates a 32-character hexadecimal string
-    expiry_time = datetime.now() + timedelta(hours=0.5)  # Token valid for 30 mins
+    expiry_time = datetime.now() + timedelta(days=7)  # Token valid for 30 mins
 
     # Check if the email exists in the database
     connection = get_db_connection()
