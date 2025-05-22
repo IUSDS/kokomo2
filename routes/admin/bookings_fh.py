@@ -4,6 +4,7 @@ from utils.db_util import get_db_connection
 from utils.point_pricing_util import get_opening_balance
 from pydantic import BaseModel
 from typing import List
+from utils.member_utils import get_if_primary_or_secondary, get_primary_for_secondary
 
 class BookingOut(BaseModel):
     item: str
@@ -78,6 +79,9 @@ async def get_booking_fh_for_user(username: str):
     summary="Return bookings for one member"
 )
 async def get_bookings_by_member(member_id: str):
+    is_primary = get_if_primary_or_secondary(member_id)
+    if not is_primary:
+        member_id = get_primary_for_secondary(member_id)
     sql = """
         SELECT
           b.vessel_name AS item,
