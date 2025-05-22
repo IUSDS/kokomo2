@@ -15,6 +15,7 @@ WEBHOOK_YACHT_MAP = {
     "KYC- 40' Aviara - Thirst Trap": "Thirst Trap",
     "KYC - 63' Prestige - Peace - Reservation": "Peace",
     "KYC - Memory Maker" : "Memory Maker",
+    "KYC- 40' Happy Hour" : "Happy Hour",
 }
 
 def get_mapped_yacht_name(webhook_name: str) -> str:
