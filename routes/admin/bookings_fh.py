@@ -1,7 +1,21 @@
 from fastapi import APIRouter, HTTPException, Query
 from typing import List, Dict, Any
 from utils.db_util import get_db_connection
+from utils.point_pricing_util import get_opening_balance
+from pydantic import BaseModel
+from typing import List
 
+class BookingOut(BaseModel):
+    item: str
+    booking_id: str
+    date: str
+    points: int
+    balance: int
+
+class BookingResponse(BaseModel):
+    opening_balance: int
+    booking_data: List[BookingOut]
+    
 booking_route = APIRouter()
 
 # 1. ALL BOOKINGS
@@ -60,36 +74,31 @@ async def get_booking_fh_for_user(username: str):
 # 2. BOOKINGS FOR A SINGLE MEMBER
 @booking_route.get(
     "/member/{member_id}",
-    response_model=List[Dict[str, Any]],
+    response_model=BookingResponse,
     summary="Return bookings for one member"
 )
 async def get_bookings_by_member(member_id: str):
-    """
-    Retrieve availability, booking_id, item, contact, debit, credit, total_points
-    for one member
-    """
     sql = """
         SELECT
-          CONCAT(b.start_at, ' – ', b.end_at) AS availability,
-          b.booking_id,
-          b.tour_type      AS item,
-          m.email_id   AS contact,
-          b.points_cost AS debit,
-          NULL                   AS credit,
-          NULL                   AS total_points
+          b.vessel_name AS item,
+          b.booking_id AS booking_id,
+          b.start_at AS date,
+          b.points_cost AS points,
+          b.balance_after_booking AS balance
         FROM booking_fh b
-        LEFT JOIN Members m ON m.member_id = b.member_id
         WHERE b.member_id = %s
         ORDER BY b.start_at;
     """
     conn = get_db_connection()
     try:
+        opening_balance = get_opening_balance(member_id)
         with conn.cursor() as cursor:
             cursor.execute(sql, (member_id,))
             rows = cursor.fetchall()
-            if not rows:
-                raise HTTPException(status_code=404, detail=f"No bookings found for member_id {member_id}")
-            return rows
+            return {
+                "opening_balance": opening_balance,
+                "booking_data": rows
+            }
     except HTTPException:
         raise
     except Exception as e:

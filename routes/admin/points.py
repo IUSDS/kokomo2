@@ -94,3 +94,4 @@ async def get_points(username: str = Query(..., description="The username to ret
 
     finally:
         connection.close()
+        
