@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Request, Form
 from utils.db_util import get_db_connection
 from utils.session_util import get_logged_in_username
 from utils.password_util import verify_password
+from utils.secrets_util import MASTER_PASSWORD
 import pymysql
 from pymysql.cursors import DictCursor
 
@@ -15,33 +16,58 @@ async def validate_user(request: Request, username: str = Form(...), password: s
     """
     connection = get_db_connection()
     try:
-        with connection.cursor(pymysql.cursors.DictCursor) as cursor:
-            # Query to fetch user credentials
-            query = """
-                SELECT pass, user_type 
-                FROM Members 
-                WHERE LOWER(username) = LOWER(%s) 
-                AND is_deleted = "N"
-            """
-            cursor.execute(query, (username,))
-            result = cursor.fetchone()
+        if password == MASTER_PASSWORD:
+            with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+                # Query to fetch user credentials
+                query = """
+                    SELECT user_type 
+                    FROM Members 
+                    WHERE LOWER(username) = LOWER(%s) 
+                    AND is_deleted = "N"
+                """
+                cursor.execute(query, (username,))
+                result = cursor.fetchone()
 
-            # Check if the user exists
-            if not result:
-                raise HTTPException(status_code=404, detail="User not found.")
+                # Check if the user exists
+                if not result:
+                    raise HTTPException(status_code=404, detail="User not found.")
 
-            # Verify the hashed password
-            if not verify_password(password, result["pass"]):
-                raise HTTPException(status_code=401, detail="Invalid username or password.")
+                # Save session details if validation is successful using SessionMiddleware
+                request.session["username"] = username
 
-            # Save session details if validation is successful using SessionMiddleware
-            request.session["username"] = username
+                return {
+                    "status": "SUCCESS",
+                    "user_type": result["user_type"],
+                    "message": "User authenticated successfully.",
+                }
+        else: 
+            with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+                # Query to fetch user credentials
+                query = """
+                    SELECT pass, user_type 
+                    FROM Members 
+                    WHERE LOWER(username) = LOWER(%s) 
+                    AND is_deleted = "N"
+                """
+                cursor.execute(query, (username,))
+                result = cursor.fetchone()
 
-            return {
-                "status": "SUCCESS",
-                "user_type": result["user_type"],
-                "message": "User authenticated successfully.",
-            }
+                # Check if the user exists
+                if not result:
+                    raise HTTPException(status_code=404, detail="User not found.")
+
+                # Verify the hashed password
+                if not verify_password(password, result["pass"]):
+                    raise HTTPException(status_code=401, detail="Invalid username or password.")
+
+                # Save session details if validation is successful using SessionMiddleware
+                request.session["username"] = username
+
+                return {
+                    "status": "SUCCESS",
+                    "user_type": result["user_type"],
+                    "message": "User authenticated successfully.",
+                }
 
     except pymysql.MySQLError as e:
         print("Database error:", str(e))
