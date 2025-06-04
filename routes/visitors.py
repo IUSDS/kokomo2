@@ -100,13 +100,13 @@ async def add_yacht_visitor(request: YachtVisitorRequest):
     try:
         with connection.cursor() as cursor:
             insert_query = """
-            INSERT INTO List_Yatch_Visitors (visitor_first_name, visitor_last_name, visitor_email, visitor_phone_number, yatch_model, yatch_manufacture_year, yatch_size, visitor_message)
+            INSERT INTO List_Yatch_Visitors (visitor_first_name, visitor_last_name, visitor_email, visitor_phone_number, yacht_model, yacht_manufacture_year, yacht_size, visitor_message)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
             """
             cursor.execute(insert_query, (
                 request.visitor_first_name, request.visitor_last_name, request.visitor_email,
-                request.visitor_phone_number, request.yatch_model, request.yatch_manufacture_year,
-                request.yatch_size, request.visitor_message))
+                request.visitor_phone_number, request.yacht_model, request.yacht_manufacture_year,
+                request.yacht_size, request.visitor_message))
             connection.commit()
 
             try:

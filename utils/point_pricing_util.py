@@ -40,6 +40,15 @@ def deduct_member_points(member_id: str, point_cost: int) -> bool:
             """,
             (point_cost, member_id)
         )
+        curr_points = get_curr_points(member_id)
+        cursor.execute(
+            """
+            UPDATE booking_fh 
+            SET balance_after_booking = %s - %s 
+            WHERE member_id = %s
+            """,
+            (curr_points, point_cost, member_id)
+        )
         conn.commit()
         return cursor.rowcount > 0  # returns True if a row was updated
 
