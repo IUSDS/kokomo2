@@ -22,9 +22,9 @@ class YachtVisitorRequest(BaseModel):
     visitor_last_name: str
     visitor_email: EmailStr
     visitor_phone_number: str
-    yatch_model: str
-    yatch_manufacture_year: int
-    yatch_size: int
+    yacht_model: str
+    yacht_manufacture_year: int
+    yacht_size: int
     visitor_message: str = None
 
 # Admin Email Address
@@ -118,9 +118,9 @@ def send_admin_notification_yacht_visitor(request: YachtVisitorRequest):
     ----------------------------------------
     **Yacht Details**
     ----------------------------------------
-     **Model:** {request.yatch_model}
-     **Manufacture Year:** {request.yatch_manufacture_year}
-     **Size:** {request.yatch_size} ft
+     **Model:** {request.yacht_model}
+     **Manufacture Year:** {request.yacht_manufacture_year}
+     **Size:** {request.yacht_size} ft
     {f' **Message:** {request.visitor_message}' if request.visitor_message else ''}
 
     Best regards,  
