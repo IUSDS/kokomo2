@@ -25,29 +25,31 @@ def get_point_cost(yacht_id: str, tour_type_id: str) -> Optional[int]:
         if conn:
             conn.close()
 
-def deduct_member_points(member_id: str, point_cost: int) -> bool:
+def deduct_member_points(member_id: str, booking_id: str, point_cost: int) -> bool:
     conn = None
     cursor = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+        curr_points = get_curr_points(member_id)
+        balance_after = curr_points - point_cost
 
         cursor.execute(
             """
             UPDATE Members 
-            SET points = points - %s 
+            SET points = %s  
             WHERE member_id = %s
             """,
-            (point_cost, member_id)
+            (balance_after, member_id)
         )
-        curr_points = get_curr_points(member_id)
+        
         cursor.execute(
             """
             UPDATE booking_fh 
-            SET balance_after_booking = %s - %s 
-            WHERE member_id = %s
+            SET balance_after_booking = %s 
+            WHERE booking_id = %s
             """,
-            (curr_points, point_cost, member_id)
+            (balance_after, booking_id)
         )
         conn.commit()
         return cursor.rowcount > 0  # returns True if a row was updated
