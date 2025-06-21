@@ -70,23 +70,23 @@ async def webhook_listener(request: Request):
                 start_local = start_dt.astimezone(eastern).strftime("%d %b %Y, %I:%M %p %Z")
                 end_local   = end_dt.astimezone(eastern).strftime("%d %b %Y, %I:%M %p %Z")
 
-                summary     = f"Kokomo: {yatch_base_name} Booked"
+                summary     = f"Kokomo Yachts: {yatch_base_name} Booked"
                 description = (
                     f"Hello {owner_name},\n\n"
                     f"Your yacht '{yatch_base_name}' was just booked.\n"
                     f"Start: {start_local}\n"
                     f"End:   {end_local}\n"
                     f"Tour Type: {tour_type_name or 'N/A'}\n\n"
-                    "Thank you for partnering with Kokomo Yacht Club!\n"
-                    "— Brian Crotty"
+                    "Thank you for partnering with Kokomo Yachts!\n"
+                    "— Kokomo Crew"
                 )
                 ics_bytes = build_invite(
                     subject=summary,
                     description=description,
                     start_dt=start_dt,
                     end_dt=end_dt,
-                    organizer_email="brian@kokomoyachtclub.com",
-                    organizer_name="Brian Crotty"
+                    organizer_email="info@kokomoyachts.com",
+                    organizer_name="Kokomo Crew"
                 )
 
                 body_text = (
@@ -98,7 +98,7 @@ async def webhook_listener(request: Request):
                     "Kokomo Crew\n"
                 )
                 send_calendar_invite(
-                    sender="brian@kokomoyachtclub.vip",
+                    sender="info@kokomoyachts.com",
                     recipient=owner_email,
                     subject=summary,
                     body_text=body_text,

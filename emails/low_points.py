@@ -5,7 +5,7 @@ from pydantic import BaseModel, EmailStr
 from utils.email_util import smtp_connection
 
 # Admin Email Address
-ADMIN_EMAIL = "brian@kokomoyachtclub.vip"
+ADMIN_EMAIL = "info@kokomoyachts.com"
 TO_EMAIL = "satya@iusdigitalsolutions.com"
 
 # Function to Send Email Notification for insufficient point balance
