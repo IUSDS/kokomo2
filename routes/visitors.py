@@ -15,6 +15,11 @@ class EmailRequest(BaseModel):
     visitor_name: str 
     phone_no: int 
 
+class RsvpRequest(BaseModel):
+    email: EmailStr
+    name: str 
+    phone: int 
+
 class VisitorRequest(BaseModel):
     email: EmailStr
     visitor_name: str 
@@ -118,5 +123,28 @@ async def add_yacht_visitor(request: YachtVisitorRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
+    finally:
+        connection.close()
+
+# API to store rsvp request in DB
+@visitors_route.post("/add-rsvp-details")
+async def add_visitors_details(request: RsvpRequest):
+    """ Adds info to the RSVP table. """
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            insert_query = """
+                INSERT INTO RSVP (email, name, phone) 
+                VALUES (%s, %s, %s) 
+                ON DUPLICATE KEY UPDATE 
+                    name = VALUES(name),
+                    phone = VALUES(phone);
+                """
+            cursor.execute(insert_query, (request.email, request.name, request.phone,))
+            connection.commit()
+
+        return {"message": "Info added successfully."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     finally:
         connection.close()
