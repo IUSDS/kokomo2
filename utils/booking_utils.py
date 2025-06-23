@@ -165,29 +165,3 @@ def parse_booking_payload(
         "created_by":       member_id,
         "point_cost":       point_cost,
     }
-
-def if_booking_exists(booking_id: str):
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute("""
-            SELECT COUNT(booking_id)
-            FROM booking_fh
-            WHERE booking_id = %s;
-        """, (booking_id,))
-        
-        result = cursor.fetchone()
-        count = result['COUNT(booking_id)']
-        if count == 0:
-            return False
-        else:
-            return True
-    
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
