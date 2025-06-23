@@ -57,55 +57,62 @@ async def webhook_listener(request: Request):
     if yacht_name and start_at and end_at:
         yacht_id_tmp = get_yacht_id_for_invite(yacht_name)
         owner = get_owner_by_yacht_id(yacht_id_tmp) if yacht_id_tmp else None
+        print("Owner: ", owner)
         yatch_base_name = get_mapped_yacht_name_for_invite(yacht_name)
         if owner:
             try:
-                owner_name  = owner["owner_name"]
-                owner_email = owner["owner_email"]
-                print(f"INFO: Owner for yacht '{yacht_name}': {owner_name} <{owner_email}>")
+                owner_data = owner[0]
+                owner_name = owner_data["owner_name"]
+                owner_emails = owner_data["owner_emails"]
 
-                start_dt = isoparse(start_at)
-                end_dt   = isoparse(end_at)
-                eastern  = pytz.timezone("America/New_York")
-                start_local = start_dt.astimezone(eastern).strftime("%d %b %Y, %I:%M %p %Z")
-                end_local   = end_dt.astimezone(eastern).strftime("%d %b %Y, %I:%M %p %Z")
+                for email in owner_emails:
+                    print(f"INFO: Owner for yacht '{yacht_name}': {owner_name} <{email}>")
 
-                summary     = f"Kokomo Yachts: {yatch_base_name} Booked"
-                description = (
-                    f"Hello {owner_name},\n\n"
-                    f"Your yacht '{yatch_base_name}' was just booked.\n"
-                    f"Start: {start_local}\n"
-                    f"End:   {end_local}\n"
-                    f"Tour Type: {tour_type_name or 'N/A'}\n\n"
-                    "Thank you for partnering with Kokomo Yachts!\n"
-                    "— Kokomo Crew"
-                )
-                ics_bytes = build_invite(
-                    subject=summary,
-                    description=description,
-                    start_dt=start_dt,
-                    end_dt=end_dt,
-                    organizer_email="info@kokomoyachts.com",
-                    organizer_name="Kokomo Crew"
-                )
+                    start_dt = isoparse(start_at)
+                    end_dt   = isoparse(end_at)
+                    eastern  = pytz.timezone("America/New_York")
+                    start_local = start_dt.astimezone(eastern).strftime("%d %b %Y, %I:%M %p %Z")
+                    end_local   = end_dt.astimezone(eastern).strftime("%d %b %Y, %I:%M %p %Z")
 
-                body_text = (
-                    f"Hi {owner_name},\n\n"
-                    "Your yacht was just booked! Please open the attached .ics to add it to your calendar.\n\n"
-                    f"Start: {start_local}\n"
-                    f"End:   {end_local}\n\n"
-                    "Best Regards,\n"
-                    "Kokomo Crew\n"
-                )
-                send_calendar_invite(
-                    sender="info@kokomoyachts.com",
-                    recipient=owner_email,
-                    subject=summary,
-                    body_text=body_text,
-                    ics_content=ics_bytes,
-                    ics_filename=f"Yacht_{yatch_base_name}_Booked.ics"
-                )
-                print(f"INFO: Sent early .ics invite to {owner_email}")
+                    summary     = f"Kokomo Yachts: {yatch_base_name} Booked"
+                    description = (
+                        f"Hello {owner_name},\n\n"
+                        f"Your yacht '{yatch_base_name}' was just booked.\n"
+                        f"Start: {start_local}\n"
+                        f"End:   {end_local}\n"
+                        f"Tour Type: {tour_type_name or 'N/A'}\n\n"
+                        "Thank you for partnering with Kokomo Yachts!\n"
+                        "— Kokomo Crew"
+                    )
+                    ics_bytes = build_invite(
+                        subject=summary,
+                        description=description,
+                        start_dt=start_dt,
+                        end_dt=end_dt,
+                        organizer_email="info@kokomoyachts.com",
+                        organizer_name="Kokomo Crew"
+                    )
+
+                    body_text = (
+                        f"Hi {owner_name},\n\n"
+                        "Your yacht was just booked! Please open the attached .ics to add it to your calendar.\n\n"
+                        f"Start: {start_local}\n"
+                        f"End:   {end_local}\n\n"
+                        "Best Regards,\n"
+                        "Kokomo Crew\n"
+                    )
+
+                    send_calendar_invite(
+                        sender="info@kokomoyachts.com",
+                        recipient=email,
+                        subject=summary,
+                        body_text=body_text,
+                        ics_content=ics_bytes,
+                        ics_filename=f"Yacht_{yatch_base_name}_Booked.ics"
+                    )
+
+                    print(f"INFO: Sent early .ics invite to {email}")
+
             except Exception as e:
                 print(f"ERROR: Failed to send early calendar invite: {e}")
         else:
