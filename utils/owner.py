@@ -6,12 +6,12 @@ import boto3
 from email.mime.application import MIMEApplication
 from email.mime.multipart   import MIMEMultipart
 from email.mime.text        import MIMEText
-
+from dateutil.parser import isoparse
+from utils.yacht_util import get_mapped_yacht_name_for_invite, get_yacht_id_for_invite
 from utils.db_util import get_db_connection
 
 # SES client (region ap-southeast-2)
 ses_client = boto3.client("ses", region_name="ap-southeast-2")
-
 
 def get_owner_by_yacht_id(yacht_id: str):
     """
@@ -63,7 +63,6 @@ def get_owner_by_yacht_id(yacht_id: str):
             cursor.close()
         if conn:
             conn.close()
-
 
 def build_invite(
     subject: str,
@@ -122,7 +121,6 @@ def build_invite(
     cal.add_component(event)
     return cal.to_ical()  # ICS bytes
 
-
 def send_calendar_invite(
     sender: str,
     recipient: str,
@@ -169,3 +167,71 @@ def send_calendar_invite(
         RawMessage={"Data": msg.as_string()},
     )
     return response
+
+def send_invite(yacht_name: str, tour_type_name: str, start_at: str, end_at: str):
+    if yacht_name and start_at and end_at:
+        yacht_id_tmp = get_yacht_id_for_invite(yacht_name)
+        owner = get_owner_by_yacht_id(yacht_id_tmp) if yacht_id_tmp else None
+        print("Owner: ", owner)
+        yatch_base_name = get_mapped_yacht_name_for_invite(yacht_name)
+        if owner:
+            try:
+                owner_data = owner[0]
+                owner_name = owner_data["owner_name"]
+                owner_emails = owner_data["owner_emails"]
+
+                for email in owner_emails:
+                    print(f"INFO: Owner for yacht '{yacht_name}': {owner_name} <{email}>")
+
+                    start_dt = isoparse(start_at)
+                    end_dt   = isoparse(end_at)
+                    eastern  = pytz.timezone("America/New_York")
+                    start_local = start_dt.astimezone(eastern).strftime("%d %b %Y, %I:%M %p %Z")
+                    end_local   = end_dt.astimezone(eastern).strftime("%d %b %Y, %I:%M %p %Z")
+
+                    summary     = f"Kokomo Yachts: {yatch_base_name} Booked"
+                    description = (
+                        f"Hello {owner_name},\n\n"
+                        f"Your yacht '{yatch_base_name}' was just booked.\n"
+                        f"Start: {start_local}\n"
+                        f"End:   {end_local}\n"
+                        f"Tour Type: {tour_type_name or 'N/A'}\n\n"
+                        "Thank you for partnering with Kokomo Yachts!\n"
+                        "— Kokomo Crew"
+                    )
+                    ics_bytes = build_invite(
+                        subject=summary,
+                        description=description,
+                        start_dt=start_dt,
+                        end_dt=end_dt,
+                        organizer_email="info@kokomoyachts.com",
+                        organizer_name="Kokomo Crew"
+                    )
+
+                    body_text = (
+                        f"Hi {owner_name},\n\n"
+                        "Your yacht was just booked! Please open the attached .ics to add it to your calendar.\n\n"
+                        f"Start: {start_local}\n"
+                        f"End:   {end_local}\n\n"
+                        "Best Regards,\n"
+                        "Kokomo Crew\n"
+                    )
+
+                    send_calendar_invite(
+                        sender="info@kokomoyachts.com",
+                        recipient=email,
+                        subject=summary,
+                        body_text=body_text,
+                        ics_content=ics_bytes,
+                        ics_filename=f"Yacht_{yatch_base_name}_Booked.ics"
+                    )
+
+                    print(f"INFO: Sent early .ics invite to {email}")
+
+            except Exception as e:
+                print(f"ERROR: Failed to send early calendar invite: {e}")
+        else:
+            print(f"WARNING: No owner found for yacht '{yacht_name}'")
+    else:
+        print("WARNING: Missing yacht_name or start/end time; skipping early invite")
+
