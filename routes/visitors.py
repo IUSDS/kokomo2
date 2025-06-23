@@ -15,10 +15,11 @@ class EmailRequest(BaseModel):
     visitor_name: str 
     phone_no: int 
 
-class RsvpRequest(BaseModel):
+class EventRequest(BaseModel):
     email: EmailStr
     name: str 
-    phone: int 
+    phone_no: int 
+    event_name: str
 
 class VisitorRequest(BaseModel):
     email: EmailStr
@@ -127,20 +128,20 @@ async def add_yacht_visitor(request: YachtVisitorRequest):
         connection.close()
 
 # API to store rsvp request in DB
-@visitors_route.post("/add-rsvp-details")
-async def add_visitors_details(request: RsvpRequest):
-    """ Adds info to the RSVP table. """
+@visitors_route.post("/add-event-details")
+async def add_visitors_details(request: EventRequest):
+    """ Adds info to the events table. """
     connection = get_db_connection()
     try:
         with connection.cursor() as cursor:
             insert_query = """
-                INSERT INTO RSVP (email, name, phone) 
-                VALUES (%s, %s, %s) 
+                INSERT INTO events (email, name, phone_no, event_name) 
+                VALUES (%s, %s, %s, %s) 
                 ON DUPLICATE KEY UPDATE 
                     name = VALUES(name),
-                    phone = VALUES(phone);
+                    phone_no = VALUES(phone_no);
                 """
-            cursor.execute(insert_query, (request.email, request.name, request.phone,))
+            cursor.execute(insert_query, (request.email, request.name, request.phone_no, request.event_name))
             connection.commit()
 
         return {"message": "Info added successfully."}
