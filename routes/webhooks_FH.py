@@ -8,7 +8,7 @@ from utils.tour_util import get_tour_id_by_name
 from utils.member_util import get_member_name
 from utils.point_pricing_util import get_point_cost, deduct_member_points, get_curr_points
 from routes.websocket import active_connections
-from utils.owner_util import send_invite
+from emails.owner_notification import send_invite
 from emails.low_points import low_points_notification
 
 webhook_route = APIRouter()

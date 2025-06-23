@@ -6,7 +6,7 @@ from utils.email_util import smtp_connection
 
 # Admin Email Address
 ADMIN_EMAIL = "info@kokomoyachts.com"
-TO_EMAIL = "satya@iusdigitalsolutions.com"
+TO_EMAIL = "brian@kokomoyachtclub.vip"
 
 # Function to Send Email Notification for insufficient point balance
 def low_points_notification(first_name: str, last_name: str, curr_points: int, point_cost: int):
@@ -24,13 +24,13 @@ def low_points_notification(first_name: str, last_name: str, curr_points: int, p
     """
     subject = f"Low Points for Member: {first_name} {last_name}"
     body_text = f"""
-Hello Brian,
+    Hello Brian,
 
-Member: {first_name} {last_name} has only {curr_points} points left. They just made a booking for {point_cost} points.
+    Member: {first_name} {last_name} has only {curr_points} points left. They just made a booking for {point_cost} points.
 
-Best regards,
-KYC Development Team
-"""
+    Best regards,
+    KYC Development Team
+    """
 
     try:
         server = smtp_connection()
