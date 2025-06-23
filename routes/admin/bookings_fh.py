@@ -4,7 +4,7 @@ from utils.db_util import get_db_connection
 from utils.point_pricing_util import get_opening_balance
 from pydantic import BaseModel
 from typing import List
-from utils.member_utils import get_if_primary_or_secondary, get_primary_for_secondary
+from utils.member_util import get_if_primary_or_secondary, get_primary_for_secondary
 
 class BookingOut(BaseModel):
     item: str
