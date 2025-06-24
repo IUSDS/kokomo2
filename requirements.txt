@@ -14,3 +14,4 @@ itsdangerous
 pandas
 websockets
 wsproto
+icalendar
