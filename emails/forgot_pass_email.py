@@ -21,7 +21,7 @@ def send_reset_email(email: str, token: str):
         Kokomo Yacht Club Team
         """
 
-    sender_email = "brian@kokomoyachtclub.vip"
+    sender_email = "info@kokomoyachts.com"
 
     try:
         # Create the email content

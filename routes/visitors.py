@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr
 from utils.db_util import get_db_connection
-from emails.admin_visitor_update import send_admin_notification_visitor, send_admin_notification_email_request, send_admin_notification_yacht_visitor
+from emails.admin_visitor_update import send_admin_notification_visitor, send_admin_notification_email_request, send_admin_notification_yacht_visitor, send_admin_notification_rsvp
 
 visitors_route = APIRouter()
 
@@ -27,7 +27,9 @@ class VisitorRequest(BaseModel):
     phone_no: int
     req_help: str = None
     ques: str = None
-
+    email_consent: bool
+    sms_consent: bool
+    
 class YachtVisitorRequest(BaseModel):
     visitor_first_name: str
     visitor_last_name: str
@@ -75,15 +77,17 @@ async def become_a_member(request: VisitorRequest):
     try:
         with connection.cursor() as cursor:
             insert_query = """
-            INSERT INTO Visitors (email, visitor_name, phone_no, req_help, ques)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO Visitors (email, visitor_name, phone_no, req_help, ques, email_consent, sms_consent)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
             ON DUPLICATE KEY UPDATE
                     visitor_name = VALUES(visitor_name),
                     phone_no = VALUES(phone_no),
                     req_help = VALUES(req_help),
-                    ques = VALUES(ques);
+                    ques = VALUES(ques),
+                    email_consent = VALUES(email_consent),
+                    sms_consent = VALUES(sms_consent);
                 """
-            cursor.execute(insert_query, (request.email, request.visitor_name, request.phone_no, request.req_help, request.ques))
+            cursor.execute(insert_query, (request.email, request.visitor_name, request.phone_no, request.req_help, request.ques, request.email_consent, request.sms_consent,))
             connection.commit()
 
             if request.email:
@@ -143,6 +147,13 @@ async def add_visitors_details(request: EventRequest):
                 """
             cursor.execute(insert_query, (request.email, request.name, request.phone_no, request.event_name))
             connection.commit()
+            
+            if request.email:
+                try:
+                    return send_admin_notification_rsvp(request)  
+                except Exception as email_error:
+                    print(f"Email notification failed: {email_error}")  
+                    return {"message": "Visitor details added/updated successfully, but email notification failed."}
 
         return {"message": "Info added successfully."}
     except Exception as e:
