@@ -5,7 +5,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from fastapi import HTTPException
 
-SENDER_EMAIL = "brian@kokomoyachtclub.vip"
+SENDER_EMAIL = "info@kokomoyachts.com"
 Login_URL = "https://kokomoyachtclub.vip/login"
 CC_EMAIL = "ali@iusdigitalsolutions.com"
 

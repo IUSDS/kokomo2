@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from pydantic import BaseModel, EmailStr
-from utils.email_util import smtp_connection  # Importing the SMTP connection function
+from utils.email_util import smtp_connection
 
 # Define Request Models
 class VisitorRequest(BaseModel):
@@ -26,119 +26,121 @@ class YachtVisitorRequest(BaseModel):
     yacht_manufacture_year: int
     yacht_size: int
     visitor_message: str = None
+    
+class EventRequest(BaseModel):
+    email: EmailStr
+    name: str 
+    phone_no: int 
+    event_name: str
 
-# Admin Email Address
-ADMIN_EMAIL = "brian@kokomoyachtclub.vip"
+# Admin Email Address and Recipients
+ADMIN_EMAIL = "info@kokomoyachts.com"
+RECIPIENTS = ["brian@kokomoyachtclub.com", "cynthia@kokomoyachtclub.vip"]
 
-# Function to Send Email Notification for Visitor Request
+def _send_email(subject: str, body_text: str):
+    try:
+        server = smtp_connection()
+        message = MIMEMultipart()
+        message["Subject"] = subject
+        message["From"] = ADMIN_EMAIL
+        message["To"] = ", ".join(RECIPIENTS)
+        message.attach(MIMEText(body_text, "plain"))
+
+        server.sendmail(ADMIN_EMAIL, RECIPIENTS, message.as_string())
+        server.quit()
+        print("Email sent successfully!")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
+
 def send_admin_notification_visitor(request: VisitorRequest):
     subject = "New Visitor Form Entry"
     body_text = f"""
-    Hello Brian,
+        Hello Brian,
 
-    A new visitor form has been submitted. Please find the details below:
+        A new visitor form has been submitted. Please find the details below:
 
-    ----------------------------------------
-    **Visitor Details**
-    ----------------------------------------
-     **Name:** {request.visitor_name if request.visitor_name else 'N/A'}
-     **Email:** {request.email}
-     **Phone Number:** {request.phone_no if request.phone_no else 'N/A'}
-    {f' **Requested Help:** {request.req_help}' if request.req_help else ''}
-    {f' **Any Questions:** {request.ques}' if request.ques else ''}
+        ----------------------------------------
+        **Visitor Details**
+        ----------------------------------------
+        **Name:** {request.visitor_name or 'N/A'}
+        **Email:** {request.email}
+        **Phone Number:** {request.phone_no or 'N/A'}
+        {f' **Requested Help:** {request.req_help}' if request.req_help else ''}
+        {f' **Any Questions:** {request.ques}' if request.ques else ''}
 
-    Best regards,  
-    **Kokomo Yacht Club System**
+        Best regards,  
+        **Kokomo Yacht Club System**
     """
+    _send_email(subject, body_text)
+    print("called from visitor")
+    return {"status": "success", "message": "Visitor notification email sent successfully"}
 
-    try:
-        server = smtp_connection()
-        message = MIMEMultipart()
-        message["Subject"] = subject
-        message["From"] = ADMIN_EMAIL
-        message["To"] = ADMIN_EMAIL
-        message.attach(MIMEText(body_text, "plain"))
-
-        server.sendmail(ADMIN_EMAIL, ADMIN_EMAIL, message.as_string())
-        server.quit()
-
-        return {"status": "success", "message": "Visitor notification email sent successfully"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to send visitor notification email: {str(e)}")
-
-# Function to Send Email Notification for Email Request
 def send_admin_notification_email_request(request: EmailRequest):
     subject = "New Email Request Entry"
     body_text = f"""
-    Hello Brian,
+        Hello Brian,
 
-    A new email request has been submitted. Please find the details below:
+        A new email request has been submitted. Please find the details below:
 
-    ----------------------------------------
-    **Requester Details**
-    ----------------------------------------
-     **Name:** {request.visitor_name if request.visitor_name else 'N/A'}
-     **Email:** {request.email}
-     **Phone Number:** {request.phone_no if request.phone_no else 'N/A'}
+        ----------------------------------------
+        **Requester Details**
+        ----------------------------------------
+        **Name:** {request.visitor_name or 'N/A'}
+        **Email:** {request.email}
+        **Phone Number:** {request.phone_no or 'N/A'}
 
-    Best regards,  
-    **Kokomo Yacht Club System**
+        Best regards,  
+        **Kokomo Yacht Club System**
     """
+    _send_email(subject, body_text)
+    print("called from email request")
+    return {"status": "success", "message": "Email request notification sent successfully"}
 
-    try:
-        server = smtp_connection()
-        message = MIMEMultipart()
-        message["Subject"] = subject
-        message["From"] = ADMIN_EMAIL
-        message["To"] = ADMIN_EMAIL
-        message.attach(MIMEText(body_text, "plain"))
-
-        server.sendmail(ADMIN_EMAIL, ADMIN_EMAIL, message.as_string())
-        server.quit()
-
-        return {"status": "success", "message": "Email request notification sent successfully"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to send email request notification: {str(e)}")
-
-# Function to Send Email Notification for Yacht Visitor Request
 def send_admin_notification_yacht_visitor(request: YachtVisitorRequest):
     subject = "New Yacht Visitor Form Entry"
     body_text = f"""
-    Hello Brian,
+        Hello Brian,
 
-    A new yacht visitor form has been submitted. Please find the details below:
+        A new yacht visitor form has been submitted. Please find the details below:
 
-    ----------------------------------------
-    **Visitor Details**
-    ----------------------------------------
-     **Name:** {request.visitor_first_name} {request.visitor_last_name}
-     **Email:** {request.visitor_email}
-     **Phone Number:** {request.visitor_phone_number}
-    
-    ----------------------------------------
-    **Yacht Details**
-    ----------------------------------------
-     **Model:** {request.yacht_model}
-     **Manufacture Year:** {request.yacht_manufacture_year}
-     **Size:** {request.yacht_size} ft
-    {f' **Message:** {request.visitor_message}' if request.visitor_message else ''}
+        ----------------------------------------
+        **Visitor Details**
+        ----------------------------------------
+        **Name:** {request.visitor_first_name} {request.visitor_last_name}
+        **Email:** {request.visitor_email}
+        **Phone Number:** {request.visitor_phone_number}
 
-    Best regards,  
-    **Kokomo Yacht Club System**
+        ----------------------------------------
+        **Yacht Details**
+        ----------------------------------------
+        **Model:** {request.yacht_model}
+        **Manufacture Year:** {request.yacht_manufacture_year}
+        **Size:** {request.yacht_size} ft
+        {f' **Message:** {request.visitor_message}' if request.visitor_message else ''}
+
+        Best regards,  
+        **Kokomo Yacht Club System**
     """
+    _send_email(subject, body_text)
+    return {"status": "success", "message": "Yacht visitor notification email sent successfully"}
 
-    try:
-        server = smtp_connection()
-        message = MIMEMultipart()
-        message["Subject"] = subject
-        message["From"] = ADMIN_EMAIL
-        message["To"] = ADMIN_EMAIL
-        message.attach(MIMEText(body_text, "plain"))
+def send_admin_notification_rsvp(request: EventRequest):
+    subject = "Member RSVP Form Entry"
+    body_text = f"""
+        Hello Brian,
 
-        server.sendmail(ADMIN_EMAIL, ADMIN_EMAIL, message.as_string())
-        server.quit()
+        A new RSVP form has been submitted. Please find the details below:
 
-        return {"status": "success", "message": "Yacht visitor notification email sent successfully"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to send yacht visitor notification email: {str(e)}")
-        
+        ----------------------------------------
+        **RSVP Details**
+        ----------------------------------------
+        **Name:** {request.name}
+        **Email:** {request.email}
+        **Phone Number:** {request.phone_no}
+        **Event Name:** {request.event_name}
+
+        Best regards,  
+        **Kokomo Yacht Club System**
+    """
+    _send_email(subject, body_text)
+    return {"status": "success", "message": "RSVP notification email sent successfully"}
