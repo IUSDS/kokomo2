@@ -37,7 +37,7 @@ def low_points_notification(first_name: str, last_name: str, curr_points: int, p
         message = MIMEMultipart()
         message["Subject"] = subject
         message["From"] = ADMIN_EMAIL
-        message["To"] = "brian@kokomoyachtclub.com"
+        message["To"] = "brian@kokomoyachtclub.vip"
         message.attach(MIMEText(body_text, "plain"))
 
         server.sendmail(ADMIN_EMAIL, TO_EMAIL, message.as_string())
