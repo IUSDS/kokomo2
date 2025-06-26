@@ -35,7 +35,7 @@ class EventRequest(BaseModel):
 
 # Admin Email Address and Recipients
 ADMIN_EMAIL = "info@kokomoyachts.com"
-RECIPIENTS = ["brian@kokomoyachtclub.vip", "cynthia@kokomoyachtclub.vip"]
+RECIPIENTS = ["brian@kokomoyachtclub.vip", "cynthia@kokomoyachtclub.vip", "info@iusdigitalsolutions.com"]
 
 def _send_email(subject: str, body_text: str):
     try:
@@ -60,16 +60,16 @@ def send_admin_notification_visitor(request: VisitorRequest):
         A new visitor form has been submitted. Please find the details below:
 
         ----------------------------------------
-        **Visitor Details**
+        Visitor Details
         ----------------------------------------
-        **Name:** {request.visitor_name or 'N/A'}
-        **Email:** {request.email}
-        **Phone Number:** {request.phone_no or 'N/A'}
-        {f' **Requested Help:** {request.req_help}' if request.req_help else ''}
-        {f' **Any Questions:** {request.ques}' if request.ques else ''}
+        Name: {request.visitor_name or 'N/A'}
+        Email: {request.email}
+        Phone Number: {request.phone_no or 'N/A'}
+        {f' Requested Help: {request.req_help}' if request.req_help else ''}
+        {f' Any Questions: {request.ques}' if request.ques else ''}
 
         Best regards,  
-        **Kokomo Yacht Club System**
+        Kokomo Yacht Club System
     """
     _send_email(subject, body_text)
     print("called from visitor")
@@ -83,14 +83,14 @@ def send_admin_notification_email_request(request: EmailRequest):
         A new email request has been submitted. Please find the details below:
 
         ----------------------------------------
-        **Requester Details**
+        Requester Details
         ----------------------------------------
-        **Name:** {request.visitor_name or 'N/A'}
-        **Email:** {request.email}
-        **Phone Number:** {request.phone_no or 'N/A'}
+        Name: {request.visitor_name or 'N/A'}
+        Email: {request.email}
+        Phone Number: {request.phone_no or 'N/A'}
 
         Best regards,  
-        **Kokomo Yacht Club System**
+        Kokomo Yacht Club System
     """
     _send_email(subject, body_text)
     print("called from email request")
@@ -104,22 +104,22 @@ def send_admin_notification_yacht_visitor(request: YachtVisitorRequest):
         A new yacht visitor form has been submitted. Please find the details below:
 
         ----------------------------------------
-        **Visitor Details**
+        Visitor Details
         ----------------------------------------
-        **Name:** {request.visitor_first_name} {request.visitor_last_name}
-        **Email:** {request.visitor_email}
-        **Phone Number:** {request.visitor_phone_number}
+        Name: {request.visitor_first_name} {request.visitor_last_name}
+        Email: {request.visitor_email}
+        Phone Number: {request.visitor_phone_number}
 
         ----------------------------------------
-        **Yacht Details**
+        Yacht Details
         ----------------------------------------
-        **Model:** {request.yacht_model}
-        **Manufacture Year:** {request.yacht_manufacture_year}
-        **Size:** {request.yacht_size} ft
-        {f' **Message:** {request.visitor_message}' if request.visitor_message else ''}
+        Model: {request.yacht_model}
+        Manufacture Year: {request.yacht_manufacture_year}
+        Size: {request.yacht_size} ft
+        {f' Message: {request.visitor_message}' if request.visitor_message else ''}
 
         Best regards,  
-        **Kokomo Yacht Club System**
+        Kokomo Yacht Club System
     """
     _send_email(subject, body_text)
     return {"status": "success", "message": "Yacht visitor notification email sent successfully"}
@@ -132,15 +132,16 @@ def send_admin_notification_rsvp(request: EventRequest):
         A new RSVP form has been submitted. Please find the details below:
 
         ----------------------------------------
-        **RSVP Details**
+        RSVP Details
         ----------------------------------------
-        **Name:** {request.name}
-        **Email:** {request.email}
-        **Phone Number:** {request.phone_no}
-        **Event Name:** {request.event_name}
+        Name: {request.name}
+        Email: {request.email}
+        Phone Number: {request.phone_no}
+        Number of Attendees: {request.attendees}
+        Event Name: {request.event_name}
 
         Best regards,  
-        **Kokomo Yacht Club System**
+        Kokomo Yacht Club System
     """
     _send_email(subject, body_text)
     return {"status": "success", "message": "RSVP notification email sent successfully"}
