@@ -35,7 +35,7 @@ class EventRequest(BaseModel):
 
 # Admin Email Address and Recipients
 ADMIN_EMAIL = "info@kokomoyachts.com"
-RECIPIENTS = ["brian@kokomoyachtclub.com", "cynthia@kokomoyachtclub.vip"]
+RECIPIENTS = ["brian@kokomoyachtclub.vip", "cynthia@kokomoyachtclub.vip"]
 
 def _send_email(subject: str, body_text: str):
     try:
