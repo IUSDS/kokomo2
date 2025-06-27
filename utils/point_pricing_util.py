@@ -7,6 +7,8 @@ def get_point_cost(yacht_id: str, tour_type_id: str) -> Optional[int]:
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+
+        # Get base point cost
         cursor.execute(
             """
             SELECT point_cost 
@@ -17,13 +19,33 @@ def get_point_cost(yacht_id: str, tour_type_id: str) -> Optional[int]:
             (yacht_id, tour_type_id)
         )
         row = cursor.fetchone()
-        return row['point_cost'] if row else None
+        raw_point_cost = row['point_cost'] if row else None
+
+        if raw_point_cost is None:
+            return None
+
+        # Get discount
+        cursor.execute(
+            """
+            SELECT discount 
+            FROM yachts
+            WHERE id = %s 
+            LIMIT 1
+            """,
+            (yacht_id,)
+        )
+        row = cursor.fetchone()
+        discount = row['discount'] if row else 0
+
+        discounted_point_cost = int(raw_point_cost - (discount / 100) * raw_point_cost)
+        return discounted_point_cost
 
     finally:
         if cursor:
             cursor.close()
         if conn:
             conn.close()
+
 
 def deduct_member_points(member_id: str, booking_id: str, point_cost: int) -> bool:
     conn = None
