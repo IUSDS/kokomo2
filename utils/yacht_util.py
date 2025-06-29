@@ -16,6 +16,7 @@ WEBHOOK_YACHT_MAP = {
     "KYC - 63' Prestige - Peace - Reservation": "Peace",
     "KYC - Memory Maker" : "Memory Maker",
     "KYC- 40' Happy Hour" : "Happy Hour",
+    "KYC- 40' Golden Ticket" : "Golden Ticket",
 }
 
 ALL_YACHT_NAMES = {
@@ -32,6 +33,7 @@ ALL_YACHT_NAMES = {
     "KYC - 63' Prestige - Peace - Reservation": "Peace",
     "KYC - Memory Maker" : "Memory Maker",
     "KYC- 40' Happy Hour" : "Happy Hour",
+    "KYC- 40' Golden Ticket" : "Golden Ticket",
     
     "42' \"Wanderlust\" Sailing Catamaran - Full Day Charter": "Wanderlust",
     "42' \"Wanderlust\" Sailing Catamaran - Half Day Sail": "Wanderlust",
@@ -92,6 +94,7 @@ ALL_YACHT_NAMES = {
     "40' Happy Hour - 3 and 4 Hour Sunset Charter" : "Happy Hour",
     
     "40' \"Golden Ticket\" - Half Day - 4 Hour Charter" : "Golden Ticket",
+    "40' \"Golden Ticket\" - 6 & 8 Hour Full Day Charter" : "Golden Ticket",
     "40' \"Golden Ticket\" - Sunset Charter" : "Golden Ticket",
 }
 
