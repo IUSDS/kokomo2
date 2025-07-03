@@ -130,9 +130,8 @@ async def add_member(
             to_email=email_id,
             first_name=first_name,
             last_name=last_name,
-            member_id=member_id,
-            temp_password = temp_password,
-            username=username
+            username=username,
+            temp_password=temp_password
         )
         
         # Insert emergency details
