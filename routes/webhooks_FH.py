@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Request
-import ast
+import ast, json
 from utils.secrets_util import SECRET_KEY
 from utils.booking_util import parse_booking_payload, store_booking_to_db, if_booking_exists
 from utils.session_util import get_logged_in_member_id_from_email
@@ -16,14 +16,21 @@ webhook_route = APIRouter()
 @webhook_route.post("/webhook")
 async def webhook_listener(request: Request):
     # 1. Read raw body
+    print("request: ", request)
     raw_body = await request.body()
-
-    # 2. Parse payload as Python dict
+    print("raw_body: ", raw_body)
+    text = raw_body.decode("utf-8", "replace")
+    # Try real JSON first
     try:
-        booking_data = ast.literal_eval(raw_body.decode("utf-8", errors="replace"))
-    except Exception as e:
-        print(f"EXCEPTION: Failed to parse payload: {e}")
-        raise HTTPException(status_code=400, detail="Could not parse payload")
+        booking_data = json.loads(text)
+    except json.JSONDecodeError:
+        # 2) Fallback to Python literal_eval
+        try:
+            booking_data = ast.literal_eval(text)
+        except Exception as e:
+            print(f"EXCEPTION: Could not parse payload: {e}")
+            raise HTTPException(status_code=400, detail="Could not parse payload")
+
     if not isinstance(booking_data, dict):
         raise HTTPException(status_code=400, detail="Invalid payload: expected a dict")
 
@@ -124,3 +131,4 @@ async def webhook_listener(request: Request):
             print(f"EXCEPTION: Failed WebSocket send: {e}")
 
     return {"booking_status": "successful"}
+
