@@ -15,25 +15,18 @@ webhook_route = APIRouter()
 
 @webhook_route.post("/webhook")
 async def webhook_listener(request: Request):
-    # 1. Read raw body
-    print("request: ", request)
-    raw_body = await request.body()
-    print("raw_body: ", raw_body)
-    text = raw_body.decode("utf-8", "replace")
-    # Try real JSON first
     try:
-        booking_data = json.loads(text)
-    except json.JSONDecodeError:
-        # 2) Fallback to Python literal_eval
-        try:
-            booking_data = ast.literal_eval(text)
-        except Exception as e:
-            print(f"EXCEPTION: Could not parse payload: {e}")
-            raise HTTPException(status_code=400, detail="Could not parse payload")
+        raw = await request.body()
+        print("Payload Body: ",raw)
+        payload = raw.json()
+        print("Payload json: ", payload)
+    except Exception as e:
+        print(f"JSON parse error: {e}")
+        raise HTTPException(status_code=400, detail="Invalid JSON payload")
 
+    booking_data = payload.get("booking")
     if not isinstance(booking_data, dict):
-        raise HTTPException(status_code=400, detail="Invalid payload: expected a dict")
-
+        raise HTTPException(status_code=400, detail="Missing 'booking' object")
     # 3. Extract booking PK / UUID
     booking_pk = booking_data.get("pk")
     if if_booking_exists(booking_pk):
