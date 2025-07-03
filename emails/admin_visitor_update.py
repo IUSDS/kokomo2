@@ -53,7 +53,7 @@ def _send_email(subject: str, body_text: str):
         raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
 
 def send_admin_notification_visitor(request: VisitorRequest):
-    subject = "New Visitor Form Entry"
+    subject = "New Contact Us Form"
     body_text = f"""
         Hello Brian,
 
@@ -72,11 +72,10 @@ def send_admin_notification_visitor(request: VisitorRequest):
         Kokomo Yacht Club System
     """
     _send_email(subject, body_text)
-    print("called from visitor")
     return {"status": "success", "message": "Visitor notification email sent successfully"}
 
 def send_admin_notification_email_request(request: EmailRequest):
-    subject = "New Email Request Entry"
+    subject = "New Membership Brochure Form"
     body_text = f"""
         Hello Brian,
 
@@ -93,11 +92,10 @@ def send_admin_notification_email_request(request: EmailRequest):
         Kokomo Yacht Club System
     """
     _send_email(subject, body_text)
-    print("called from email request")
     return {"status": "success", "message": "Email request notification sent successfully"}
 
 def send_admin_notification_yacht_visitor(request: YachtVisitorRequest):
-    subject = "New Yacht Visitor Form Entry"
+    subject = "New List Your Yacht Form"
     body_text = f"""
         Hello Brian,
 
@@ -125,7 +123,7 @@ def send_admin_notification_yacht_visitor(request: YachtVisitorRequest):
     return {"status": "success", "message": "Yacht visitor notification email sent successfully"}
 
 def send_admin_notification_rsvp(request: EventRequest):
-    subject = "Member RSVP Form Entry"
+    subject = "New Member RSVP Form Entry"
     body_text = f"""
         Hello Brian,
 
