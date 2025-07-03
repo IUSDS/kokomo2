@@ -5,101 +5,88 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from fastapi import HTTPException
 
+# Configuration
 SENDER_EMAIL = "info@kokomoyachts.com"
-Login_URL = "https://kokomoyachtclub.vip/login"
-CC_EMAIL = "ali@iusdigitalsolutions.com"
+LOGIN_URL = "https://kokomoyachtclub.vip/login"
+RESET_PASS_URL = "https://kokomoyachtclub.vip/forgot_password"
+USER_MANUAL_URL = (
+    "https://image-bucket-kokomo-yacht-club.s3.ap-southeast-2.amazonaws.com/"
+    "kyc_member_portal_user_manual.pdf"
+)
+BCC_EMAILS = [
+    "brian@kokomoyachtclub.vip",
+    "info@iusdigitalsolutions.com"
+]
 
-def generate_temp_password(length=10):
+
+def generate_temp_password(length: int = 10) -> str:
     """Generate a random temporary password."""
     chars = string.ascii_letters + string.digits + "!@#$%^&*"
     return ''.join(random.choice(chars) for _ in range(length))
 
-#when we start sending to the emails to user directly 
-#def send_welcome_email(to_email: str, first_name: str, last_name: str, member_id: int, temp_password: str,username: str):
-def send_welcome_email(to_email: str, first_name: str, last_name: str, member_id: int, temp_password: str, username: str):
-    """Sends a welcome email with temporary password and password update link."""
+
+def send_welcome_email(
+    to_email: str,
+    first_name: str,
+    last_name: str,
+    username: str,
+    temp_password: str
+) -> dict:
+    """Sends a formal welcome email with a reset password link and a link to the user manual."""
     try:
         server = smtp_connection()
 
-        subject = "Welcome to Kokomo Yacht Club!"
-        body = f"""
-    <html>
-        <head>
-            <style>
-                body {{
-                    font-family: Arial, sans-serif;
-                    background-color: #f4f4f4;
-                    margin: 0;
-                    padding: 20px;
-                }}
-                .container {{
-                    max-width: 600px;
-                    background: #ffffff;
-                    padding: 20px;
-                    border-radius: 10px;
-                    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-                    text-align: center;
-                }}
-                h2 {{
-                    color: #003366;
-                }}
-                p {{
-                    font-size: 16px;
-                    color: #333333;
-                }}
-                .highlight {{
-                    font-weight: bold;
-                    color: #003366;
-                }}
-                .button {{
-                    display: inline-block;
-                    background-color: #007BFF;
-                    color: #ffffff !important;
-                    padding: 10px 20px;
-                    text-decoration: none;
-                    border-radius: 5px;
-                    font-weight: bold;
-                    border: none;
-                    text-align: center;
-                }}
-                .footer {{
-                    margin-top: 20px;
-                    font-size: 14px;
-                    color: #666666;
-                }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <h2>Welcome to Kokomo Yacht Club, {first_name}!</h2>
-                <p>We're thrilled to have you on board. Your account has been successfully created!</p>
-                
-                <p><span class="highlight">Username:</span> {username}</p>
-                <p><span class="highlight">Temporary Password:</span> {temp_password}</p>
-                
-                <p>Use the above mentioned information for logging in!</p>
-                
-                <a class="button" href="{Login_URL}">LOGIN</a>
-                
-                <p class="footer">If you have any questions or need assistance, feel free to contact our support team.</p>
-                
-                <p class="footer">Best Regards,<br><strong>Kokomo Yacht Club Team</strong></p>
-            </div>
-        </body>
-    </html>
-    """
-
-
+        # Create the message container
         msg = MIMEMultipart()
         msg["From"] = SENDER_EMAIL
         msg["To"] = to_email
-        msg["Cc"] = CC_EMAIL 
-        msg["Subject"] = subject
+        msg["Subject"] = "Welcome to Kokomo Yacht Club"
+        msg["Bcc"] = ", ".join(BCC_EMAILS)
+
+        # HTML body with link to S3-hosted PDF
+        body = f"""
+                <html>
+                    <head>
+                        <style>
+                        body {{ font-family: Arial, sans-serif; background-color: #f9f9f9; margin: 0; padding: 20px; }}
+                        .container {{ max-width: 600px; background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }}
+                        h2 {{ color: #002147; margin-bottom: 20px; }}
+                        p {{ font-size: 16px; color: #333333; line-height: 1.5; }}
+                        .highlight {{ font-weight: bold; color: #002147; }}
+                        .button {{ display: inline-block; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; }}
+                        .footer {{ margin-top: 30px; font-size: 14px; color: #777777; }}
+                        .link {{ color: #004080; font-weight: bold; }}
+                        </style>
+                    </head>
+                    <body>
+                        <div class="container">
+                        <p>Greetings,</p>
+                        <h2>Dear {first_name} {last_name},</h2>
+                        <p>Welcome to the Kokomo Yacht Club! Your membership account has been successfully created.</p>
+                        <p>Please find below your login credentials:</p>
+                        <p><span class="highlight">Username:</span> {username}</p>
+                        <p><span class="highlight">Temporary Password:</span> {temp_password}</p>
+                        <p><span class="highlight">Registered Email:</span> {to_email}</p>
+                        <p><a href="{LOGIN_URL}" class="button" style="background-color:#004080;color:#ffffff;">Click here to login</a></p>
+                        <p>For security reasons, please set a new password at your earliest convenience by clicking the button below:</p>
+                        <p><a href="{RESET_PASS_URL}" class="button" style="background-color:#004080;color:#ffffff;">Reset Your Password</a></p>
+                        <p>To help you get started, you can download the <a href="{USER_MANUAL_URL}" class="link">KYC Member Portal User Manual</a>.</p>
+                        <p>If you have any questions or require assistance, please do not hesitate to reach out to our support team.</p>
+                        <p class="footer">Sincerely,<br><strong>Kokomo Yacht Club Team</strong></p>
+                        </div>
+                    </body>
+                </html>
+                """
         msg.attach(MIMEText(body, "html"))
 
-        server.sendmail(SENDER_EMAIL, to_email, msg.as_string())
+        # Send the message
+        recipients = [to_email] + BCC_EMAILS
+        server.sendmail(SENDER_EMAIL, recipients, msg.as_string())
         server.quit()
-        return {"status": "success", "message": "Email sent successfully"}
-    
+        
+        print("Email sent")
+
+        return {"status": "success", "message": "Welcome email sent successfully."}
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to send email: {e}")
