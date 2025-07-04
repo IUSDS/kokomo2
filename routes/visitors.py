@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr
+from typing import Optional
 from utils.db_util import get_db_connection
 from emails.admin_visitor_update import send_admin_notification_visitor, send_admin_notification_email_request, send_admin_notification_yacht_visitor, send_admin_notification_rsvp
 
@@ -20,7 +21,6 @@ class EventRequest(BaseModel):
     name: str 
     phone_no: int 
     event_name: str
-    attendees: int
 
 class VisitorRequest(BaseModel):
     email: EmailStr
@@ -140,14 +140,13 @@ async def add_visitors_details(request: EventRequest):
     try:
         with connection.cursor() as cursor:
             insert_query = """
-                INSERT INTO events (email, name, phone_no, event_name, attendees) 
-                VALUES (%s, %s, %s, %s, %s) 
+                INSERT INTO events (email, name, phone_no, event_name) 
+                VALUES (%s, %s, %s, %s) 
                 ON DUPLICATE KEY UPDATE 
                     name = VALUES(name),
-                    phone_no = VALUES(phone_no),
-                    attendees = VALUES(attendees);
+                    phone_no = VALUES(phone_no)
                 """
-            cursor.execute(insert_query, (request.email, request.name, request.phone_no, request.event_name, request.attendees))
+            cursor.execute(insert_query, (request.email, request.name, request.phone_no, request.event_name))
             connection.commit()
             
             if request.email:
@@ -155,10 +154,11 @@ async def add_visitors_details(request: EventRequest):
                     return send_admin_notification_rsvp(request)  
                 except Exception as email_error:
                     print(f"Email notification failed: {email_error}")  
-                    return {"message": "Visitor details added/updated successfully, but email notification failed."}
+                    return {"message": "RSVP details added/updated successfully, but email notification failed."}
 
         return {"message": "Info added successfully."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     finally:
         connection.close()
+        
