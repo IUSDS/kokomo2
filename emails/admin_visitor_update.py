@@ -1,5 +1,6 @@
 from fastapi import HTTPException
 from email.mime.text import MIMEText
+from typing import Optional
 from email.mime.multipart import MIMEMultipart
 from pydantic import BaseModel, EmailStr
 from utils.email_util import smtp_connection
@@ -57,7 +58,7 @@ def send_admin_notification_visitor(request: VisitorRequest):
     body_text = f"""
         Hello Brian,
 
-        A new visitor form has been submitted. Please find the details below:
+        A new Contact Us Form has been submitted. Please find the details below:
 
         ----------------------------------------
         Visitor Details
@@ -79,7 +80,7 @@ def send_admin_notification_email_request(request: EmailRequest):
     body_text = f"""
         Hello Brian,
 
-        A new email request has been submitted. Please find the details below:
+        A new Membership Brochure Form has been submitted. Please find the details below:
 
         ----------------------------------------
         Requester Details
@@ -99,7 +100,7 @@ def send_admin_notification_yacht_visitor(request: YachtVisitorRequest):
     body_text = f"""
         Hello Brian,
 
-        A new yacht visitor form has been submitted. Please find the details below:
+        A new List Your Yacht form has been submitted. Please find the details below:
 
         ----------------------------------------
         Visitor Details
@@ -123,19 +124,18 @@ def send_admin_notification_yacht_visitor(request: YachtVisitorRequest):
     return {"status": "success", "message": "Yacht visitor notification email sent successfully"}
 
 def send_admin_notification_rsvp(request: EventRequest):
-    subject = "New Member RSVP Form Entry"
+    subject = "Waitlist"
     body_text = f"""
         Hello Brian,
 
-        A new RSVP form has been submitted. Please find the details below:
+        A new form has been submitted. Please find the details below:
 
         ----------------------------------------
-        RSVP Details
+        Details
         ----------------------------------------
         Name: {request.name}
         Email: {request.email}
         Phone Number: {request.phone_no}
-        Number of Attendees: {request.attendees}
         Event Name: {request.event_name}
 
         Best regards,  
