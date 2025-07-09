@@ -7,6 +7,7 @@ from utils.yacht_util import get_yacht_id_by_name
 from utils.tour_util import get_tour_id_by_name
 from utils.member_util import get_member_name
 from utils.point_pricing_util import get_point_cost, deduct_member_points, get_curr_points
+from utils.json_sanitizer import parse_clean_json, remove_escape_characters
 from routes.websocket import active_connections
 from emails.owner_notification import send_invite
 from emails.low_points import low_points_notification
@@ -16,10 +17,8 @@ webhook_route = APIRouter()
 @webhook_route.post("/webhook")
 async def webhook_listener(request: Request):
     try:
-        raw = await request.body()
-        print("Payload Body: ",raw)
-        payload = raw.json()
-        print("Payload json: ", payload)
+        payload = await parse_clean_json(request)
+        print("Cleaned text:", payload)
     except Exception as e:
         print(f"JSON parse error: {e}")
         raise HTTPException(status_code=400, detail="Invalid JSON payload")
@@ -27,7 +26,7 @@ async def webhook_listener(request: Request):
     booking_data = payload.get("booking")
     if not isinstance(booking_data, dict):
         raise HTTPException(status_code=400, detail="Missing 'booking' object")
-    # 3. Extract booking PK / UUID
+    # 3. Extract booking PK / UUID 
     booking_pk = booking_data.get("pk")
     if if_booking_exists(booking_pk):
         print("WARNING: Booking already exists!")
