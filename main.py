@@ -4,6 +4,7 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.responses import RedirectResponse, Response
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
+from fastapi.responses import RedirectResponse
 import base64
 from routes.admin.export_data import export_data_route
 from routes.validate_user import validate_user_route
@@ -47,6 +48,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# The Docusign URL you provided
+DOCUSIGN_URL = "https://us.services.docusign.net/webforms-ux/v1.0/forms/690282cb4272b0df7605b26ae28788f2"
+
+@app.get("/apply-for-membership")
+async def apply_for_membership_redirect():
+    """
+    Redirects requests for /apply-for-membership to the Docusign URL.
+    """
+    return RedirectResponse(url=DOCUSIGN_URL)
 
 
 # Function to enforce authentication for Swagger UI & OpenAPI
