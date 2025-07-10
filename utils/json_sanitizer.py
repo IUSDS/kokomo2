@@ -1,6 +1,7 @@
 import json
 import re
 from starlette.requests import Request
+from fastapi import HTTPException
 
 def remove_escape_characters(payload: bytes) -> str:
     """
@@ -14,9 +15,14 @@ def remove_escape_characters(payload: bytes) -> str:
     return text
 
 async def parse_clean_json(request: Request) -> dict:
-    """
-    Reads raw body, cleans escapes, then loads JSON.
-    """
     raw = await request.body()
-    cleaned = remove_escape_characters(raw)
-    return json.loads(cleaned)
+    text = raw.decode('utf-8')
+
+    # Common JSON fixes:
+    text = re.sub(r"'", '"', text)  # single → double quotes
+    text = re.sub(r",\s*([}\]])", r"\1", text)  # remove trailing commas before } or ]
+
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=400, detail=f"JSON decode error: {str(e)}")
