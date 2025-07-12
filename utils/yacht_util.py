@@ -75,7 +75,7 @@ ALL_YACHT_NAMES = {
     "Half Day Private Charter - Downtown Tampa Bay": "Congetta",
     "Sunset Private Charter - Downtown Tampa Bay": "Congetta",
     
-    "40' Thirst - Half Day Charter - Venice": "Thirst Trap",
+    "40' Thirst -3 and 4 Hour Charters - Venice": "Thirst Trap",
     "40' Thirst- Sunset Charter - Venice": "Thirst Trap",
     "40' Thirst- Full Day 6- 8 Hour Charter - Venice": "Thirst Trap",
     
