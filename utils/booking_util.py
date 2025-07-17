@@ -127,7 +127,12 @@ def parse_booking_payload(
         return "yes" if str(val).lower() in ("yes", "true") else "no"
 
     # compute amount still due
-    amount_due = booking.get("invoice_price", 0) - booking.get("amount_paid", 0)
+    receipt_total = booking.get("receipt_total_display", 0)
+    amount_paid = booking.get("amount_paid_display", 0)
+    amount_due = float(receipt_total) - float(amount_paid)
+    print("Receipt Total: ", receipt_total)
+    print("Amount Paid: ", amount_paid)
+    print("Amount Due: ", amount_due)
 
     return {
         "member_id": member_id,
