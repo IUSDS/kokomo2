@@ -93,9 +93,7 @@ async def webhook_listener(request: Request):
     # 11. Store booking
     try:
         parsed_data = parse_booking_payload(booking_data, int(member_id) if member_id else 0, point_cost)
-        parse_ledger_data = parse_ledger_payload(booking_data, int(member_id), point_cost, curr_points)
         store_booking_to_db({"data": parsed_data})
-        store_ledger_data({"data": parse_ledger_data})
         print(f"INFO: Booking stored: pk={booking_pk}")
     except Exception as e:
         print(f"EXCEPTION: Failed to store booking: {e}")
