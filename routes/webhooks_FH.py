@@ -1,13 +1,12 @@
 from fastapi import APIRouter, HTTPException, Request
-import ast, json
 from utils.secrets_util import SECRET_KEY
-from utils.booking_util import parse_booking_payload, store_booking_to_db, if_booking_exists
+from utils.booking_util import parse_booking_payload, parse_ledger_payload, store_booking_to_db, if_booking_exists, store_ledger_data
 from utils.session_util import get_logged_in_member_id_from_email
 from utils.yacht_util import get_yacht_id_by_name
 from utils.tour_util import get_tour_id_by_name
 from utils.member_util import get_member_name
 from utils.point_pricing_util import get_point_cost, deduct_member_points, get_curr_points
-from utils.json_sanitizer import parse_clean_json, remove_escape_characters
+from utils.json_sanitizer import parse_clean_json
 from routes.websocket import active_connections
 from emails.owner_notification import send_invite
 from emails.low_points import low_points_notification
@@ -21,7 +20,7 @@ async def webhook_listener(request: Request):
         # print("Raw request body:", raw_body.decode("utf-8"))
         
         payload = await parse_clean_json(request)
-        # print("Cleaned payload:", payload)
+        print("Cleaned payload:", payload)
     except Exception as e:
         print(f"JSON parse error: {e}")
         raise HTTPException(status_code=400, detail="Invalid JSON payload")
@@ -94,7 +93,9 @@ async def webhook_listener(request: Request):
     # 11. Store booking
     try:
         parsed_data = parse_booking_payload(booking_data, int(member_id) if member_id else 0, point_cost)
+        parse_ledger_data = parse_ledger_payload(booking_data, int(member_id), point_cost, curr_points)
         store_booking_to_db({"data": parsed_data})
+        store_ledger_data({"data": parse_ledger_data})
         print(f"INFO: Booking stored: pk={booking_pk}")
     except Exception as e:
         print(f"EXCEPTION: Failed to store booking: {e}")
