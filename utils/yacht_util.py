@@ -13,10 +13,10 @@ WEBHOOK_YACHT_MAP = {
     "KYC - Memories Not Dreams": "Memories Not Dreams",
     "KYC - Congetta - The Vinoy in St. Pete": "Congetta",
     "KYC- 40' Aviara - Thirst Trap": "Thirst Trap",
-    "KYC - 63' Prestige - Peace - Reservation": "Peace",
+    "KYC- 63' Prestige - Peace - Reservation": "Peace",
     "KYC - Memory Maker" : "Memory Maker",
     "KYC- 40' Happy Hour" : "Happy Hour",
-    "KYC- 40' Golden Ticket" : "Golden Ticket",
+    "KYC- 40' Golden Ticket" : "Golden Ticket", 
 }
 
 ALL_YACHT_NAMES = {
@@ -30,7 +30,7 @@ ALL_YACHT_NAMES = {
     "KYC - Memories Not Dreams": "Memories Not Dreams",
     "KYC - Congetta - The Vinoy in St. Pete": "Congetta",
     "KYC- 40' Aviara - Thirst Trap": "Thirst Trap",
-    "KYC - 63' Prestige - Peace - Reservation": "Peace",
+    "KYC- 63' Prestige - Peace - Reservation": "Peace",
     "KYC - Memory Maker" : "Memory Maker",
     "KYC- 40' Happy Hour" : "Happy Hour",
     "KYC- 40' Golden Ticket" : "Golden Ticket",
