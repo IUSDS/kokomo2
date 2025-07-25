@@ -60,7 +60,11 @@ kokomoyachtclub.vip
                         
                         <!-- Header -->
                         <tr>
-                            <td style="background-color: #191970; padding: 40px 30px; text-align: center;">
+                            <td style="background-color: #033e8b; padding: 40px 30px; text-align: center;">
+                                <img src="https://kokomoyachtclub.vip/images/logo.png" 
+                                     alt="Kokomo Yacht Club Logo" 
+                                     style="max-height: 60px; width: auto; margin-bottom: 20px; display: block; margin-left: auto; margin-right: auto;"
+                                     onerror="this.style.display='none';">
                                 <h1 style="color: #ffffff; font-size: 24px; font-weight: 300; margin: 0; letter-spacing: 2px;">
                                     KOKOMO YACHT CLUB
                                 </h1>
@@ -71,7 +75,7 @@ kokomoyachtclub.vip
                         <tr>
                             <td style="padding: 40px 30px;">
                                 
-                                <h2 style="color: #191970; font-size: 20px; font-weight: 400; margin: 0 0 30px 0;">
+                                <h2 style="color: #033e8b; font-size: 20px; font-weight: 400; margin: 0 0 30px 0;">
                                     Password Reset
                                 </h2>
                                 
@@ -86,7 +90,7 @@ kokomoyachtclub.vip
                                 <!-- Reset Button -->
                                 <div style="text-align: center; margin: 30px 0;">
                                     <a href="{reset_link}" 
-                                       style="background-color: #191970; 
+                                       style="background-color: #033e8b; 
                                               color: #ffffff; 
                                               padding: 14px 30px; 
                                               text-decoration: none; 
@@ -98,15 +102,15 @@ kokomoyachtclub.vip
                                 </div>
                                 
                                 <!-- Security Notice -->
-                                <div style="border-left: 3px solid #191970; padding: 15px 20px; background-color: #f8f9ff; margin: 30px 0;">
-                                    <p style="color: #191970; font-size: 14px; margin: 0;">
+                                <div style="border-left: 3px solid #033e8b; padding: 15px 20px; background-color: #f8f9ff; margin: 30px 0;">
+                                    <p style="color: #033e8b; font-size: 14px; margin: 0;">
                                         <strong>Note:</strong> This link expires in 30 minutes. If you didn't request this reset, please ignore this email.
                                     </p>
                                 </div>
                                 
                                 <p style="color: #5a6c7d; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
                                     Best regards,<br>
-                                    <strong style="color: #191970;">Kokomo Yacht Club Team</strong>
+                                    <strong style="color: #033e8b;">Kokomo Yacht Club Team</strong>
                                 </p>
                             </td>
                         </tr>
@@ -116,7 +120,7 @@ kokomoyachtclub.vip
                             <td style="background-color: #f8f9fa; padding: 20px 30px; text-align: center; border-top: 1px solid #e9ecef;">
                                 <p style="color: #6c757d; font-size: 12px; margin: 0;">
                                     Kokomo Yacht Club<br>
-                                    <a href="https://kokomoyachtclub.vip" style="color: #191970; text-decoration: none;">kokomoyachtclub.vip</a>
+                                    <a href="https://kokomoyachtclub.vip" style="color: #033e8b; text-decoration: none;">kokomoyachtclub.vip</a>
                                 </p>
                             </td>
                         </tr>
