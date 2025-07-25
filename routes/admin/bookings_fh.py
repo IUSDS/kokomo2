@@ -140,7 +140,7 @@ async def get_bookings_with_adjustments_by_member(member_id: str):
     ) combined_data
     ORDER BY 
         CASE WHEN date IS NULL THEN 1 ELSE 0 END,
-        date DESC;
+        date ASC;
 """
     conn = get_db_connection()
     try:
