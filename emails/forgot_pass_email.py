@@ -13,88 +13,145 @@ BCC_EMAILS = [
 ADMIN_EMAIL = "info@kokomoyachts.com"
 
 def send_reset_email(email: str, token: str):
-    """Send password reset email with proper BCC handling"""
+    """Send simple yet elegant yacht club password reset email"""
     
     reset_link = f"https://kokomoyachtclub.vip/new_password?token={token}"
 
-    subject = "Password Reset Request"
+    subject = "Password Reset • Kokomo Yacht Club"
     
-    # Plain text version
-    body_text = f"""Dear User,
+    # Clean plain text version
+    body_text = f"""
+KOKOMO YACHT CLUB
 
-    We received a request to reset your password. To proceed, please click the link below:
+Dear Member,
 
-    Reset Password: {reset_link}
+We received a request to reset your password.
 
-    This link is valid for 30 minutes. If you didn't request a password reset, please disregard this email.
+Reset your password: {reset_link}
 
-    For assistance, feel free to reach out to our support team.
+This link expires in 30 minutes.
 
-    Best regards,
+If you didn't request this, please ignore this email.
 
-    Kokomo Yacht Club Team
+Best regards,
+Kokomo Yacht Club Team
+
+---
+kokomoyachtclub.vip
     """
 
-    # HTML version for better presentation
+    # Simple yet elegant HTML design
     body_html = f"""
-    <html>
-      <body>
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #2c3e50;">Password Reset Request</h2>
-          
-          <p>Dear User,</p>
-          
-          <p>We received a request to reset your password. To proceed, please click the button below:</p>
-          
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="{reset_link}" 
-               style="background-color: #3498db; color: white; padding: 12px 30px; 
-                      text-decoration: none; border-radius: 5px; font-weight: bold; 
-                      display: inline-block;">
-              Reset Password
-            </a>
-          </div>
-          
-          <p>Alternatively, you can copy and paste this link into your browser:</p>
-          <p style="background-color: #f8f9fa; padding: 10px; border-left: 4px solid #3498db; 
-                    word-break: break-all; font-family: monospace; font-size: 12px;">
-            {reset_link}
-          </p>
-          
-          <p><strong>Important:</strong> This link is valid for 30 minutes only.</p>
-          
-          <p>If you didn't request a password reset, please disregard this email and your password will remain unchanged.</p>
-          
-          <p>For assistance, feel free to reach out to our support team.</p>
-          
-          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-          
-          <p style="color: #7f8c8d;">
-            Best regards,<br>
-            <strong>Kokomo Yacht Club Team</strong>
-          </p>
-        </div>
-      </body>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Password Reset • Kokomo Yacht Club</title>
+    </head>
+    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background-color: #f8f9fa; color: #2c3e50;">
+        
+        <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f8f9fa; padding: 40px 20px;">
+            <tr>
+                <td align="center">
+                    
+                    <!-- Main Container -->
+                    <table cellpadding="0" cellspacing="0" border="0" width="500" style="background-color: #ffffff; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                        
+                        <!-- Header -->
+                        <tr>
+                            <td style="background-color: #191970; padding: 40px 30px; text-align: center;">
+                                <h1 style="color: #ffffff; font-size: 24px; font-weight: 300; margin: 0; letter-spacing: 2px;">
+                                    KOKOMO YACHT CLUB
+                                </h1>
+                            </td>
+                        </tr>
+                        
+                        <!-- Content -->
+                        <tr>
+                            <td style="padding: 40px 30px;">
+                                
+                                <h2 style="color: #191970; font-size: 20px; font-weight: 400; margin: 0 0 30px 0;">
+                                    Password Reset
+                                </h2>
+                                
+                                <p style="color: #2c3e50; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                                    Dear Member,
+                                </p>
+                                
+                                <p style="color: #5a6c7d; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
+                                    We received a request to reset your password for your Kokomo Yacht Club account.
+                                </p>
+                                
+                                <!-- Reset Button -->
+                                <div style="text-align: center; margin: 30px 0;">
+                                    <a href="{reset_link}" 
+                                       style="background-color: #191970; 
+                                              color: #ffffff; 
+                                              padding: 14px 30px; 
+                                              text-decoration: none; 
+                                              font-size: 16px; 
+                                              display: inline-block;
+                                              border-radius: 4px;">
+                                        Reset Password
+                                    </a>
+                                </div>
+                                
+                                <!-- Security Notice -->
+                                <div style="border-left: 3px solid #191970; padding: 15px 20px; background-color: #f8f9ff; margin: 30px 0;">
+                                    <p style="color: #191970; font-size: 14px; margin: 0;">
+                                        <strong>Note:</strong> This link expires in 30 minutes. If you didn't request this reset, please ignore this email.
+                                    </p>
+                                </div>
+                                
+                                <p style="color: #5a6c7d; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
+                                    Best regards,<br>
+                                    <strong style="color: #191970;">Kokomo Yacht Club Team</strong>
+                                </p>
+                            </td>
+                        </tr>
+                        
+                        <!-- Footer -->
+                        <tr>
+                            <td style="background-color: #f8f9fa; padding: 20px 30px; text-align: center; border-top: 1px solid #e9ecef;">
+                                <p style="color: #6c757d; font-size: 12px; margin: 0;">
+                                    Kokomo Yacht Club<br>
+                                    <a href="https://kokomoyachtclub.vip" style="color: #191970; text-decoration: none;">kokomoyachtclub.vip</a>
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                </td>
+            </tr>
+        </table>
+    </body>
     </html>
     """
 
     try:
-        print(f"Sending password reset email to {email}")
+        logging.info(f"Sending simple elegant password reset email to {email}")
         
         # Create the email content
         message = MIMEMultipart("alternative")
         message["Subject"] = subject
-        message["From"] = ADMIN_EMAIL
+        message["From"] = f"Kokomo Yacht Club <{ADMIN_EMAIL}>"
         message["To"] = email
+        message["Reply-To"] = ADMIN_EMAIL
+        
         recipients = [email] + BCC_EMAILS
+        
+        # Attach both versions
         message.attach(MIMEText(body_text, "plain"))
         message.attach(MIMEText(body_html, "html"))
+        
+        # Send the email
         server = smtp_connection()
         server.sendmail(ADMIN_EMAIL, recipients, message.as_string())
         server.quit()
         
-        print(f"Password reset email sent successfully to {email}")
+        logging.info(f"Simple elegant password reset email sent successfully to {email}")
 
     except Exception as e:
-        print(f"Failed to send password reset email to {email}: {str(e)}")
+        logging.error(f"Failed to send password reset email to {email}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
