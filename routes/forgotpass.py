@@ -22,7 +22,7 @@ class ResetPasswordRequest(BaseModel):
 def forgot_password(email: str = Form(...)):
     # Generate a secure token
     token = secrets.token_hex(16)  # Generates a 32-character hexadecimal string
-    expiry_time = datetime.now() + timedelta(days=7)  # Token valid for 30 mins
+    expiry_time = datetime.now() + timedelta(minutes=30)  # Token valid for 30 mins
 
     # Check if the email exists in the database
     connection = get_db_connection()
@@ -49,14 +49,20 @@ def forgot_password(email: str = Form(...)):
         return {"message": "Password reset email sent successfully."}
 
     except IntegrityError as e:
-        print(f"IntegrityError: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
+        print(f"IntegrityError during password reset: {str(e)}")
+        raise HTTPException(status_code=400, detail="A unique constraint was violated. Please try again.")
+
+    except HTTPException as e:
+        # Re-raise explicit HTTPExceptions (like the 404 for "Email not found")
+        raise e
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Internal Server Error")
+        print(f"An unexpected error occurred in forgot_password: {type(e).__name__}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal Server Error occurred during password reset request.")
 
     finally:
-        connection.close()
+        if connection:
+            connection.close()
 
 
 # Endpoint to reset the password
