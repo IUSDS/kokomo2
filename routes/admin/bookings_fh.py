@@ -23,10 +23,13 @@ class BookingOut(BaseModel):
     description: Optional[str] = None
     date: Optional[str] = None
     source: Optional[str] = None
+    
 
 class BookingResponse(BaseModel):
     member_id: int
+    opening_balance: float
     data: List[BookingOut]
+
 
 booking_route = APIRouter()
 
@@ -94,6 +97,7 @@ async def get_bookings_with_adjustments_by_member(member_id: str):
     if not is_primary:
         member_id = get_primary_for_secondary(member_id)
 
+    # 🔹 Step 1: SQL for transactions (without opening_balance in each row)
     sql = """
     SELECT * FROM (
         SELECT 
@@ -113,9 +117,9 @@ async def get_bookings_with_adjustments_by_member(member_id: str):
             'Booking' AS source
         FROM booking_fh b
         WHERE b.member_id = %s
-        
+
         UNION ALL
-        
+
         SELECT 
             p.member_id,
             NULL AS item,
@@ -141,31 +145,40 @@ async def get_bookings_with_adjustments_by_member(member_id: str):
     ORDER BY 
         CASE WHEN date IS NULL THEN 1 ELSE 0 END,
         date ASC;
-"""
+    """
+
+    # 🔹 Step 2: SQL for opening_balance
+    opening_balance_query = """
+        SELECT opening_balance FROM Members WHERE member_id = %s
+    """
+
     conn = get_db_connection()
     try:
         with conn.cursor() as cursor:
-            cursor.execute(sql, (member_id, member_id))
 
-            # Get raw data - it's already dictionaries!
+            # 🔸 Step 3: Fetch opening_balance separately
+            cursor.execute(opening_balance_query, (member_id,))
+            opening_balance_result = cursor.fetchone()
+            if not opening_balance_result:
+                raise HTTPException(status_code=404, detail="Member not found")
+            opening_balance = opening_balance_result.get("opening_balance", 0)
+
+            # 🔸 Step 4: Fetch transaction records
+            cursor.execute(sql, (member_id, member_id))
             rows = cursor.fetchall()
 
-            # Convert datetime objects to strings before validation
+            # 🔸 Step 5: Process and format rows
             processed_rows = []
             for row in rows:
-                # Convert datetime to string if present
                 if row.get('date') and isinstance(row['date'], datetime):
                     row['date'] = row['date'].strftime('%Y-%m-%d %H:%M:%S')
-                
-                # Convert member_id to int (your model expects int)
                 if row.get('member_id'):
                     row['member_id'] = int(row['member_id'])
-                
                 processed_rows.append(row)
 
-            # Validate each row against BookingOut
+            # 🔸 Step 6: Validate using BookingOut
             validated_rows = []
-            for row in rows:
+            for row in processed_rows:
                 try:
                     validated_rows.append(BookingOut(**row))
                 except Exception as e:
@@ -173,10 +186,13 @@ async def get_bookings_with_adjustments_by_member(member_id: str):
                     print("Error:", e)
                     raise HTTPException(status_code=500, detail="Data format mismatch.")
 
+            # 🔸 Step 7: Return structured response with separate opening_balance
             return {
                 "member_id": member_id,
+                "opening_balance": opening_balance,
                 "data": validated_rows
             }
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database query error: {e}")
     finally:
