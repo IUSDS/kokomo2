@@ -29,8 +29,9 @@ async def webhook_listener(request: Request):
     if not isinstance(booking_data, dict):
         raise HTTPException(status_code=400, detail="Missing 'booking' object")
     # 3. Extract booking PK / UUID 
+    status = booking_data.get("status")
     booking_pk = booking_data.get("pk")
-    if if_booking_exists(booking_pk):
+    if if_booking_exists(booking_pk, status):
         print("WARNING: Booking already exists!")
         return
     booking_uuid = booking_data.get("uuid")
@@ -50,10 +51,10 @@ async def webhook_listener(request: Request):
     tour_type_name  = availability.get("headline")
     start_at        = availability.get("start_at")
     end_at          = availability.get("end_at")
-    print(f"INFO: Availability: yacht_name={yacht_name}, tour_type={tour_type_name}, start_at={start_at}, end_at={end_at}")
+    print(f"INFO: Status: {status}, Availability: yacht_name={yacht_name}, tour_type={tour_type_name}, start_at={start_at}, end_at={end_at}")
 
     # 6. Send calendar invite early
-    # send_invite(yacht_name, tour_type_name, start_at, end_at)
+    send_invite(yacht_name, tour_type_name, start_at, end_at)
     
     # 7. Lookup member_id
     member_id = None
