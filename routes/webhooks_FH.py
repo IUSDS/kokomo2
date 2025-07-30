@@ -17,7 +17,7 @@ webhook_route = APIRouter()
 async def webhook_listener(request: Request):
     try:
         raw_body = await request.body()
-        print("Raw request body:", raw_body.decode("utf-8"))
+        # print("Raw request body:", raw_body.decode("utf-8"))
         
         payload = await parse_clean_json(request)
         print("Cleaned payload:", payload)
