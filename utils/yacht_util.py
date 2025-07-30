@@ -17,6 +17,7 @@ WEBHOOK_YACHT_MAP = {
     "KYC - Memory Maker" : "Memory Maker",
     "KYC- 40' Happy Hour" : "Happy Hour",
     "KYC- 40' Golden Ticket" : "Golden Ticket", 
+    "KYC- 52' Rally Point" : "Rally Point",
 }
 
 ALL_YACHT_NAMES = {
@@ -33,7 +34,8 @@ ALL_YACHT_NAMES = {
     "KYC- 63' Prestige - Peace - Reservation": "Peace",
     "KYC - Memory Maker" : "Memory Maker",
     "KYC- 40' Happy Hour" : "Happy Hour",
-    "KYC- 40' Golden Ticket" : "Golden Ticket",
+    "KYC- 40' Golden Ticket" : "Golden Ticket", 
+    "KYC- 52' Rally Point" : "Rally Point",
     
     "42' \"Wanderlust\" Sailing Catamaran - Full Day Charter": "Wanderlust",
     "42' \"Wanderlust\" Sailing Catamaran - Half Day Sail": "Wanderlust",
@@ -96,6 +98,9 @@ ALL_YACHT_NAMES = {
     "40' \"Golden Ticket\" - Half Day - 4 Hour Charter" : "Golden Ticket",
     "40' \"Golden Ticket\" - 6 & 8 Hour Full Day Charter" : "Golden Ticket",
     "40' \"Golden Ticket\" - Sunset Charter" : "Golden Ticket",
+    "52' Rally Point - 6 & 8 Hours" : "Rally Point",
+    "52' Rally Point - Half Day" : "Rally Point",
+    "52' Rally Point -Sunset Cruise" : "Rally Point",
 }
 
 def get_mapped_yacht_name(webhook_name: str) -> str:
