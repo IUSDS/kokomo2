@@ -171,7 +171,7 @@ def parse_booking_payload(
         "point_cost":       point_cost,
     }
 
-def if_booking_exists(booking_id: str, status: str):
+def if_booking_exists(booking_id: str):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -181,8 +181,10 @@ def if_booking_exists(booking_id: str, status: str):
             FROM booking_fh
             WHERE booking_id = %s;
         """, (booking_id,))
-        
+       
         result = cursor.fetchone()
+
+        print('>>>>>>> result', result)
         count = result['COUNT(booking_id)']
         if count == 0:
             return False
@@ -196,3 +198,107 @@ def if_booking_exists(booking_id: str, status: str):
             cursor.close()
         if conn:
             conn.close()
+
+
+def get_points_cost_from_booking_fh(booking_id:str):
+    try:
+        conn=get_db_connection()
+        cursor=conn.cursor()
+        cursor.execute("""
+            SELECT points_cost,member_id
+            FROM booking_fh
+            WHERE booking_id = %s;
+            """,(booking_id,))
+        result=cursor.fetchone()
+        print('>>>>>>> result', result)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+
+def get_points_from_members(member_id:int):
+    try:
+        conn=get_db_connection()
+        cursor=conn.cursor()
+        cursor.execute("""
+            SELECT points
+            FROM Members
+            WHERE member_id = %s;
+            """,(member_id,))
+        result=cursor.fetchone()
+        print('<<<<result',result)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+
+def new_record_in_point_adjustment(member_id:int,points_added:int,Balance:int,description:str):     ### After cancellation points adjustments
+    try:
+        conn=get_db_connection()
+        cursor=conn.cursor()
+        cursor.execute("""
+            INSERT INTO Point_Adjustment(member_id,points_added,Balance,description)
+            Values(%s,%s,%s,%s);
+            """,(member_id, points_added, Balance, description))
+        conn.commit()
+
+        # Fetch the most recent matching record
+        cursor.execute("""
+            SELECT * FROM Point_Adjustment
+            WHERE member_id = %s AND points_added = %s AND Balance = %s AND description = %s
+            ORDER BY created_at DESC
+            LIMIT 1;
+        """, (member_id, points_added, Balance, description))
+        inserted_record = cursor.fetchone()
+        return inserted_record
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+
+
+
+
+
+
+# def if_booking_exists(booking_id: str, status: str):
+#     try:
+#         conn = get_db_connection()
+#         cursor = conn.cursor()
+        
+#         cursor.execute("""
+#             SELECT COUNT(booking_id)
+#             FROM booking_fh
+#             WHERE booking_id = %s;
+#         """, (booking_id,))
+       
+#         result = cursor.fetchone()
+
+#         print('>>>>>>> result', result)
+#         count = result['COUNT(booking_id)']
+#         if count == 0:
+#             return False
+#         else:
+#             return True
+    
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
+#     finally:
+#         if cursor:
+#             cursor.close()
+#         if conn:
+#             conn.close()
