@@ -183,8 +183,6 @@ def if_booking_exists(booking_id: str):
         """, (booking_id,))
        
         result = cursor.fetchone()
-
-        print('>>>>>>> result', result)
         count = result['COUNT(booking_id)']
         if count == 0:
             return False
@@ -200,7 +198,8 @@ def if_booking_exists(booking_id: str):
             conn.close()
 
 
-def get_points_cost_from_booking_fh(booking_id:str):
+### retrieve points_cost and member_id from booking_fh by booking_id
+def get_points_cost_and_member_id_from_booking_fh(booking_id:str):
     try:
         conn=get_db_connection()
         cursor=conn.cursor()
@@ -210,7 +209,6 @@ def get_points_cost_from_booking_fh(booking_id:str):
             WHERE booking_id = %s;
             """,(booking_id,))
         result=cursor.fetchone()
-        print('>>>>>>> result', result)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
@@ -221,6 +219,7 @@ def get_points_cost_from_booking_fh(booking_id:str):
             conn.close()
 
 
+### retrieve current points from members by member_id 
 def get_points_from_members(member_id:int):
     try:
         conn=get_db_connection()
@@ -231,7 +230,6 @@ def get_points_from_members(member_id:int):
             WHERE member_id = %s;
             """,(member_id,))
         result=cursor.fetchone()
-        print('<<<<result',result)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
@@ -242,6 +240,7 @@ def get_points_from_members(member_id:int):
             conn.close()
 
 
+### Create new record in Point_Adjustment table
 def new_record_in_point_adjustment(member_id:int,points_added:int,Balance:int,description:str):     ### After cancellation points adjustments
     try:
         conn=get_db_connection()
