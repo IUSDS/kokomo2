@@ -53,7 +53,7 @@ async def webhook_listener(request: Request):
     print(f"INFO: Availability: yacht_name={yacht_name}, tour_type={tour_type_name}, start_at={start_at}, end_at={end_at}")
 
     # 6. Send calendar invite early
-    send_invite(yacht_name, tour_type_name, start_at, end_at)
+    # send_invite(yacht_name, tour_type_name, start_at, end_at)
     
     # 7. Lookup member_id
     member_id = None
