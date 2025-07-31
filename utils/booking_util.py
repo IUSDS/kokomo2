@@ -267,37 +267,3 @@ def new_record_in_point_adjustment(member_id:int,points_added:int,Balance:int,de
             cursor.close()
         if conn:
             conn.close()
-
-
-
-
-
-
-
-# def if_booking_exists(booking_id: str, status: str):
-#     try:
-#         conn = get_db_connection()
-#         cursor = conn.cursor()
-        
-#         cursor.execute("""
-#             SELECT COUNT(booking_id)
-#             FROM booking_fh
-#             WHERE booking_id = %s;
-#         """, (booking_id,))
-       
-#         result = cursor.fetchone()
-
-#         print('>>>>>>> result', result)
-#         count = result['COUNT(booking_id)']
-#         if count == 0:
-#             return False
-#         else:
-#             return True
-    
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
-#     finally:
-#         if cursor:
-#             cursor.close()
-#         if conn:
-#             conn.close()
