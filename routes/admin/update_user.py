@@ -1,9 +1,11 @@
-from fastapi import APIRouter, HTTPException, Form, UploadFile, File
+from fastapi import APIRouter, HTTPException, Form, UploadFile ,File
 from utils.db_util import get_db_connection
 import boto3
 from botocore.exceptions import ClientError
 from pydantic import BaseModel, EmailStr
 from typing import Optional, Union
+import starlette.datastructures
+
 
 # Initialize the router
 update_user_route = APIRouter()
@@ -35,6 +37,7 @@ async def update_user(
     membership_type: Optional[str] = Form(None),
     points: Optional[int] = Form(None),
     file: Optional[Union[UploadFile, str]] = File(None),
+
     # emergency_contact: int = Form(None),
     # emergency_email: EmailStr = Form(None),
     # emergency_relationship: str = Form(None),
@@ -68,14 +71,12 @@ async def update_user(
     
     # Determine the picture_url update value
     picture_s3_url = None
-    if file is None:
-        # File not provided: leave picture_url unchanged (pass None so COALESCE uses existing value)
-        picture_s3_url = None
-    elif isinstance(file, UploadFile):
-        # A file was provided; attempt to upload it to S3
-        file_content = await file.read()
-        object_name = f"profile_pictures/{username}/{file.filename}"
+      
+    if isinstance(file, starlette.datastructures.UploadFile):        
         try:
+            file_content = await file.read()
+            object_name = f"profile_pictures/{username}/{file.filename}"
+
             s3_client.put_object(
                 Bucket=S3_BUCKET_NAME,
                 Key=object_name,
@@ -83,14 +84,18 @@ async def update_user(
                 ContentType=file.content_type,
             )
             picture_s3_url = f"https://{S3_BUCKET_NAME}.s3.{S3_REGION}.amazonaws.com/{object_name}"
-        except ClientError as e:
+            print("✅ Upload successful:", picture_s3_url)
+        except Exception as e:
             raise HTTPException(
-                status_code=500, 
-                detail=f"S3 Upload error: {e.response['Error']['Message']}"
+                status_code=500,
+                detail=f"S3 Upload error: {str(e)}"
             )
-    elif isinstance(file, str) and file == "":
-        # An empty string was sent for file; update with default picture URL.
+    elif isinstance(file, str) and file == "":    
+         # An empty string was sent for file; update with default picture URL.
         picture_s3_url = DEFAULT_PICTURE_URL
+        print(">>>>",picture_s3_url)
+    else:
+        print("⚠️ file is not UploadFile or is None. Skipping upload.")
 
     try:
         with connection.cursor() as cursor:
