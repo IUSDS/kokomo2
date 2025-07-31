@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from typing import List,Optional,Union
 from datetime import datetime
 from utils.member_util import get_if_primary_or_secondary, get_primary_for_secondary
+import pandas as pd
 
 class BookingOut(BaseModel):
     member_id: int
