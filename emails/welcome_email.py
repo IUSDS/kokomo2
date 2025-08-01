@@ -6,18 +6,23 @@ from email.mime.text import MIMEText
 from fastapi import HTTPException
 
 # Configuration
-SENDER_EMAIL = "info@kokomoyachts.com"
+# SENDER_EMAIL = "info@kokomoyachts.com"
 LOGIN_URL = "https://kokomoyachtclub.vip/login"
 RESET_PASS_URL = "https://kokomoyachtclub.vip/forgot_password"
 USER_MANUAL_URL = (
     "https://image-bucket-kokomo-yacht-club.s3.ap-southeast-2.amazonaws.com/"
     "kyc_member_portal_user_manual.pdf"
 )
-BCC_EMAILS = [
-    "brian@kokomoyachtclub.vip",
-    "info@iusdigitalsolutions.com"
-]
+# BCC_EMAILS = [
+#     "brian@kokomoyachtclub.vip",
+#     "info@iusdigitalsolutions.com"
+# ]
 
+
+SENDER_EMAIL = "satya@kokomoyachtclub.vip"
+BCC_EMAILS = [
+    "aishwarya@iusdigitalsolutions.com"
+]
 
 def generate_temp_password(length: int = 10) -> str:
     """Generate a random temporary password."""
