@@ -197,10 +197,3 @@ async def get_bookings_with_adjustments_by_member(member_id: str):
         raise HTTPException(status_code=500, detail=f"Database query error: {e}")
     finally:
         conn.close()
-
-
-
-
-# ORDER BY 
-    #     CASE WHEN date IS NULL THEN 1 ELSE 0 END,
-    #     date ASC;
