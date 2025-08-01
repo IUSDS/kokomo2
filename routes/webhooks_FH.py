@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Request
 from utils.secrets_util import SECRET_KEY
-from utils.booking_util import parse_booking_payload, store_booking_to_db, if_booking_exists
+from utils.booking_util import parse_booking_payload, store_booking_to_db, if_booking_exists, charter_booking_exists, determine_source
 from utils.session_util import get_logged_in_member_id_from_email
 from utils.yacht_util import get_yacht_id_by_name
 from utils.tour_util import get_tour_id_by_name
@@ -30,9 +30,6 @@ async def webhook_listener(request: Request):
         raise HTTPException(status_code=400, detail="Missing 'booking' object")
     # 3. Extract booking PK / UUID 
     booking_pk = booking_data.get("pk")
-    if if_booking_exists(booking_pk):
-        print("WARNING: Booking already exists!")
-        return
     booking_uuid = booking_data.get("uuid")
     print(f"INFO: Booking received: pk={booking_pk}, uuid={booking_uuid}")
 
@@ -51,9 +48,21 @@ async def webhook_listener(request: Request):
     start_at        = availability.get("start_at")
     end_at          = availability.get("end_at")
     print(f"INFO: Availability: yacht_name={yacht_name}, tour_type={tour_type_name}, start_at={start_at}, end_at={end_at}")
+    
+    # Checks if booking exists
+    webhook_source = determine_source(yacht_name)
+    print("INFO: This webhook originates from", webhook_source)
+    if webhook_source.upper() == "CHARTERS":
+        if charter_booking_exists(booking_pk):   # this is for charters bookings
+            print("WARNING: Charter booking already exists!")
+            return
+        elif if_booking_exists(booking_pk, yacht_name):   # this is for KYC bookings
+            print("WARNING: Booking already exists!")
+            return
 
     # 6. Send calendar invite early
     # send_invite(yacht_name, tour_type_name, start_at, end_at)
+    print("Owners Notified")
     
     # 7. Lookup member_id
     member_id = None

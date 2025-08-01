@@ -103,15 +103,27 @@ ALL_YACHT_NAMES = {
     "52' Rally Point -Sunset Cruise" : "Rally Point",
 }
 
-def get_mapped_yacht_name(webhook_name: str) -> str:
-    cleaned = webhook_name.strip()
-    return WEBHOOK_YACHT_MAP.get(cleaned, cleaned)
+yacht_names = [
+    'Peace', 'Wanderlust', 'Giddy Up', 'Ocean Rode', 'The Life', 'Top Shelf', 'Outrage', 'Lil\' Bit Nauti', 'Memories Not Dreams', 'Congetta', 'Thirst Trap', 'Memory Maker', 'Happy Hour', 'Golden Ticket', 'Rally Point'
+]
+
+def get_yacht_basename(name: str):
+    name_lower = name.lower()
+    for yacht in yacht_names:
+        yacht_lower = yacht.lower()
+        if yacht_lower in name_lower:
+            return yacht
+    return None
+
+# def get_mapped_yacht_name(webhook_name: str) -> str:
+#     cleaned = webhook_name.strip()
+#     return WEBHOOK_YACHT_MAP.get(cleaned, cleaned)
 
 def get_yacht_id_by_name(name: str) -> Optional[str]:
     conn = None
     cursor = None
 
-    base_name = get_mapped_yacht_name(name)
+    base_name = get_yacht_basename(name)
     print("base name:", base_name)
 
     try:
