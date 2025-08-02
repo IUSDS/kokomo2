@@ -143,9 +143,8 @@ async def get_bookings_with_adjustments_by_member(member_id: str):
         FROM Point_Adjustment p
         WHERE p.member_id = %s
     ) combined_data
-    ORDER BY 
-        CASE WHEN date IS NULL THEN 1 ELSE 0 END,
-        date ASC;
+    ORDER BY
+    COALESCE(date, start_at) ASC;   
     """
 
     # 🔹 Step 2: SQL for opening_balance
