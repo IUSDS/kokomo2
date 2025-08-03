@@ -60,7 +60,7 @@ async def webhook_listener(request: Request):
             raise HTTPException(status_code=409, detail="Charter booking already exists")
         
         # Send calendar invite to owner for charter bookings
-        # send_invite(yacht_name, tour_type_name, start_at, end_at, contact_email)
+        send_invite(yacht_name, tour_type_name, start_at, end_at, contact_email)
         print("INFO: Charter owners notified")
         
         return {"booking_status": "charter_notification_sent"}

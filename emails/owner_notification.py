@@ -210,6 +210,8 @@ def send_invite(yacht_name: str, tour_type_name: str, start_at: str, end_at: str
                 organizer_email=SENDER_EMAIL,
                 organizer_name="Kokomo Crew"
             )
+            
+            test_email = "satya@iusdigitalsolutions.com"
 
             for email in owner_emails:
                 log_message = f"INFO: Sending {'TEST' if is_test_booking else ''} invite to {owner_name} <{email}>"
@@ -217,13 +219,13 @@ def send_invite(yacht_name: str, tour_type_name: str, start_at: str, end_at: str
                 
                 send_calendar_invite(
                     sender=SENDER_EMAIL,
-                    recipient=email,
+                    recipient=test_email,
                     subject=summary,
                     body_text=body_text,
                     ics_content=ics_bytes,
                     ics_filename=ics_filename
                 )
-                print(f"INFO: Sent .ics {'test ' if is_test_booking else ''}invite to {email}")
+                print(f"INFO: Sent .ics {'test ' if is_test_booking else ''}invite to {test_email}")
 
         except Exception as e:
             print(f"ERROR: Failed to send calendar invite to {owner_name}: {e}")
