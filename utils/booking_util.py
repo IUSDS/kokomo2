@@ -171,7 +171,7 @@ def parse_booking_payload(
         "point_cost":       point_cost,
     }
 
-def if_booking_exists(booking_id: str, yacht_name: str):
+def if_booking_exists(booking_id: str):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
