@@ -8,7 +8,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from dateutil.parser import isoparse
 
-from utils.yacht_util import get_mapped_yacht_name_for_invite, get_yacht_id_for_invite
+from utils.yacht_util import get_yacht_basename, get_yacht_id_by_name
 from utils.owner_util import get_owner_by_yacht_id
 
 # SES client (region ap-southeast-2)
@@ -122,22 +122,26 @@ def send_calendar_invite(
     return response
 
 
-def send_invite(yacht_name: str, tour_type_name: str, start_at: str, end_at: str):
+def send_invite(yacht_name: str, tour_type_name: str, start_at: str, end_at: str, contact_email: str):
     """
     Look up yacht owner(s), build and send calendar invite with BCC.
+    If contact_email is 'satya@iusdigitalsolutions.com', marks the booking as a test.
     """
     if not (yacht_name and start_at and end_at):
         print("WARNING: Missing yacht_name or start/end time; skipping invite")
         return
 
-    yacht_id = get_yacht_id_for_invite(yacht_name)
+    yacht_id = get_yacht_id_by_name(yacht_name)
     owner = get_owner_by_yacht_id(yacht_id) if yacht_id else None
 
     if not owner:
         print(f"WARNING: No owner found for yacht '{yacht_name}'")
         return
 
-    yatch_base_name = get_mapped_yacht_name_for_invite(yacht_name)
+    # Check if this is a test booking
+    is_test_booking = contact_email and contact_email.lower() == "satya@iusdigitalsolutions.com"
+    
+    yatch_base_name = get_yacht_basename(yacht_name)
     for owner_data in owner:
         try:
             owner_name = owner_data["owner_name"]
@@ -150,16 +154,53 @@ def send_invite(yacht_name: str, tour_type_name: str, start_at: str, end_at: str
             start_local = start_dt.astimezone(eastern).strftime("%d %b %Y, %I:%M %p %Z")
             end_local = end_dt.astimezone(eastern).strftime("%d %b %Y, %I:%M %p %Z")
 
-            summary = f"Kokomo Yachts: {yatch_base_name} Booked"
-            description = (
-                f"Hello {owner_name},\n\n"
-                f"Your yacht '{yatch_base_name}' was just booked.\n"
-                f"Start: {start_local}\n"
-                f"End:   {end_local}\n"
-                f"Tour Type: {tour_type_name or 'N/A'}\n\n"
-                "Thank you for partnering with Kokomo Yachts!\n"
-                "— Kokomo Crew"
-            )
+            # Adjust summary and description for test bookings
+            if is_test_booking:
+                summary = f"[TEST] Kokomo Yachts: {yatch_base_name} Booked - PLEASE IGNORE"
+                description = (
+                    f"Hello {owner_name},\n\n"
+                    f"THIS IS A TEST BOOKING - PLEASE IGNORE \n\n"
+                    f"Your yacht '{yatch_base_name}' received a test booking.\n"
+                    f"Start: {start_local}\n"
+                    f"End:   {end_local}\n"
+                    f"Tour Type: {tour_type_name or 'N/A'}\n"
+                    f"Contact Email: {contact_email}\n\n"
+                    "This is a test booking for system verification purposes. "
+                    "No action is required from you.\n\n"
+                    "— Kokomo Crew"
+                )
+                body_text = (
+                    f"Hi {owner_name},\n\n"
+                    "THIS IS A TEST BOOKING - PLEASE IGNORE \n\n"
+                    "Your yacht received a test booking for system verification. "
+                    "No action is required from you.\n\n"
+                    f"Start: {start_local}\n"
+                    f"End:   {end_local}\n\n"
+                    "Best Regards,\n"
+                    "Kokomo Crew\n"
+                )
+                ics_filename = f"TEST_Yacht_{yatch_base_name}_Booked.ics"
+            else:
+                summary = f"Kokomo Yachts: {yatch_base_name} Booked"
+                description = (
+                    f"Hello {owner_name},\n\n"
+                    f"Your yacht '{yatch_base_name}' was just booked.\n"
+                    f"Start: {start_local}\n"
+                    f"End:   {end_local}\n"
+                    f"Tour Type: {tour_type_name or 'N/A'}\n"
+                    f"Contact Email: {contact_email or 'N/A'}\n\n"
+                    "Thank you for partnering with Kokomo Yachts!\n"
+                    "— Kokomo Crew"
+                )
+                body_text = (
+                    f"Hi {owner_name},\n\n"
+                    "Your yacht was just booked! Please open the attached .ics to add it to your calendar.\n\n"
+                    f"Start: {start_local}\n"
+                    f"End:   {end_local}\n\n"
+                    "Best Regards,\n"
+                    "Kokomo Crew\n"
+                )
+                ics_filename = f"Yacht_{yatch_base_name}_Booked.ics"
 
             ics_bytes = build_invite(
                 subject=summary,
@@ -169,27 +210,22 @@ def send_invite(yacht_name: str, tour_type_name: str, start_at: str, end_at: str
                 organizer_email=SENDER_EMAIL,
                 organizer_name="Kokomo Crew"
             )
-
-            body_text = (
-                f"Hi {owner_name},\n\n"
-                "Your yacht was just booked! Please open the attached .ics to add it to your calendar.\n\n"
-                f"Start: {start_local}\n"
-                f"End:   {end_local}\n\n"
-                "Best Regards,\n"
-                "Kokomo Crew\n"
-            )
+            
+            test_email = "satya@iusdigitalsolutions.com"
 
             for email in owner_emails:
-                print(f"INFO: Sending invite to {owner_name} <{email}>")
+                log_message = f"INFO: Sending {'TEST' if is_test_booking else ''} invite to {owner_name} <{email}>"
+                print(log_message)
+                
                 send_calendar_invite(
                     sender=SENDER_EMAIL,
-                    recipient=email,
+                    recipient=test_email,
                     subject=summary,
                     body_text=body_text,
                     ics_content=ics_bytes,
-                    ics_filename=f"Yacht_{yatch_base_name}_Booked.ics"
+                    ics_filename=ics_filename
                 )
-                print(f"INFO: Sent .ics invite to {email}")
+                print(f"INFO: Sent .ics {'test ' if is_test_booking else ''}invite to {test_email}")
 
         except Exception as e:
             print(f"ERROR: Failed to send calendar invite to {owner_name}: {e}")

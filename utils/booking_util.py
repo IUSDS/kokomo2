@@ -196,3 +196,43 @@ def if_booking_exists(booking_id: str):
             cursor.close()
         if conn:
             conn.close()
+            
+def charter_booking_exists(booking_id: str):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Check if booking exists
+        cursor.execute("""
+            SELECT EXISTS(
+                SELECT 1 FROM charter_booking 
+                WHERE booking_id = %s
+            ) as booking_exists;
+        """, (booking_id,))
+        
+        result = cursor.fetchone()
+        exists = bool(result['booking_exists'])
+        
+        # If booking doesn't exist, store it
+        if not exists:
+            cursor.execute("""
+                INSERT INTO charter_booking (booking_id) 
+                VALUES (%s);
+            """, (booking_id,))
+            conn.commit()
+        
+        return exists
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+            
+def determine_source(yacht_name: str):
+    if "KYC" in yacht_name.upper():
+        return "KYC"
+    else:
+        return "CHARTERS"
