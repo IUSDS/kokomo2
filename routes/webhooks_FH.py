@@ -55,11 +55,11 @@ async def webhook_listener(request: Request):
     
     #### For cancellation points adjustments.
 
-    # 6. Extract status 
+    # . Extract status 
     status = booking_data.get("status")
     print("status",status)
 
-    # 6. Check if booking_id exists and is cancelled.
+    # . Check if booking_id exists and is cancelled.
     if if_booking_exists(booking_pk):
         print("WARNING: Booking already exists!")
         if status=='cancelled':
@@ -77,7 +77,7 @@ async def webhook_listener(request: Request):
 
             ### Create new record in Point_Adjustment table
             ss=new_record_in_point_adjustment(member_id=member,points_added=points_cost,Balance=updated_points,description=yacht_name)
-            print('new-record',points_cost,member,curr_points,updated_points,ss)
+            # print('new-record',points_cost,member,curr_points,updated_points,ss)
             print("Message:Cancelled booking points added back successfully!")
             return
         return
