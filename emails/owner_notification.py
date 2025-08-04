@@ -15,13 +15,18 @@ from utils.owner_util import get_owner_by_yacht_id
 ses_client = boto3.client("ses", region_name="ap-southeast-2")
 
 # BCC recipients for every invite
-BCC_EMAILS = [
-    "brian@kokomoyachtclub.vip",
-    "info@iusdigitalsolutions.com"
-]
+# BCC_EMAILS = [
+#     "brian@kokomoyachtclub.vip",
+#     "info@iusdigitalsolutions.com"
+# ]
 
 # Verified sender address
-SENDER_EMAIL = "info@kokomoyachts.com"
+# SENDER_EMAIL = "info@kokomoyachts.com"
+
+SENDER_EMAIL = "satya@kokomoyachtclub.vip"
+BCC_EMAILS = [
+    "aishwarya@iusdigitalsolutions.com"
+]
 
 def build_invite(
     subject: str,
