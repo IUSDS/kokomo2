@@ -236,3 +236,75 @@ def determine_source(yacht_name: str):
         return "KYC"
     else:
         return "CHARTERS"
+
+
+### retrieve points_cost and member_id from booking_fh by booking_id
+def get_points_cost_and_member_id_from_booking_fh(booking_id:str):
+    try:
+        conn=get_db_connection()
+        cursor=conn.cursor()
+        cursor.execute("""
+            SELECT points_cost,member_id
+            FROM booking_fh
+            WHERE booking_id = %s;
+            """,(booking_id,))
+        result=cursor.fetchone()
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+
+### retrieve current points from members by member_id 
+def get_points_from_members(member_id:int):
+    try:
+        conn=get_db_connection()
+        cursor=conn.cursor()
+        cursor.execute("""
+            SELECT points
+            FROM Members
+            WHERE member_id = %s;
+            """,(member_id,))
+        result=cursor.fetchone()
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+
+### Create new record in Point_Adjustment table
+def new_record_in_point_adjustment(member_id:int,points_added:int,Balance:int,description:str):     ### After cancellation points adjustments
+    try:
+        conn=get_db_connection()
+        cursor=conn.cursor()
+        cursor.execute("""
+            INSERT INTO Point_Adjustment(member_id,points_added,Balance,description)
+            Values(%s,%s,%s,%s);
+            """,(member_id, points_added, Balance, description))
+        conn.commit()
+
+        # Fetch the most recent matching record
+        cursor.execute("""
+            SELECT * FROM Point_Adjustment
+            WHERE member_id = %s AND points_added = %s AND Balance = %s AND description = %s
+            ORDER BY created_at DESC
+            LIMIT 1;
+        """, (member_id, points_added, Balance, description))
+        inserted_record = cursor.fetchone()
+        return inserted_record
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
