@@ -105,7 +105,8 @@ def send_calendar_invite(
 
     # 1) Plain-text body
     alt = MIMEMultipart("alternative")
-    alt.attach(MIMEText(body_text, "plain"))
+    # alt.attach(MIMEText(body_text, "plain"))
+    alt.attach(MIMEText(body_text, "html"))
     msg.attach(alt)
 
     # 2) The ICS attachment
@@ -174,15 +175,6 @@ def send_invite(yacht_name: str, tour_type_name: str, start_at: str, end_at: str
                 organizer_email=SENDER_EMAIL,
                 organizer_name="Kokomo Crew"
             )
-
-            # body_text = (
-            #     f"Hi {owner_name},\n\n"
-            #     "Your yacht was just booked! Please open the attached .ics to add it to your calendar.\n\n"
-            #     f"Start: {start_local}\n"
-            #     f"End:   {end_local}\n\n"
-            #     "Best Regards,\n"
-            #     "Kokomo Crew\n"
-            # )
 
             body_text = f"""
                 <!DOCTYPE html>
