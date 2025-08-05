@@ -27,14 +27,6 @@ def low_points_notification(first_name: str, last_name: str, curr_points: int, p
     Sends an email notification via Amazon SES when a member has insufficient points.
     """
     subject = f"Low Points for Member: {first_name} {last_name}"
-    # body_text = f"""
-    # Hello Brian,
-
-    # Member: {first_name} {last_name} has only {curr_points} points left. They just made a booking for {point_cost} points.
-
-    # Best regards,
-    # KYC Development Team
-    # """
 
     body_text = f"""
         <!DOCTYPE html>
@@ -116,7 +108,7 @@ def low_points_notification(first_name: str, last_name: str, curr_points: int, p
         message["From"] = ADMIN_EMAIL
         message["To"] = TO_EMAIL
         message["Bcc"] = ", ".join(BCC_EMAILS)
-        message.attach(MIMEText(body_text, "plain"))
+        message.attach(MIMEText(body_text, "html"))
 
         # Send to PRIMARY + BCC recipients
         recipients = [TO_EMAIL] + BCC_EMAILS
