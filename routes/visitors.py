@@ -148,7 +148,7 @@ async def add_visitors_details(request: EventRequest):
                 """
             cursor.execute(insert_query, (request.email, request.name, request.phone_no, request.event_name))
             connection.commit()
-            
+
             if request.email:
                 try:
                     return send_admin_notification_rsvp(request)  

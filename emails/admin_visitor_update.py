@@ -4,6 +4,9 @@ from typing import Optional
 from email.mime.multipart import MIMEMultipart
 from pydantic import BaseModel, EmailStr
 from utils.email_util import smtp_connection
+import os
+import smtplib
+from email.message import EmailMessage
 
 # Define Request Models
 class VisitorRequest(BaseModel):
@@ -35,12 +38,11 @@ class EventRequest(BaseModel):
     event_name: str
 
 # Admin Email Address and Recipients
-# ADMIN_EMAIL = "info@kokomoyachts.com"
-# RECIPIENTS = ["brian@kokomoyachtclub.vip", "cynthia@kokomoyachtclub.vip", "info@iusdigitalsolutions.com"]
+ADMIN_EMAIL = "info@kokomoyachts.com"
+RECIPIENTS = ["brian@kokomoyachtclub.vip", "cynthia@kokomoyachtclub.vip", "info@iusdigitalsolutions.com"]
 
-ADMIN_EMAIL = "satya@kokomoyachtclub.vip"
-RECIPIENTS = "aishwarya@iusdigitalsolutions.com"
-
+# ADMIN_EMAIL = "satya@iusdigitalsolutions.com"
+# RECIPIENTS = ["aishwarya@iusdigitalsolutions.com"]
 
 
 def _send_email(subject: str, body_text: str):
@@ -50,7 +52,7 @@ def _send_email(subject: str, body_text: str):
         message["Subject"] = subject
         message["From"] = ADMIN_EMAIL
         message["To"] = ", ".join(RECIPIENTS)
-        message.attach(MIMEText(body_text, "plain"))
+        message.attach(MIMEText(body_text, "html"))
 
         server.sendmail(ADMIN_EMAIL, RECIPIENTS, message.as_string())
         server.quit()
@@ -60,24 +62,7 @@ def _send_email(subject: str, body_text: str):
 
 def send_admin_notification_visitor(request: VisitorRequest):
     subject = "New Contact Us Form"
-    # body_text = f"""
-    #     Hello Brian,
-
-    #     A new Contact Us Form has been submitted. Please find the details below:
-
-    #     ----------------------------------------
-    #     Visitor Details
-    #     ----------------------------------------
-    #     Name: {request.visitor_name or 'N/A'}
-    #     Email: {request.email}
-    #     Phone Number: {request.phone_no or 'N/A'}
-    #     {f' Requested Help: {request.req_help}' if request.req_help else ''}
-    #     {f' Any Questions: {request.ques}' if request.ques else ''}
-
-    #     Best regards,  
-    #     Kokomo Yacht Club System
-    # """
-
+    
     body_text = f"""
         <!DOCTYPE html>
         <html lang="en">
@@ -172,22 +157,7 @@ def send_admin_notification_visitor(request: VisitorRequest):
 
 def send_admin_notification_email_request(request: EmailRequest):
     subject = "New Membership Brochure Form"
-    # body_text = f"""
-    #     Hello Brian,
-
-    #     A new Membership Brochure Form has been submitted. Please find the details below:
-
-    #     ----------------------------------------
-    #     Requester Details
-    #     ----------------------------------------
-    #     Name: {request.visitor_name or 'N/A'}
-    #     Email: {request.email}
-    #     Phone Number: {request.phone_no or 'N/A'}
-
-    #     Best regards,  
-    #     Kokomo Yacht Club System
-    # """
-
+    
     body_text = f"""
         <!DOCTYPE html>
         <html lang="en">
@@ -280,30 +250,7 @@ def send_admin_notification_email_request(request: EmailRequest):
 
 def send_admin_notification_yacht_visitor(request: YachtVisitorRequest):
     subject = "New List Your Yacht Form"
-    # body_text = f"""
-    #     Hello Brian,
-
-    #     A new List Your Yacht form has been submitted. Please find the details below:
-
-    #     ----------------------------------------
-    #     Visitor Details
-    #     ----------------------------------------
-    #     Name: {request.visitor_first_name} {request.visitor_last_name}
-    #     Email: {request.visitor_email}
-    #     Phone Number: {request.visitor_phone_number}
-
-    #     ----------------------------------------
-    #     Yacht Details
-    #     ----------------------------------------
-    #     Model: {request.yacht_model}
-    #     Manufacture Year: {request.yacht_manufacture_year}
-    #     Size: {request.yacht_size} ft
-    #     {f' Message: {request.visitor_message}' if request.visitor_message else ''}
-
-    #     Best regards,  
-    #     Kokomo Yacht Club System
-    # """
-
+    
     body_text = f"""
         <!DOCTYPE html>
         <html lang="en">
@@ -412,22 +359,6 @@ def send_admin_notification_yacht_visitor(request: YachtVisitorRequest):
 
 def send_admin_notification_rsvp(request: EventRequest):
     subject = "Waitlist"
-    # body_text = f"""
-    #     Hello Brian,
-
-    #     A new form has been submitted. Please find the details below:
-
-    #     ----------------------------------------
-    #     Details
-    #     ----------------------------------------
-    #     Name: {request.name}
-    #     Email: {request.email}
-    #     Phone Number: {request.phone_no}
-    #     Event Name: {request.event_name}
-
-    #     Best regards,  
-    #     Kokomo Yacht Club System
-    # """
 
     body_text = f"""
         <!DOCTYPE html>

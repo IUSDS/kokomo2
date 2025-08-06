@@ -5,20 +5,20 @@ from pydantic import BaseModel, EmailStr
 from utils.email_util import smtp_connection
 
 # Admin Email Address
-# ADMIN_EMAIL = "info@kokomoyachts.com"
-# TO_EMAIL = "brian@kokomoyachtclub.vip"
+ADMIN_EMAIL = "info@kokomoyachts.com"
+TO_EMAIL = "brian@kokomoyachtclub.vip"
 
-## BCC recipients for every invite
-# BCC_EMAILS = [
-#     "info@iusdigitalsolutions.com"
-# ]
-
-ADMIN_EMAIL = "satya@kokomoyachtclub.vip"
-TO_EMAIL = "aishwarya@iusdigitalsolutions.com"
-
+# BCC recipients for every invite
 BCC_EMAILS = [
-    "aishwarya@iusdigitalsolutions.com"
+    "info@iusdigitalsolutions.com"
 ]
+
+# ADMIN_EMAIL = "satya@kokomoyachtclub.vip"
+# TO_EMAIL = "aishwarya@iusdigitalsolutions.com"
+
+# BCC_EMAILS = [
+#     "aishwarya@iusdigitalsolutions.com"
+# ]
 
 
 
