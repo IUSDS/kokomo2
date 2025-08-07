@@ -20,7 +20,7 @@ class EventRequest(BaseModel):
     email: EmailStr
     name: str 
     phone_no: int 
-    event_name: str
+    event_name: str  
 
 class VisitorRequest(BaseModel):
     email: EmailStr
