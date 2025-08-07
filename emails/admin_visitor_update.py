@@ -33,6 +33,7 @@ class EventRequest(BaseModel):
     name: str 
     phone_no: int 
     event_name: str
+    attendees: int
 
 # Admin Email Address and Recipients
 ADMIN_EMAIL = "info@kokomoyachts.com"
@@ -124,7 +125,7 @@ def send_admin_notification_yacht_visitor(request: YachtVisitorRequest):
     return {"status": "success", "message": "Yacht visitor notification email sent successfully"}
 
 def send_admin_notification_rsvp(request: EventRequest):
-    subject = "Waitlist"
+    subject = f"New RSVP for {request.event_name}" 
     body_text = f"""
         Hello Brian,
 
@@ -137,8 +138,9 @@ def send_admin_notification_rsvp(request: EventRequest):
         Email: {request.email}
         Phone Number: {request.phone_no}
         Event Name: {request.event_name}
+        Number of attendees: {request.attendees}
 
-        Best regards,  
+        Best regards,
         Kokomo Yacht Club System
     """
     _send_email(subject, body_text)
