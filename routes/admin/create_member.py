@@ -10,6 +10,7 @@ from fastapi import HTTPException
 from datetime import datetime
 from typing import List,  Optional, Union
 from emails.welcome_email import send_welcome_email, generate_temp_password
+from pydantic import conint
 
 # Initialize router
 create_member_route = APIRouter()
@@ -65,6 +66,10 @@ async def add_member(
     child_dobs: List[str] = Form([]),
     child_emails: List[str] = Form([]),
     child_phone_numbers: List[str] = Form([]),
+    # NEW FIELDS
+    is_primary: conint(ge=0, le=1) = Form(0),      # only 0 or 1
+    opening_balance: int = Form(...),       
+    primary_member_id: Optional[str] = Form(None),  # can be null
 ):
     """
     Adds a new member to the database with optional profile picture upload and optional children's details.
@@ -114,17 +119,51 @@ async def add_member(
             # Either file was not provided or an empty string was sent
             picture_url = "https://{S3_BUCKET_NAME}.s3.{S3_REGION}.amazonaws.com/profile_pictures/default.png"
 
+        
+        # check:
+        # Browsers can send "" for empty inputs; normalize to None
+        if isinstance(primary_member_id, str) and primary_member_id.strip() == "":
+            primary_member_id = None
+
+
+
+
+        if is_primary == 1:
+        # primary members MUST have NULL primary_member_id
+            if primary_member_id is not None:
+                raise HTTPException(
+                    status_code=422,
+                    detail="primary_member_id must be NULL when is_primary=1 (primary)."
+                )
+            primary_member_id = None  # force it
+            print('...',is_primary, primary_member_id,opening_balance)
+
+        else:  # is_primary == 0                 
+            if primary_member_id is None:   # secondary members MUST have a non-null primary_member_id (and ideally > 0)
+                raise HTTPException(
+                    status_code=422,
+                    detail="primary_member_id is required when is_primary=0 (secondary)."
+                )
+            if int(primary_member_id) <= 0:
+                raise HTTPException(
+                    status_code=422,
+                    detail="primary_member_id must be a positive integer."
+                )
+        print('<<<<<',is_primary,primary_member_id,opening_balance)
+        
         # Insert member data
         query = """
             INSERT INTO Members (username, pass, first_name, last_name, phone_number, member_address1, member_address2, member_city, member_state, member_zip,
-                                email_id, membership_type, points, referral_information, picture_url, user_type, is_deleted, dl, company_name)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                                email_id, membership_type, points, referral_information, picture_url, user_type, is_deleted, dl, company_name,
+                                is_primary, opening_balance, primary_member_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
         """
-        cursor.execute(query, (username, hashed_password, first_name, last_name, phone_number, member_address1, member_address2, member_city, member_state, member_zip, 
-            email_id, membership_type, points, referral_information, picture_url, "User", "N", dl, company_name,))
-        member_id = cursor.lastrowid
-        if member_id is None:
-            raise HTTPException(status_code=500, detail="Failed to retrieve member_id after insertion.")
+        # cursor.execute(query, (username, hashed_password, first_name, last_name, phone_number, member_address1, member_address2, member_city, member_state, member_zip, 
+        #     email_id, membership_type, points, referral_information, picture_url, "User", "N", dl, company_name,
+        #     is_primary, opening_balance, primary_member_id))
+        # member_id = cursor.lastrowid
+        # if member_id is None:
+        #     raise HTTPException(status_code=500, detail="Failed to retrieve member_id after insertion.")
         
         email_response = send_welcome_email(
             to_email=email_id,
