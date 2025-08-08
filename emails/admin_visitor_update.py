@@ -125,7 +125,7 @@ def send_admin_notification_yacht_visitor(request: YachtVisitorRequest):
     return {"status": "success", "message": "Yacht visitor notification email sent successfully"}
 
 def send_admin_notification_rsvp(request: EventRequest):
-    subject = f"New RSVP for {request.event_name}" 
+    subject = f"New Entry for {request.event_name}" 
     body_text = f"""
         Hello Brian,
 
