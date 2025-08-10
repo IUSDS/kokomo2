@@ -36,6 +36,7 @@ class EventRequest(BaseModel):
     name: str 
     phone_no: int 
     event_name: str
+    attendees: int
 
 # Admin Email Address and Recipients
 ADMIN_EMAIL = "info@kokomoyachts.com"
@@ -358,8 +359,7 @@ def send_admin_notification_yacht_visitor(request: YachtVisitorRequest):
     return {"status": "success", "message": "Yacht visitor notification email sent successfully"}
 
 def send_admin_notification_rsvp(request: EventRequest):
-    subject = "Waitlist"
-
+    subject = f"New Entry for {request.event_name}" 
     body_text = f"""
         <!DOCTYPE html>
         <html lang="en">
@@ -402,53 +402,17 @@ def send_admin_notification_rsvp(request: EventRequest):
                                         A new form has been submitted. Please find the details below:
                                     </p>
 
-                                    <p style="color:#5a6c7d; font-size:16px; line-height:1.6; margin:0 0 10px 0;">
-                                        ----------------------------------------
-                                    </p>
-                                    <p style="color:#5a6c7d; font-size:16px; line-height:1.6; margin:0 0 10px 0;">
-                                        Details
-                                    </p>
-                                    <p style="color:#5a6c7d; font-size:16px; line-height:1.6; margin:0 0 20px 0;">
-                                        ----------------------------------------
-                                    </p>
+        ----------------------------------------
+        Details
+        ----------------------------------------
+        Name: {request.name}
+        Email: {request.email}
+        Phone Number: {request.phone_no}
+        Event Name: {request.event_name}
 
-                                    <p style="color:#2c3e50; font-size:16px; line-height:1.6; margin:0 0 30px 0;">
-                                        Name: {request.name}<br>
-                                        Email: {request.email}<br>
-                                        Phone Number: {request.phone_no}<br>
-                                        Event Name: {request.event_name}
-                                    </p>
-
-                                    <p style="color:#2c3e50; font-size:16px; line-height:1.6; margin:30px 0 0 0;">
-                                        Best regards,<br>
-                                        <strong style="color:#033e8b;">Kokomo Yacht Club System</strong>
-                                    </p>
-
-                                </td>
-                            </tr>
-
-                            <!-- Footer -->
-                            <tr>
-                                <td style="background-color:#f8f9fa; padding:20px 30px; text-align:center; border-top:1px solid #e9ecef;">
-                                    <p style="color:#6c757d; font-size:12px; margin:0;">
-                                        Kokomo Yacht Club<br>
-                                        <a href="https://kokomoyachtclub.vip" style="color:#033e8b; text-decoration:none;">
-                                            kokomoyachtclub.vip
-                                        </a>
-                                    </p>
-                                </td>
-                            </tr>
-
-                        </table>
-
-                    </td>
-                </tr>
-            </table>
-
-        </body>
-        </html>
-        """
-    
+        Best regards,  
+        Kokomo Yacht Club System
+    """
     _send_email(subject, body_text)
     return {"status": "success", "message": "RSVP notification email sent successfully"}
 

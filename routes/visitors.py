@@ -20,7 +20,8 @@ class EventRequest(BaseModel):
     email: EmailStr
     name: str 
     phone_no: int 
-    event_name: str  
+    event_name: str
+    attendees: int
 
 class VisitorRequest(BaseModel):
     email: EmailStr
@@ -140,13 +141,14 @@ async def add_visitors_details(request: EventRequest):
     try:
         with connection.cursor() as cursor:
             insert_query = """
-                INSERT INTO events (email, name, phone_no, event_name) 
-                VALUES (%s, %s, %s, %s) 
+                INSERT INTO events (email, name, phone_no, event_name, attendees) 
+                VALUES (%s, %s, %s, %s, %s) 
                 ON DUPLICATE KEY UPDATE 
                     name = VALUES(name),
-                    phone_no = VALUES(phone_no)
+                    phone_no = VALUES(phone_no),
+                    attendees = VALUES(attendees)
                 """
-            cursor.execute(insert_query, (request.email, request.name, request.phone_no, request.event_name))
+            cursor.execute(insert_query, (request.email, request.name, request.phone_no, request.event_name, request.attendees))
             connection.commit()
 
             if request.email:
