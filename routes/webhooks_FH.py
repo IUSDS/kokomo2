@@ -1,6 +1,8 @@
 from fastapi import APIRouter, HTTPException, Request
 from utils.secrets_util import SECRET_KEY
-from utils.booking_util import parse_booking_payload, store_booking_to_db, if_booking_exists, charter_booking_exists, determine_source
+from utils.booking_util import parse_booking_payload, store_booking_to_db, if_booking_exists, charter_booking_exists, determine_source,\
+get_points_from_members,new_record_in_point_adjustment,get_points_cost_and_member_id_from_booking_fh,store_charters_booking_to_db,\
+parse_charters_booking_payload
 from utils.session_util import get_logged_in_member_id_from_email
 from utils.yacht_util import get_yacht_id_by_name
 from utils.tour_util import get_tour_id_by_name
@@ -20,7 +22,7 @@ async def webhook_listener(request: Request):
         # print("Raw request body:", raw_body.decode("utf-8"))
         
         payload = await parse_clean_json(request)
-        print("Cleaned payload:", payload)
+        # print("Cleaned payload:", payload)
     except Exception as e:
         print(f"JSON parse error: {e}")
         raise HTTPException(status_code=400, detail="Invalid JSON payload")
@@ -28,6 +30,8 @@ async def webhook_listener(request: Request):
     booking_data = payload.get("booking")
     if not isinstance(booking_data, dict):
         raise HTTPException(status_code=400, detail="Missing 'booking' object")
+    
+    
     # 3. Extract booking PK / UUID 
     booking_pk = booking_data.get("pk")
     booking_uuid = booking_data.get("uuid")
@@ -49,6 +53,16 @@ async def webhook_listener(request: Request):
     end_at          = availability.get("end_at")
     print(f"INFO: Availability: yacht_name={yacht_name}, tour_type={tour_type_name}, start_at={start_at}, end_at={end_at}")
     
+    
+    #### For cancellation points adjustments.
+
+    # . Extract status 
+    status = booking_data.get("status")
+    print("status",status,yacht_name)
+
+    
+
+
     # Determine webhook source and handle accordingly
     webhook_source = determine_source(yacht_name)
     print("INFO: This webhook originates from", webhook_source)
@@ -57,19 +71,56 @@ async def webhook_listener(request: Request):
         # Handle CHARTERS bookings - only send owner notification
         if charter_booking_exists(booking_pk):
             print("WARNING: Charter booking already exists!")
-            raise HTTPException(status_code=409, detail="Charter booking already exists")
+            # raise HTTPException(status_code=409, detail="Charter booking already exists")
+            return
         
         # Send calendar invite to owner for charter bookings
         send_invite(yacht_name, tour_type_name, start_at, end_at, contact_email)
         print("INFO: Charter owners notified")
+
+
+        # Store Charters booking
+        try:
+            parsed_data = parse_charters_booking_payload(booking_data,status)
+            store_charters_booking_to_db({"data": parsed_data})
+            print(f"INFO: Charters Booking stored: pk={booking_pk}")
+        except Exception as e:
+            print(f"EXCEPTION: Failed to store booking: {e}")
+            raise HTTPException(status_code=500, detail="Failed to save booking")
         
-        return {"booking_status": "charter_notification_sent"}
+        return {"Charters booking_status": "charter_notification_sent"}
     
     else:
         # Handle KYC bookings - full processing
         if if_booking_exists(booking_pk):
             print("WARNING: KYC booking already exists!")
             raise HTTPException(status_code=409, detail="KYC booking already exists")
+
+            # # . Check if booking_id exists and is cancelled.
+            # if if_booking_exists(booking_pk):
+            #     print("WARNING: Booking already exists!")
+            #     if status=='cancelled':
+
+            #         ### retrieve points_cost and member_id from booking_fh by booking_id
+            #         result=get_points_cost_and_member_id_from_booking_fh(booking_pk)
+            #         points_cost=result['points_cost']
+            #         member=result['member_id']
+
+            #         ### retrieve current points from members by member_id           
+            #         curr_points=get_points_from_members(member)['points']
+
+            #         ### Add points back 
+            #         updated_points=points_cost+curr_points
+
+            #         ### Create new record in Point_Adjustment table
+            #         ss=new_record_in_point_adjustment(member_id=member,points_added=points_cost,Balance=updated_points,description=yacht_name)
+            #         # print('new-record',points_cost,member,curr_points,updated_points,ss)
+            #         print("Message:Cancelled booking points added back successfully!")
+            #         return
+            #     return
+
+
+
 
         # 6. Send calendar invite
         send_invite(yacht_name, tour_type_name, start_at, end_at, contact_email)
@@ -145,3 +196,4 @@ async def webhook_listener(request: Request):
                 print(f"EXCEPTION: Failed WebSocket send: {e}")
 
         return {"booking_status": "successful"}
+    
