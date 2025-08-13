@@ -196,40 +196,7 @@ def if_booking_exists(booking_id: str):
             cursor.close()
         if conn:
             conn.close()
-            
-# def charter_booking_exists(booking_id: str):
-#     try:
-#         conn = get_db_connection()
-#         cursor = conn.cursor()
-        
-#         # Check if booking exists
-#         cursor.execute("""
-#             SELECT EXISTS(
-#                 SELECT 1 FROM charter_booking 
-#                 WHERE booking_id = %s
-#             ) as booking_exists;
-#         """, (booking_id,))
-        
-#         result = cursor.fetchone()
-#         exists = bool(result['booking_exists'])
-        
-#         # If booking doesn't exist, store it
-#         if not exists:
-#             cursor.execute("""
-#                 INSERT INTO charter_booking (booking_id) 
-#                 VALUES (%s);
-#             """, (booking_id,))
-#             conn.commit()
-        
-#         return exists
-    
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
-#     finally:
-#         if cursor:
-#             cursor.close()
-#         if conn:
-#             conn.close()
+
             
 def determine_source(yacht_name: str):
     if "KYC" in yacht_name.upper():
@@ -322,11 +289,7 @@ def store_charters_booking_to_db(payload: dict):
 
         connection = get_db_connection()
         cursor = connection.cursor()
-        print('START',data.get("start_at"))
-        print('END',data.get("end_at"))
-        print('booking status',data.get("booking_status"))
-
-
+        
         insert_query = """
             INSERT INTO Charters (
                 booking_id, dashboard_url, vessel_name, start_at, end_at,
@@ -451,7 +414,6 @@ def parse_charters_booking_payload(
         "amount_due":       amount_due,
         "booking_fee":      booking_fee,
         "yacht_name": availability.get("item", {}).get("name", "Unknown")
-
     }
 
 
@@ -468,9 +430,7 @@ def charter_booking_exists(booking_id: str):
         """, (booking_id,))
         
         result = cursor.fetchone()
-        print('>>>>>', result)
         count = result['COUNT(booking_id)']
-        print('count', count)
         if count == 0:
             return False
         else:
@@ -483,3 +443,4 @@ def charter_booking_exists(booking_id: str):
             cursor.close()
         if conn:
             conn.close()
+

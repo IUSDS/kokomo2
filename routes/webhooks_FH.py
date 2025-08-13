@@ -53,15 +53,8 @@ async def webhook_listener(request: Request):
     end_at          = availability.get("end_at")
     print(f"INFO: Availability: yacht_name={yacht_name}, tour_type={tour_type_name}, start_at={start_at}, end_at={end_at}")
     
-    
-    #### For cancellation points adjustments.
-
     # . Extract status 
     status = booking_data.get("status")
-    print("status",status,yacht_name)
-
-    
-
 
     # Determine webhook source and handle accordingly
     webhook_source = determine_source(yacht_name)
@@ -118,9 +111,6 @@ async def webhook_listener(request: Request):
             #         print("Message:Cancelled booking points added back successfully!")
             #         return
             #     return
-
-
-
 
         # 6. Send calendar invite
         send_invite(yacht_name, tour_type_name, start_at, end_at, contact_email)
