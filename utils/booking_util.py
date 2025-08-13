@@ -314,36 +314,6 @@ def new_record_in_point_adjustment(member_id:int,points_added:int,Balance:int,de
 ################################
 ###### New code for charters booking store in DB
 
-def charter_booking_exists(booking_id: str):
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        # Check if booking exists
-        cursor.execute("""
-            SELECT EXISTS(
-                SELECT 1 FROM Charters 
-                WHERE booking_id = %s
-            ) as booking_exists;
-        """, (booking_id,))
-        
-        result = cursor.fetchone()
-        exists = bool(result['booking_exists'])
-
-        print("{{{{}}}}", booking_id)
-        
-        return exists
-    
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-
-
-
 def store_charters_booking_to_db(payload: dict):
     connection = None
     cursor = None
@@ -429,7 +399,6 @@ def parse_charters_booking_payload(
     custom_fields = booking.get("custom_field_values", [])
     
     print("Parse_booking_util:")
-    # print(point_cost, member_id)
 
     def get_custom_value(name: str, default=None):
         for field in custom_fields:
@@ -485,3 +454,32 @@ def parse_charters_booking_payload(
 
     }
 
+
+
+def charter_booking_exists(booking_id: str):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT COUNT(booking_id)
+            FROM Charters
+            WHERE booking_id = %s;
+        """, (booking_id,))
+        
+        result = cursor.fetchone()
+        print('>>>>>', result)
+        count = result['COUNT(booking_id)']
+        print('count', count)
+        if count == 0:
+            return False
+        else:
+            return True
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()

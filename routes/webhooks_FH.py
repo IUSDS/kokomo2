@@ -71,8 +71,8 @@ async def webhook_listener(request: Request):
         # Handle CHARTERS bookings - only send owner notification
         if charter_booking_exists(booking_pk):
             print("WARNING: Charter booking already exists!")
-            # raise HTTPException(status_code=409, detail="Charter booking already exists")
-            return
+            raise HTTPException(status_code=409, detail="Charter booking already exists")
+            # return
         
         # Send calendar invite to owner for charter bookings
         send_invite(yacht_name, tour_type_name, start_at, end_at, contact_email)
