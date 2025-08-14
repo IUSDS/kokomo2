@@ -19,6 +19,11 @@ BCC_EMAILS = [
 ]
 
 
+# SENDER_EMAIL = "satya@kokomoyachtclub.vip"
+# BCC_EMAILS = [
+#     "aishwarya@iusdigitalsolutions.com"
+# ]
+
 def generate_temp_password(length: int = 10) -> str:
     """Generate a random temporary password."""
     chars = string.ascii_letters + string.digits + "!@#$%^&*"
@@ -45,38 +50,132 @@ def send_welcome_email(
 
         # HTML body with link to S3-hosted PDF
         body = f"""
-                <html>
-                    <head>
-                        <style>
-                        body {{ font-family: Arial, sans-serif; background-color: #f9f9f9; margin: 0; padding: 20px; }}
-                        .container {{ max-width: 600px; background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }}
-                        h2 {{ color: #002147; margin-bottom: 20px; }}
-                        p {{ font-size: 16px; color: #333333; line-height: 1.5; }}
-                        .highlight {{ font-weight: bold; color: #002147; }}
-                        .button {{ display: inline-block; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; }}
-                        .footer {{ margin-top: 30px; font-size: 14px; color: #777777; }}
-                        .link {{ color: #004080; font-weight: bold; }}
-                        </style>
-                    </head>
-                    <body>
-                        <div class="container">
-                        <p>Greetings,</p>
-                        <h2>Dear {first_name} {last_name},</h2>
-                        <p>Welcome to the Kokomo Yacht Club! Your membership account has been successfully created.</p>
-                        <p>Please find below your login credentials:</p>
-                        <p><span class="highlight">Username:</span> {username}</p>
-                        <p><span class="highlight">Temporary Password:</span> {temp_password}</p>
-                        <p><span class="highlight">Registered Email:</span> {to_email}</p>
-                        <p><a href="{LOGIN_URL}" class="button" style="background-color:#004080;color:#ffffff;">Click here to login</a></p>
-                        <p>For security reasons, please set a new password at your earliest convenience by clicking the button below:</p>
-                        <p><a href="{RESET_PASS_URL}" class="button" style="background-color:#004080;color:#ffffff;">Reset Your Password</a></p>
-                        <p>To help you get started, you can download the <a href="{USER_MANUAL_URL}" class="link">KYC Member Portal User Manual</a>.</p>
-                        <p>If you have any questions or require assistance, please do not hesitate to reach out to our support team.</p>
-                        <p class="footer">Sincerely,<br><strong>Kokomo Yacht Club Team</strong></p>
-                        </div>
-                    </body>
-                </html>
-                """
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Welcome to Kokomo Yacht Club • Kokomo Yacht Club</title>
+            </head>
+            <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background-color: #f8f9fa; color: #2c3e50;">
+                
+                <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f8f9fa; padding: 40px 20px;">
+                    <tr>
+                        <td align="center">
+                            
+                            <!-- Main Container -->
+                            <table cellpadding="0" cellspacing="0" border="0" width="500" style="background-color: #ffffff; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                                
+                                <!-- Header -->
+                                <tr>
+                                    <td style="background-color: #033e8b; padding: 40px 30px; text-align: center;">
+                                        <img src="https://kokomoyachtclub.vip/images/logo.png" 
+                                            alt="Kokomo Yacht Club Logo" 
+                                            style="max-height: 60px; width: auto; margin-bottom: 20px; display: block; margin-left: auto; margin-right: auto;"
+                                            onerror="this.style.display='none';">
+                                        <h1 style="color: #ffffff; font-size: 24px; font-weight: 300; margin: 0; letter-spacing: 2px;">
+                                            KOKOMO YACHT CLUB
+                                        </h1>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Content -->
+                                <tr>
+                                    <td style="padding: 40px 30px;">
+                                        
+                                        <p style="color: #2c3e50; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                                            Greetings,
+                                        </p>
+                                        
+                                        <h2 style="color: #033e8b; font-size: 20px; font-weight: 400; margin: 0 0 30px 0;">
+                                            Dear {first_name} {last_name},
+                                        </h2>
+                                        
+                                        <p style="color: #5a6c7d; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                                            Welcome to the Kokomo Yacht Club! Your membership account has been successfully created.
+                                        </p>
+                                        
+                                        <p style="color: #5a6c7d; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                                            Please find below your login credentials:
+                                        </p>
+                                        
+                                        <p style="color: #2c3e50; font-size: 16px; line-height: 1.6; margin: 0 0 10px 0;">
+                                            <strong style="color: #033e8b;">Username:</strong> {username}
+                                        </p>
+                                        <p style="color: #2c3e50; font-size: 16px; line-height: 1.6; margin: 0 0 10px 0;">
+                                            <strong style="color: #033e8b;">Temporary Password:</strong> {temp_password}
+                                        </p>
+                                        <p style="color: #2c3e50; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
+                                            <strong style="color: #033e8b;">Registered Email:</strong> {to_email}
+                                        </p>
+                                        
+                                        <!-- Login Button -->
+                                        <div style="text-align: center; margin: 30px 0;">
+                                            <a href="{LOGIN_URL}" 
+                                            style="background-color: #033e8b; 
+                                                    color: #ffffff; 
+                                                    padding: 14px 30px; 
+                                                    text-decoration: none; 
+                                                    font-size: 16px; 
+                                                    display: inline-block;
+                                                    border-radius: 4px;">
+                                                Click here to login
+                                            </a>
+                                        </div>
+                                        
+                                        <p style="color: #5a6c7d; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                                            For security reasons, please set a new password at your earliest convenience by clicking the button below:
+                                        </p>
+                                        
+                                        <!-- Reset Button -->
+                                        <div style="text-align: center; margin: 30px 0;">
+                                            <a href="{RESET_PASS_URL}" 
+                                            style="background-color: #033e8b; 
+                                                    color: #ffffff; 
+                                                    padding: 14px 30px; 
+                                                    text-decoration: none; 
+                                                    font-size: 16px; 
+                                                    display: inline-block;
+                                                    border-radius: 4px;">
+                                                Reset Your Password
+                                            </a>
+                                        </div>
+                                        
+                                        <p style="color: #5a6c7d; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                                            To help you get started, you can download the <a href="{USER_MANUAL_URL}" style="color: #033e8b; text-decoration: none; font-weight: bold;">KYC Member Portal User Manual</a>.
+                                        </p>
+                                        
+                                        <p style="color: #5a6c7d; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
+                                            If you have any questions or require assistance, please do not hesitate to reach out to our support team.
+                                        </p>
+                                        
+                                        <p style="color: #5a6c7d; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
+                                            Sincerely,<br>
+                                            <strong style="color: #033e8b;">Kokomo Yacht Club Team</strong>
+                                        </p>
+                                        
+                                    </td>
+                                </tr>
+                                
+                                <!-- Footer -->
+                                <tr>
+                                    <td style="background-color: #f8f9fa; padding: 20px 30px; text-align: center; border-top: 1px solid #e9ecef;">
+                                        <p style="color: #6c757d; font-size: 12px; margin: 0;">
+                                            Kokomo Yacht Club<br>
+                                            <a href="https://kokomoyachtclub.vip" style="color: #033e8b; text-decoration: none;">kokomoyachtclub.vip</a>
+                                        </p>
+                                    </td>
+                                </tr>
+                                
+                            </table>
+                            
+                        </td>
+                    </tr>
+                </table>
+            </body>
+            </html>
+        """
+        
         msg.attach(MIMEText(body, "html"))
 
         # Send the message
