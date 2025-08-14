@@ -325,24 +325,8 @@ def update_points_in_members(member_id: int,new_points: int):
             """,
             (new_points, member_id)
         )
-
-        # If no rows affected, member may not exist OR value is same
-        if cursor.rowcount == 0:
-            cursor.execute(
-                """
-                SELECT points
-                FROM Members
-                WHERE member_id = %s;
-                """,
-                (member_id,)
-            )
-            result = cursor.fetchone()
-            conn.commit()
-            return result[0] if result else None
-
-        # If rows affected, fetch updated points
         
-        # Step 2: Fetch updated value
+        # Fetch updated value
         cursor.execute(
             """
             SELECT points
@@ -352,10 +336,9 @@ def update_points_in_members(member_id: int,new_points: int):
             (member_id,)
         )
         result = cursor.fetchone()
-        print(">>>>>>", result)
-        
+        # print(">>>>>>", result, '======')        
         conn.commit()
-        return result[0] if result else None
+        return result['points'] if result else None
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
     finally:

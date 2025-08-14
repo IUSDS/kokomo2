@@ -106,22 +106,11 @@ async def webhook_listener(request: Request):
                 member = result["member_id"]
 
                 ### retrieve current points from members by member_id
-                # curr_points = get_points_from_members(member)[
-                #     "points"
-                # ]  # USE ALREADY EXISTING get_curr_points(member_id) HERE
-
-                ### retrieve current points from members by member_id
                 curr_points = get_curr_points(member)   # USED ALREADY EXISTING get_curr_points(member_id) HERE
-                print('.....',curr_points, points_cost, member)
+                # print('.....',curr_points, points_cost, member)
 
                 ### Add points back
                 updated_points = points_cost + curr_points
-
-                # ADJUST CURRENT POINTS OF THE MEMBER IN THE MEMBERS TABLE
-
-                aa=update_points_in_members(member,updated_points)
-
-                print('....',aa)
 
                 ### Create new record in Point_Adjustment table
                 ss = new_record_in_point_adjustment(
@@ -130,10 +119,15 @@ async def webhook_listener(request: Request):
                     Balance=updated_points,
                     description=yacht_name,
                 )
-                print('new-record',points_cost,member,curr_points,updated_points,ss)
+                # print('new-record',points_cost,member,curr_points,updated_points,ss)
+
+                # ADJUST CURRENT POINTS OF THE MEMBER IN THE MEMBERS TABLE
+
+                aa=update_points_in_members(member,updated_points)
+                # print('....',aa)
+
                 print("Message:Cancelled booking points added back successfully!")
                 return
-            # return
             else:
                 raise HTTPException(status_code=409, detail="KYC booking already exists")
 
