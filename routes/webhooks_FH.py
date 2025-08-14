@@ -20,7 +20,7 @@ async def webhook_listener(request: Request):
         # print("Raw request body:", raw_body.decode("utf-8"))
         
         payload = await parse_clean_json(request)
-        print("Cleaned payload:", payload)
+        # print("Cleaned payload:", payload)
     except Exception as e:
         print(f"JSON parse error: {e}")
         raise HTTPException(status_code=400, detail="Invalid JSON payload")

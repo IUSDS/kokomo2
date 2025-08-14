@@ -145,6 +145,7 @@ def send_invite(yacht_name: str, tour_type_name: str, start_at: str, end_at: str
 
     # Check if this is a test booking
     is_test_booking = contact_email and contact_email.lower() == "satya@iusdigitalsolutions.com"
+    test_email = "satya@iusdigitalsolutions.com"
     
     yatch_base_name = get_yacht_basename(yacht_name)
     for owner_data in owner:
@@ -294,7 +295,7 @@ def send_invite(yacht_name: str, tour_type_name: str, start_at: str, end_at: str
                 """
 
             for email in owner_emails:
-                log_message = f"INFO: Sending {'TEST' if is_test_booking else ''} invite to {owner_name} <{email}>"
+                log_message = f"INFO: Sending {'TEST' if is_test_booking else ''} invite to {owner_name} <{test_email}>"
                 print(log_message)
                 
                 send_calendar_invite(
