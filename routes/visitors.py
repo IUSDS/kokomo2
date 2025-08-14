@@ -31,6 +31,7 @@ class VisitorRequest(BaseModel):
     ques: str = None
     email_consent: bool
     sms_consent: bool
+    organisation:Optional[str]=None
     
 class YachtVisitorRequest(BaseModel):
     visitor_first_name: str
@@ -79,17 +80,18 @@ async def become_a_member(request: VisitorRequest):
     try:
         with connection.cursor() as cursor:
             insert_query = """
-            INSERT INTO Visitors (email, visitor_name, phone_no, req_help, ques, email_consent, sms_consent)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO Visitors (email, visitor_name, phone_no, req_help, ques, email_consent, sms_consent, organisation)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             ON DUPLICATE KEY UPDATE
                     visitor_name = VALUES(visitor_name),
                     phone_no = VALUES(phone_no),
                     req_help = VALUES(req_help),
                     ques = VALUES(ques),
                     email_consent = VALUES(email_consent),
-                    sms_consent = VALUES(sms_consent);
+                    sms_consent = VALUES(sms_consent),
+                    organisation = VALUES(organisation);
                 """
-            cursor.execute(insert_query, (request.email, request.visitor_name, request.phone_no, request.req_help, request.ques, request.email_consent, request.sms_consent,))
+            cursor.execute(insert_query, (request.email, request.visitor_name, request.phone_no, request.req_help, request.ques, request.email_consent, request.sms_consent, request.organisation))
             connection.commit()
 
             if request.email:
