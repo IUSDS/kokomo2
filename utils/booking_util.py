@@ -224,28 +224,6 @@ def get_points_cost_and_member_id_from_booking_fh(booking_id:str):
         if conn:
             conn.close()
 
-
-### retrieve current points from members by member_id 
-def get_points_from_members(member_id:int):
-    try:
-        conn=get_db_connection()
-        cursor=conn.cursor()
-        cursor.execute("""
-            SELECT points
-            FROM Members
-            WHERE member_id = %s;
-            """,(member_id,))
-        result=cursor.fetchone()
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-
-
 ### Create new record in Point_Adjustment table
 def new_record_in_point_adjustment(member_id:int,points_added:int,Balance:int,description:str):     ### After cancellation points adjustments
     try:
@@ -273,9 +251,6 @@ def new_record_in_point_adjustment(member_id:int,points_added:int,Balance:int,de
             cursor.close()
         if conn:
             conn.close()
-
-
-
 
 
 ################################
@@ -382,6 +357,9 @@ def parse_charters_booking_payload(
     print("Amount Paid: ", amount_paid)
     print("Amount Due: ", amount_due)
 
+    # Normalize status: if 'booked' -> 'scheduled'
+    normalized_status = "scheduled" if str(status).lower() == "booked" else status
+
     return {
         "booking_id": booking.get("pk"),
         "dashboard_url": booking.get("dashboard_url"),
@@ -410,12 +388,11 @@ def parse_charters_booking_payload(
         "staff_gratuity":   0.00,
         "tubing":           yn("Tubing"),
         # fixed/status fields:
-        "booking_status":   status,
+        "booking_status":   normalized_status,
         "amount_due":       amount_due,
         "booking_fee":      booking_fee,
         "yacht_name": availability.get("item", {}).get("name", "Unknown")
     }
-
 
 
 def charter_booking_exists(booking_id: str):
