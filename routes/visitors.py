@@ -163,4 +163,3 @@ async def add_visitors_details(request: EventRequest):
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     finally:
         connection.close()
-        
