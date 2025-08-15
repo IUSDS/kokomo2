@@ -41,10 +41,10 @@ async def update_points(
         cursor.execute(
             """
             INSERT INTO Point_Adjustment
-              (member_id, points_added, points_removed, description)
-            VALUES (%s, %s, %s, %s)
+              (member_id, points_added, points_removed, description, Balance)
+            VALUES (%s, %s, %s, %s, %s)
             """,
-            (member_id, points_added, points_removed, description),
+            (member_id, points_added, points_removed, description, new_points),
         )
 
         # 4) Commit both operations
