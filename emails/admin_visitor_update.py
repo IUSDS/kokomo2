@@ -121,7 +121,7 @@ def send_admin_notification_visitor(request: VisitorRequest):
                                         Name: {request.visitor_name or 'N/A'}<br>
                                         Email: {request.email}<br>
                                         Phone Number: {request.phone_no or 'N/A'}<br>
-                                        Organisation: {request.organization or 'N/A'}<br>
+                                        Organization: {request.organization or 'N/A'}<br>
                                         {f"Requested Help: {request.req_help}<br>" if request.req_help else ""}
                                         {f"Any Questions: {request.ques}" if request.ques else ""}
                                     </p>
