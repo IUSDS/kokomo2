@@ -7,13 +7,14 @@ from utils.session_util import get_logged_in_member_id_from_email
 from utils.yacht_util import get_yacht_id_by_name
 from utils.tour_util import get_tour_id_by_name
 from utils.member_util import get_member_name
-from utils.point_pricing_util import get_point_cost, deduct_member_points, get_curr_points,
+from utils.point_pricing_util import get_point_cost, deduct_member_points, get_curr_points
 from utils.json_sanitizer import parse_clean_json
 from routes.websocket import active_connections
 from emails.owner_notification import send_invite
 from emails.low_points import low_points_notification
 
 webhook_route = APIRouter()
+
 
 @webhook_route.post("/webhook")
 async def webhook_listener(request: Request):
@@ -41,7 +42,9 @@ async def webhook_listener(request: Request):
     contact_name = contact.get("name")
     contact_email = contact.get("email")
     contact_phone = contact.get("phone")
-    print(f"INFO: Contact: name={contact_name}, email={contact_email}, phone={contact_phone}")
+    print(
+        f"INFO: Contact: name={contact_name}, email={contact_email}, phone={contact_phone}"
+    )
 
     # 5. Availability
     availability    = booking_data.get("availability", {}) or {}
@@ -65,7 +68,6 @@ async def webhook_listener(request: Request):
             print("WARNING: Charter booking already exists!")
             raise HTTPException(status_code=409, detail="Charter booking already exists")
 
-        
         # Send calendar invite to owner for charter bookings
         send_invite(yacht_name, tour_type_name, start_at, end_at, contact_email)
         print("INFO: Charter owners notified")
@@ -126,6 +128,7 @@ async def webhook_listener(request: Request):
         print("KYC Owners Notified")
 
         # 9. Lookup member_id
+
         member_id = None
         if contact_email:
             member_id = get_logged_in_member_id_from_email(contact_email)
