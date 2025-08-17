@@ -39,11 +39,11 @@ class EventRequest(BaseModel):
     attendees: int
 
 # Admin Email Address and Recipients
-# ADMIN_EMAIL = "info@kokomoyachts.com"
-# RECIPIENTS = ["brian@kokomoyachtclub.vip", "cynthia@kokomoyachtclub.vip", "info@iusdigitalsolutions.com"]
+ADMIN_EMAIL = "info@kokomoyachts.com"
+RECIPIENTS = ["brian@kokomoyachtclub.vip", "cynthia@kokomoyachtclub.vip", "info@iusdigitalsolutions.com"]
 
-ADMIN_EMAIL = "satya@iusdigitalsolutions.com"
-RECIPIENTS = ["aishwarya@iusdigitalsolutions.com"]
+# ADMIN_EMAIL = "satya@iusdigitalsolutions.com"
+# RECIPIENTS = ["aishwarya@iusdigitalsolutions.com"]
 
 
 def _send_email(subject: str, body_text: str):
