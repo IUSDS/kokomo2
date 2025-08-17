@@ -15,6 +15,7 @@ class VisitorRequest(BaseModel):
     phone_no: int
     req_help: str = None
     ques: str = None
+    organization: str = None
 
 class EmailRequest(BaseModel):
     email: EmailStr
@@ -120,6 +121,7 @@ def send_admin_notification_visitor(request: VisitorRequest):
                                         Name: {request.visitor_name or 'N/A'}<br>
                                         Email: {request.email}<br>
                                         Phone Number: {request.phone_no or 'N/A'}<br>
+                                        Organization: {request.organization or 'N/A'}<br>
                                         {f"Requested Help: {request.req_help}<br>" if request.req_help else ""}
                                         {f"Any Questions: {request.ques}" if request.ques else ""}
                                     </p>

@@ -2,12 +2,12 @@ from fastapi import APIRouter, HTTPException, Request
 from utils.secrets_util import SECRET_KEY
 from utils.booking_util import parse_booking_payload, store_booking_to_db, if_booking_exists, charter_booking_exists, determine_source,\
 new_record_in_point_adjustment,get_points_cost_and_member_id_from_booking_fh,store_charters_booking_to_db,\
-parse_charters_booking_payload
+parse_charters_booking_payload,update_points_in_members
 from utils.session_util import get_logged_in_member_id_from_email
 from utils.yacht_util import get_yacht_id_by_name
 from utils.tour_util import get_tour_id_by_name
 from utils.member_util import get_member_name
-from utils.point_pricing_util import get_point_cost, deduct_member_points, get_curr_points
+from utils.point_pricing_util import get_point_cost, deduct_member_points, get_curr_points,
 from utils.json_sanitizer import parse_clean_json
 from routes.websocket import active_connections
 from emails.owner_notification import send_invite
@@ -20,7 +20,7 @@ async def webhook_listener(request: Request):
     try:
         raw_body = await request.body()
         # print("Raw request body:", raw_body.decode("utf-8"))
-        
+
         payload = await parse_clean_json(request)
         # print("Cleaned payload:", payload)
     except Exception as e:
@@ -30,15 +30,15 @@ async def webhook_listener(request: Request):
     booking_data = payload.get("booking")
     if not isinstance(booking_data, dict):
         raise HTTPException(status_code=400, detail="Missing 'booking' object")
-        
-    # 3. Extract booking PK / UUID 
+
+    # 3. Extract booking PK / UUID
     booking_pk = booking_data.get("pk")
     booking_uuid = booking_data.get("uuid")
     print(f"INFO: Booking received: pk={booking_pk}, uuid={booking_uuid}")
 
     # 4. Contact info
-    contact       = booking_data.get("contact", {}) or {}
-    contact_name  = contact.get("name")
+    contact = booking_data.get("contact", {}) or {}
+    contact_name = contact.get("name")
     contact_email = contact.get("email")
     contact_phone = contact.get("phone")
     print(f"INFO: Contact: name={contact_name}, email={contact_email}, phone={contact_phone}")
@@ -58,13 +58,13 @@ async def webhook_listener(request: Request):
     # 7. Determine webhook source and handle accordingly
     webhook_source = determine_source(yacht_name)
     print("INFO: This webhook originates from", webhook_source)
-    
+
     if webhook_source.upper() == "CHARTERS":
         # Handle CHARTERS bookings - only send owner notification
         if charter_booking_exists(booking_pk):
             print("WARNING: Charter booking already exists!")
             raise HTTPException(status_code=409, detail="Charter booking already exists")
-            # return
+
         
         # Send calendar invite to owner for charter bookings
         send_invite(yacht_name, tour_type_name, start_at, end_at, contact_email)
@@ -83,6 +83,8 @@ async def webhook_listener(request: Request):
     
     else:
         # Handle KYC bookings - full processing
+       
+        # . Check if booking_id exists and is cancelled.
         if if_booking_exists(booking_pk):
             print("WARNING: KYC booking already exists!")
 
@@ -122,7 +124,7 @@ async def webhook_listener(request: Request):
         # 8. Send calendar invite
         send_invite(yacht_name, tour_type_name, start_at, end_at, contact_email)
         print("KYC Owners Notified")
-        
+
         # 9. Lookup member_id
         member_id = None
         if contact_email:
@@ -138,10 +140,14 @@ async def webhook_listener(request: Request):
         yacht_id = get_yacht_id_by_name(yacht_name) if yacht_name else None
         if not yacht_id:
             print("WARNING: Yacht ID not found!")
-            raise HTTPException(status_code=400, detail=f"Yacht '{yacht_name}' not found")
+            raise HTTPException(
+                status_code=400, detail=f"Yacht '{yacht_name}' not found"
+            )
         print(f"INFO: Yacht ID: {yacht_id}")
 
-        tour_type_id = get_tour_id_by_name(tour_type_name, start_at) if tour_type_name else None
+        tour_type_id = (
+            get_tour_id_by_name(tour_type_name, start_at) if tour_type_name else None
+        )
         if tour_type_name and tour_type_id is None:
             print(f"WARNING: Tour type not found: {tour_type_name}")
         print(f"INFO: Tour Type ID: {tour_type_id}")
@@ -153,14 +159,16 @@ async def webhook_listener(request: Request):
         # 12. Check for low points
         curr_points = get_curr_points(member_id) if member_id else None
         if point_cost >= curr_points:
-            name       = get_member_name(member_id)
+            name = get_member_name(member_id)
             first_name = name.get("first_name")
-            last_name  = name.get("last_name")
+            last_name = name.get("last_name")
             low_points_notification(first_name, last_name, curr_points, point_cost)
 
         # 13. Store booking
         try:
-            parsed_data = parse_booking_payload(booking_data, int(member_id) if member_id else 0, point_cost)
+            parsed_data = parse_booking_payload(
+                booking_data, int(member_id) if member_id else 0, point_cost
+            )
             store_booking_to_db({"data": parsed_data})
             print(f"INFO: Booking stored: pk={booking_pk}")
         except Exception as e:
@@ -183,7 +191,7 @@ async def webhook_listener(request: Request):
             "event": "booking_success",
             "point_used": point_cost,
             "yacht_name": yacht_name,
-            "current_points": curr_points
+            "current_points": curr_points,
         }
         if member_id and member_id in active_connections:
             try:
@@ -193,4 +201,4 @@ async def webhook_listener(request: Request):
                 print(f"EXCEPTION: Failed WebSocket send: {e}")
 
         return {"booking_status": "successful"}
-    
+
