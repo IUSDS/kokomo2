@@ -197,39 +197,6 @@ def if_booking_exists(booking_id: str):
         if conn:
             conn.close()
             
-# def charter_booking_exists(booking_id: str):
-#     try:
-#         conn = get_db_connection()
-#         cursor = conn.cursor()
-        
-#         # Check if booking exists
-#         cursor.execute("""
-#             SELECT EXISTS(
-#                 SELECT 1 FROM charter_booking 
-#                 WHERE booking_id = %s
-#             ) as booking_exists;
-#         """, (booking_id,))
-        
-#         result = cursor.fetchone()
-#         exists = bool(result['booking_exists'])
-        
-#         # If booking doesn't exist, store it
-#         if not exists:
-#             cursor.execute("""
-#                 INSERT INTO charter_booking (booking_id) 
-#                 VALUES (%s);
-#             """, (booking_id,))
-#             conn.commit()
-        
-#         return exists
-    
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
-#     finally:
-#         if cursor:
-#             cursor.close()
-#         if conn:
-#             conn.close()
             
 def determine_source(yacht_name: str):
     if "KYC" in yacht_name.upper():
@@ -258,18 +225,34 @@ def get_points_cost_and_member_id_from_booking_fh(booking_id:str):
             conn.close()
 
 
-### retrieve current points from members by member_id 
-def get_points_from_members(member_id:int):
+### Update new points in Members table
+def update_points_in_members(member_id: int,new_points: int):
     try:
         conn=get_db_connection()
         cursor=conn.cursor()
-        cursor.execute("""
+        # Step 1: Update points
+        cursor.execute(
+            """
+            UPDATE Members
+            SET points = %s
+            WHERE member_id = %s;
+            """,
+            (new_points, member_id)
+        )
+        
+        # Fetch updated value
+        cursor.execute(
+            """
             SELECT points
             FROM Members
             WHERE member_id = %s;
-            """,(member_id,))
-        result=cursor.fetchone()
-        return result
+            """,
+            (member_id,)
+        )
+        result = cursor.fetchone()
+        # print(">>>>>>", result, '======')        
+        conn.commit()
+        return result['points'] if result else None
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
     finally:
@@ -277,7 +260,6 @@ def get_points_from_members(member_id:int):
             cursor.close()
         if conn:
             conn.close()
-
 
 ### Create new record in Point_Adjustment table
 def new_record_in_point_adjustment(member_id:int,points_added:int,Balance:int,description:str):     ### After cancellation points adjustments
@@ -308,41 +290,8 @@ def new_record_in_point_adjustment(member_id:int,points_added:int,Balance:int,de
             conn.close()
 
 
-
-
-
 ################################
 ###### New code for charters booking store in DB
-
-def charter_booking_exists(booking_id: str):
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        # Check if booking exists
-        cursor.execute("""
-            SELECT EXISTS(
-                SELECT 1 FROM Charters 
-                WHERE booking_id = %s
-            ) as booking_exists;
-        """, (booking_id,))
-        
-        result = cursor.fetchone()
-        exists = bool(result['booking_exists'])
-
-        print("{{{{}}}}", booking_id)
-        
-        return exists
-    
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-
-
 
 def store_charters_booking_to_db(payload: dict):
     connection = None
@@ -485,3 +434,29 @@ def parse_charters_booking_payload(
 
     }
 
+
+def charter_booking_exists(booking_id: str):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT COUNT(booking_id)
+            FROM Charters
+            WHERE booking_id = %s;
+        """, (booking_id,))
+        
+        result = cursor.fetchone()
+        count = result['COUNT(booking_id)']
+        if count == 0:
+            return False
+        else:
+            return True
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
