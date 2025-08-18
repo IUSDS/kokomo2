@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Request
 from utils.secrets_util import SECRET_KEY
 from utils.booking_util import parse_booking_payload, store_booking_to_db, if_booking_exists, charter_booking_exists, determine_source,\
 new_record_in_point_adjustment,get_points_cost_and_member_id_from_booking_fh,store_charters_booking_to_db,\
-parse_charters_booking_payload,update_points_in_members
+parse_charters_booking_payload,update_points_in_members,update_status_in_charters
 from utils.session_util import get_logged_in_member_id_from_email
 from utils.yacht_util import get_yacht_id_by_name
 from utils.tour_util import get_tour_id_by_name
@@ -61,11 +61,15 @@ async def webhook_listener(request: Request):
 
     if webhook_source.upper() == "CHARTERS":
         # Handle CHARTERS bookings - only send owner notification
-        if charter_booking_exists(booking_pk):
+        if charter_booking_exists(booking_pk):            
             print("WARNING: Charter booking already exists!")
+            #### For cancellation status.
+            if status.lower() == "cancelled":
+                aa=update_status_in_charters(booking_pk,status)
+                print('...',aa)
             raise HTTPException(status_code=409, detail="Charter booking already exists")
 
-        
+
         # Send calendar invite to owner for charter bookings
         send_invite(yacht_name, tour_type_name, start_at, end_at, contact_email)
         print("INFO: Charter owners notified")

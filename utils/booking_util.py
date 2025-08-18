@@ -254,19 +254,19 @@ def update_points_in_members(member_id: int,new_points: int):
             (new_points, member_id)
         )
         
-        # Fetch updated value
-        cursor.execute(
-            """
-            SELECT points
-            FROM Members
-            WHERE member_id = %s;
-            """,
-            (member_id,)
-        )
-        result = cursor.fetchone()
-        # print(">>>>>>", result, '======')        
+        # # Fetch updated value
+        # cursor.execute(
+        #     """
+        #     SELECT points
+        #     FROM Members
+        #     WHERE member_id = %s;
+        #     """,
+        #     (member_id,)
+        # )
+        # result = cursor.fetchone()
+        # # print(">>>>>>", result, '======')        
         conn.commit()
-        return result['points'] if result else None
+        return {"status": "success", "message": "Points updated in Members successfully!"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
     finally:
@@ -474,6 +474,31 @@ def charter_booking_exists(booking_id: str):
         else:
             return True
     
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+
+def update_status_in_charters(booking_id: str, booking_status: str):
+    try:
+        conn=get_db_connection()
+        cursor=conn.cursor()
+        # Step 1: Update status
+        cursor.execute(
+            """
+            UPDATE Charters
+            SET booking_status = %s
+            WHERE booking_id = %s;
+            """,
+            (booking_status, booking_id)
+        )
+               
+        conn.commit()
+        return {"status": "success", "message": "Booking status updated successfully!"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
     finally:
