@@ -65,8 +65,7 @@ async def webhook_listener(request: Request):
             print("WARNING: Charter booking already exists!")
             #### For cancellation status.
             if status.lower() == "cancelled":
-                aa=update_status_in_charters(booking_pk,status)
-                print('...',aa)
+                update_status_in_charters(booking_pk,status)
             raise HTTPException(status_code=409, detail="Charter booking already exists")
 
 
@@ -102,7 +101,6 @@ async def webhook_listener(request: Request):
 
                 ### retrieve current points from members by member_id
                 curr_points = get_curr_points(member)   # USED ALREADY EXISTING get_curr_points(member_id) HERE
-                # print('.....',curr_points, points_cost, member)
 
                 ### Add points back
                 updated_points = points_cost + curr_points
@@ -112,10 +110,10 @@ async def webhook_listener(request: Request):
                     member_id=member,
                     points_added=points_cost,
                     Balance=updated_points,
-                    description=yacht_name,
+                    description="Cancellation Refund - " + yacht_name,
                 )
                 # print('new-record',points_cost,member,curr_points,updated_points,ss)
-
+                # print('....',ss)
                 # ADJUST CURRENT POINTS OF THE MEMBER IN THE MEMBERS TABLE
                 aa=update_points_in_members(member,updated_points)
                 # print('....',aa)
