@@ -118,15 +118,11 @@ async def add_member(
         else:
             # Either file was not provided or an empty string was sent
             picture_url = "https://{S3_BUCKET_NAME}.s3.{S3_REGION}.amazonaws.com/profile_pictures/default.png"
-
         
         # check:
         # Browsers can send "" for empty inputs; normalize to None
         if isinstance(primary_member_id, str) and primary_member_id.strip() == "":
             primary_member_id = None
-
-
-
 
         if is_primary == 1:
         # primary members MUST have NULL primary_member_id
@@ -136,9 +132,8 @@ async def add_member(
                     detail="primary_member_id must be NULL when is_primary=1 (primary)."
                 )
             primary_member_id = None  # force it
-            print('...',is_primary, primary_member_id,opening_balance)
 
-        else:  # is_primary == 0                 
+        else:                 
             if primary_member_id is None:   # secondary members MUST have a non-null primary_member_id (and ideally > 0)
                 raise HTTPException(
                     status_code=422,
@@ -149,7 +144,6 @@ async def add_member(
                     status_code=422,
                     detail="primary_member_id must be a positive integer."
                 )
-        print('<<<<<',is_primary,primary_member_id,opening_balance)
         
         # Insert member data
         query = """
@@ -158,12 +152,12 @@ async def add_member(
                                 is_primary, opening_balance, primary_member_id)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
         """
-        # cursor.execute(query, (username, hashed_password, first_name, last_name, phone_number, member_address1, member_address2, member_city, member_state, member_zip, 
-        #     email_id, membership_type, points, referral_information, picture_url, "User", "N", dl, company_name,
-        #     is_primary, opening_balance, primary_member_id))
-        # member_id = cursor.lastrowid
-        # if member_id is None:
-        #     raise HTTPException(status_code=500, detail="Failed to retrieve member_id after insertion.")
+        cursor.execute(query, (username, hashed_password, first_name, last_name, phone_number, member_address1, member_address2, member_city, member_state, member_zip, 
+            email_id, membership_type, points, referral_information, picture_url, "User", "N", dl, company_name,
+            is_primary, opening_balance, primary_member_id))
+        member_id = cursor.lastrowid
+        if member_id is None:
+            raise HTTPException(status_code=500, detail="Failed to retrieve member_id after insertion.")
         
         email_response = send_welcome_email(
             to_email=email_id,
