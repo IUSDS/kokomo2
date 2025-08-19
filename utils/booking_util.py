@@ -211,47 +211,6 @@ def if_booking_exists(booking_id: str):
             conn.close()
 
 
-def charter_booking_exists(booking_id: str):
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        # Check if booking exists
-        cursor.execute(
-            """
-            SELECT EXISTS(
-                SELECT 1 FROM charter_booking 
-                WHERE booking_id = %s
-            ) as booking_exists;
-        """,
-            (booking_id,),
-        )
-
-        result = cursor.fetchone()
-        exists = bool(result["booking_exists"])
-
-        # If booking doesn't exist, store it
-        if not exists:
-            cursor.execute(
-                """
-                INSERT INTO charter_booking (booking_id) 
-                VALUES (%s);
-            """,
-                (booking_id,),
-            )
-            conn.commit()
-
-        return exists
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-
-
 def determine_source(yacht_name: str):
     if "KYC" in yacht_name.upper():
         return "KYC"
@@ -260,21 +219,16 @@ def determine_source(yacht_name: str):
 
 
 ### retrieve points_cost and member_id from booking_fh by booking_id
-
-def get_points_cost_and_member_id_from_booking_fh(booking_id: str):
+def get_points_cost_and_member_id_from_booking_fh(booking_id:str):
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-            """
+        conn=get_db_connection()
+        cursor=conn.cursor()
+        cursor.execute("""
             SELECT points_cost,member_id
             FROM booking_fh
             WHERE booking_id = %s;
-            """,
-            (booking_id,),
-        )
-        result = cursor.fetchone()
-
+            """,(booking_id,))
+        result=cursor.fetchone()
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
@@ -283,32 +237,6 @@ def get_points_cost_and_member_id_from_booking_fh(booking_id: str):
             cursor.close()
         if conn:
             conn.close()
-
-
-
-### retrieve current points from members by member_id
-def get_points_from_members(member_id: int):
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            SELECT points
-            FROM Members
-            WHERE member_id = %s;
-            """,
-            (member_id,),
-        )
-        result = cursor.fetchone()
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-
 
 
 ### Update new points in Members table
@@ -326,19 +254,19 @@ def update_points_in_members(member_id: int,new_points: int):
             (new_points, member_id)
         )
         
-        # Fetch updated value
-        cursor.execute(
-            """
-            SELECT points
-            FROM Members
-            WHERE member_id = %s;
-            """,
-            (member_id,)
-        )
-        result = cursor.fetchone()
-        # print(">>>>>>", result, '======')        
+        # # Fetch updated value
+        # cursor.execute(
+        #     """
+        #     SELECT points
+        #     FROM Members
+        #     WHERE member_id = %s;
+        #     """,
+        #     (member_id,)
+        # )
+        # result = cursor.fetchone()
+        # # print(">>>>>>", result, '======')        
         conn.commit()
-        return result['points'] if result else None
+        return {"status": "success", "message": "Points updated in Members successfully!"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
     finally:
@@ -373,11 +301,9 @@ def new_record_in_point_adjustment(
             WHERE member_id = %s AND points_added = %s AND Balance = %s AND description = %s
             ORDER BY created_at DESC
             LIMIT 1;
-
         """,
             (member_id, points_added, Balance, description),
         )
-
         inserted_record = cursor.fetchone()
         return inserted_record
     except Exception as e:
@@ -388,3 +314,220 @@ def new_record_in_point_adjustment(
         if conn:
             conn.close()
 
+################################
+###### New code for charters booking store in DB
+
+def store_charters_booking_to_db(payload: dict):
+    connection = None
+    cursor = None
+    try:
+        data = payload.get("data", {})
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        
+        insert_query = """
+            INSERT INTO Charters (
+                booking_id, dashboard_url, vessel_name, start_at, end_at,
+                yacht_name, tour_type, pickup_point, invoice_price_display, amount_paid_display,
+                receipt_subtotal_display, receipt_taxes_display, receipt_total_display, other_add_ons, adult_beverages,
+                catering_option, number_of_adults, number_of_kids, e_foil_count, sea_bob_count, 
+                other_cost, other_cost_desc, staff_gratuity, tubing, booking_status, 
+                amount_due, booking_fee
+            ) VALUES (
+                %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, 
+                %s, %s, %s, %s, %s, 
+                %s, %s
+            )
+        """
+
+        cursor.execute(insert_query, (
+            data.get("booking_id"),
+            data.get("dashboard_url"),
+            data.get("vessel_name"),        
+            data.get("start_at"),
+            data.get("end_at"),
+            data.get("yacht_name"),
+            data.get("tour_type"),
+            data.get("pickup_point"),
+            data.get("invoice_price_display"),
+            data.get("amount_paid_display"),
+            data.get("receipt_subtotal_display"),
+            data.get("receipt_taxes_display"),
+            data.get("receipt_total_display"),
+            data.get("other_add_ons"),
+            data.get("adult_beverages"),
+            data.get("catering_option"),            
+            data.get("number_of_adults"),
+            data.get("number_of_kids"),
+            data.get("e_foil_count"),
+            data.get("sea_bob_count"),            
+            data.get("other_cost"),
+            data.get("other_cost_desc"),
+            data.get("staff_gratuity"),
+            data.get("tubing"),
+            data.get("booking_status"),
+            data.get("amount_due"),
+            data.get("booking_fee")
+        ))
+
+        connection.commit()
+        return {"status": "success", "message": "Charters Booking stored in database."}
+
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error saving booking: {e}")
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+
+def parse_charters_booking_payload(
+    booking: dict,
+    status: str,
+    booking_fee: float = 0.0,
+    
+) -> dict:
+    availability = booking.get("availability", {})
+    custom_fields = booking.get("custom_field_values", [])
+    
+    print("Parse_booking_util:")
+
+    def get_custom_value(name: str, default=None):
+        for field in custom_fields:
+            if field.get("name") == name:
+                return field.get("display_value") or field.get("value") or default
+        return default
+
+    # yes/no fields come through as "Yes"/"No" or True/False
+    def yn(name: str):
+        val = get_custom_value(name, "No")
+        return "yes" if str(val).lower() in ("yes", "true") else "no"
+
+    # compute amount still due
+    receipt_total = booking.get("receipt_total_display", 0)
+    amount_paid = booking.get("amount_paid_display", 0)
+    amount_due = float(receipt_total) - float(amount_paid)
+    print("Receipt Total: ", receipt_total)
+    print("Amount Paid: ", amount_paid)
+    print("Amount Due: ", amount_due)
+
+    # Normalize status: if 'booked' -> 'scheduled'
+    normalized_status = "scheduled" if str(status).lower() == "booked" else status
+
+    return {
+        "booking_id": booking.get("pk"),
+        "dashboard_url": booking.get("dashboard_url"),
+        "start_at":        availability.get("start_at"),
+        "end_at":          availability.get("end_at"),
+        "vessel_name":     availability.get("item", {}).get("name", "Unknown"),
+        "tour_type":       availability.get("headline", "Unknown"),
+        "pickup_point":    get_custom_value("Pick Up Locations - KYC", ""),
+        "invoice_price_display": booking.get("invoice_price_display"),
+        "amount_paid_display":   booking.get("amount_paid_display"),
+        "receipt_subtotal_display": booking.get("receipt_subtotal_display"),
+        "receipt_taxes_display":    booking.get("receipt_taxes_display"),
+        "receipt_total_display":    booking.get("receipt_total_display"),
+        "other_add_ons":   get_custom_value("Add ons", "No"),
+        "adult_beverages": yn("Adult Beverages"),
+        "catering_option": yn("Catering Option?"),
+        "number_of_adults": extract_int(get_custom_value(
+            "How many people are in your party? (no pricing)", 0)),
+        "number_of_kids":   extract_int(get_custom_value(
+            "How many kids in your party are under 6?", 0)),
+        "e_foil_count":     extract_int(get_custom_value("E-foil", 0)),
+        "sea_bob_count":    extract_int(get_custom_value("Sea Bob", 0)),
+        # the three fields you don’t have in payload yet:
+        "other_cost":       0.00,
+        "other_cost_desc":  "",
+        "staff_gratuity":   0.00,
+        "tubing":           yn("Tubing"),
+        # fixed/status fields:
+        "booking_status":   normalized_status,
+        "amount_due":       amount_due,
+        "booking_fee":      booking_fee,
+        "yacht_name": availability.get("item", {}).get("name", "Unknown")
+    }
+
+
+def charter_booking_exists(booking_id: str):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT COUNT(booking_id)
+            FROM Charters
+            WHERE booking_id = %s;
+        """, (booking_id,))
+        
+        result = cursor.fetchone()
+        count = result['COUNT(booking_id)']
+        if count == 0:
+            return False
+        else:
+            return True
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+
+def update_status_in_charters(booking_id: str, booking_status: str):
+    try:
+        conn=get_db_connection()
+        cursor=conn.cursor()
+        # Step 1: Update status
+        cursor.execute(
+            """
+            UPDATE Charters
+            SET booking_status = %s
+            WHERE booking_id = %s;
+            """,
+            (booking_status, booking_id)
+        )
+               
+        conn.commit()
+        return {"status": "success", "message": "Booking status updated successfully!"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+
+def update_status_in_booking_fh(booking_id: str, booking_status: str):
+    try:
+        conn=get_db_connection()
+        cursor=conn.cursor()
+        # Step 1: Update status
+        cursor.execute(
+            """
+            UPDATE booking_fh
+            SET booking_status = %s
+            WHERE booking_id = %s;
+            """,
+            (booking_status, booking_id)
+        )       
+        conn.commit()
+
+        return {"status": "success", "message": "Booking status updated successfully!"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
