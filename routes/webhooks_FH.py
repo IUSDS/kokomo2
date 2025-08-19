@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Request
 from utils.secrets_util import SECRET_KEY
 from utils.booking_util import parse_booking_payload, store_booking_to_db, if_booking_exists, charter_booking_exists, determine_source,\
 new_record_in_point_adjustment,get_points_cost_and_member_id_from_booking_fh,store_charters_booking_to_db,\
-parse_charters_booking_payload,update_points_in_members,update_status_in_charters
+parse_charters_booking_payload,update_points_in_members,update_status_in_charters,update_status_in_booking_fh
 from utils.session_util import get_logged_in_member_id_from_email
 from utils.yacht_util import get_yacht_id_by_name
 from utils.tour_util import get_tour_id_by_name
@@ -92,7 +92,7 @@ async def webhook_listener(request: Request):
             print("WARNING: KYC booking already exists!")
 
             #### For cancellation points adjustments.
-            if status.lower() == "cancelled":
+            if status.lower() == "cancelled" or status.lower() == 'canceled':
 
                 ### retrieve points_cost and member_id from booking_fh by booking_id
                 result = get_points_cost_and_member_id_from_booking_fh(booking_pk)
@@ -111,12 +111,12 @@ async def webhook_listener(request: Request):
                     points_added=points_cost,
                     Balance=updated_points,
                     description="Cancellation Refund - " + yacht_name,
-                )
-                # print('new-record',points_cost,member,curr_points,updated_points,ss)
-                # print('....',ss)
+                )                
                 # ADJUST CURRENT POINTS OF THE MEMBER IN THE MEMBERS TABLE
                 aa=update_points_in_members(member,updated_points)
-                # print('....',aa)
+                
+                bb=update_status_in_booking_fh(booking_pk,status)
+                # print('....',aa,bb)
 
                 print("Message:Cancelled booking points added back successfully!")
                 return

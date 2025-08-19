@@ -506,3 +506,28 @@ def update_status_in_charters(booking_id: str, booking_status: str):
             cursor.close()
         if conn:
             conn.close()
+
+
+def update_status_in_booking_fh(booking_id: str, booking_status: str):
+    try:
+        conn=get_db_connection()
+        cursor=conn.cursor()
+        # Step 1: Update status
+        cursor.execute(
+            """
+            UPDATE booking_fh
+            SET booking_status = %s
+            WHERE booking_id = %s;
+            """,
+            (booking_status, booking_id)
+        )       
+        conn.commit()
+
+        return {"status": "success", "message": "Booking status updated successfully!"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
